@@ -1,6 +1,7 @@
 package com.supermarket.supermarket.controller;
 
 import com.supermarket.supermarket.dto.request.CreateUserRequest;
+import com.supermarket.supermarket.dto.request.UpdateProfileRequest;
 import com.supermarket.supermarket.dto.request.UpdateUserRequest;
 import com.supermarket.supermarket.dto.request.UpdateUserStatusRequest;
 import com.supermarket.supermarket.dto.response.RoleOptionResponse;
@@ -62,5 +63,13 @@ public class UserController {
         @Valid @RequestBody UpdateUserStatusRequest request
     ) {
         return ResponseEntity.ok(userService.updateUserStatus(id, request.getStatus()));
+    }
+
+    @PutMapping("/{id}/profile")
+    public ResponseEntity<UserDetailResponse> updateProfile(
+        @PathVariable("id") Integer id,
+        @Valid @RequestBody UpdateProfileRequest request
+    ) {
+        return ResponseEntity.ok(userService.updateProfile(id, request));
     }
 }

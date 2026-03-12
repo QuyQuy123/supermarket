@@ -29,9 +29,12 @@ class UserDetail {
     required this.email,
     required this.role,
     required this.idCard,
+    required this.phone,
+    required this.address,
     required this.status,
     required this.avatar,
     required this.lastLogin,
+    required this.dob,
     required this.schedule,
   });
 
@@ -41,9 +44,12 @@ class UserDetail {
   final String email;
   final String role;
   final String idCard;
+  final String phone;
+  final String address;
   final String status;
   final String avatar;
   final String lastLogin;
+  final String dob;
   final List<UserScheduleItem> schedule;
 
   factory UserDetail.fromJson(Map<String, dynamic> json) {
@@ -55,9 +61,12 @@ class UserDetail {
       email: json['email'] as String? ?? '—',
       role: json['role'] as String? ?? '—',
       idCard: json['idCard'] as String? ?? '—',
+      phone: json['phone'] as String? ?? '',
+      address: json['address'] as String? ?? '',
       status: json['status'] as String? ?? '—',
       avatar: json['avatar'] as String? ?? '',
       lastLogin: json['lastLogin'] as String? ?? '—',
+      dob: json['dob'] as String? ?? '',
       schedule: rawSchedule is List
           ? rawSchedule
               .whereType<Map<String, dynamic>>()

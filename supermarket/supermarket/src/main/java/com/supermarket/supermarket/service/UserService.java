@@ -1,6 +1,7 @@
 package com.supermarket.supermarket.service;
 
 import com.supermarket.supermarket.dto.request.CreateUserRequest;
+import com.supermarket.supermarket.dto.request.UpdateProfileRequest;
 import com.supermarket.supermarket.dto.request.UpdateUserRequest;
 import com.supermarket.supermarket.dto.response.UserDetailResponse;
 import com.supermarket.supermarket.dto.response.RoleOptionResponse;
@@ -19,4 +20,6 @@ public interface UserService {
     UserListItemResponse updateUser(Integer userId, UpdateUserRequest request);
 
     UserListItemResponse updateUserStatus(Integer userId, String status);
+
+    UserDetailResponse updateProfile(Integer userId, UpdateProfileRequest request);
 }

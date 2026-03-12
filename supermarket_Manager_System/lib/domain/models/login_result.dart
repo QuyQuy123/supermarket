@@ -2,6 +2,7 @@ class LoginResult {
   const LoginResult({
     required this.success,
     required this.message,
+    required this.userId,
     required this.role,
     required this.redirectTo,
     required this.fullName,
@@ -10,6 +11,7 @@ class LoginResult {
 
   final bool success;
   final String message;
+  final int userId;
   final String role;
   final String redirectTo;
   final String fullName;
@@ -19,6 +21,7 @@ class LoginResult {
     return LoginResult(
       success: json['success'] as bool? ?? false,
       message: json['message'] as String? ?? 'Login failed',
+      userId: json['userId'] as int? ?? 0,
       role: json['role'] as String? ?? '',
       redirectTo: json['redirectTo'] as String? ?? '',
       fullName: json['fullName'] as String? ?? '',

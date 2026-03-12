@@ -151,4 +151,41 @@ class UserApiService {
     }
     throw Exception('Failed to update user status');
   }
+
+  Future<UserDetail> updateProfile({
+    required int userId,
+    required String fullname,
+    required String email,
+    String? idCard,
+    String? phone,
+    String? address,
+    String? dob,
+  }) async {
+    final uri = Uri.parse('${ApiConstants.baseUrl}${ApiConstants.usersPath}/$userId/profile');
+    final response = await http.put(
+      uri,
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({
+        'fullname': fullname,
+        'email': email,
+        'idCard': (idCard == null || idCard.trim().isEmpty) ? null : idCard.trim(),
+        'phone': (phone == null || phone.trim().isEmpty) ? null : phone.trim(),
+        'address': (address == null || address.trim().isEmpty) ? null : address.trim(),
+        'dob': (dob == null || dob.trim().isEmpty) ? null : dob.trim(),
+      }),
+    );
+
+    if (response.statusCode < 200 || response.statusCode >= 300) {
+      if (response.body.isNotEmpty) {
+        throw Exception(response.body);
+      }
+      throw Exception('Failed to update profile');
+    }
+
+    final decoded = jsonDecode(response.body);
+    if (decoded is! Map<String, dynamic>) {
+      throw Exception('Invalid update profile response format');
+    }
+    return UserDetail.fromJson(decoded);
+  }
 }

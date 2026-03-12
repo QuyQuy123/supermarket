@@ -13,8 +13,11 @@ public class UserDetailResponse {
     private String email;
     private String role;
     private String idCard;
+    private String phone;
+    private String address;
     private String status;
     private String avatar;
     private String lastLogin;
+    private String dob;
     private List<UserScheduleItemResponse> schedule;
 }

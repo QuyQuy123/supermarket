@@ -9,10 +9,14 @@ class UsersContent extends StatefulWidget {
     super.key,
     required this.fullName,
     required this.isCompact,
+    required this.currentTimeText,
+    required this.onProfileTap,
   });
 
   final String fullName;
   final bool isCompact;
+  final String currentTimeText;
+  final VoidCallback onProfileTap;
 
   @override
   State<UsersContent> createState() => _UsersContentState();
@@ -64,6 +68,8 @@ class _UsersContentState extends State<UsersContent> {
           _UsersHeader(
             fullName: widget.fullName,
             isCompact: widget.isCompact,
+            currentTimeText: widget.currentTimeText,
+            onProfileTap: widget.onProfileTap,
           ),
           Expanded(
             child: Padding(
@@ -318,10 +324,14 @@ class _UsersHeader extends StatelessWidget {
   const _UsersHeader({
     required this.fullName,
     required this.isCompact,
+    required this.currentTimeText,
+    required this.onProfileTap,
   });
 
   final String fullName;
   final bool isCompact;
+  final String currentTimeText;
+  final VoidCallback onProfileTap;
 
   @override
   Widget build(BuildContext context) {
@@ -352,7 +362,7 @@ class _UsersHeader extends StatelessWidget {
                   color: const Color(0xFF667EEA),
                   borderRadius: BorderRadius.circular(8),
                 ),
-                child: const Text('11:14:36 AM', style: TextStyle(color: Colors.white)),
+                child: Text(currentTimeText, style: const TextStyle(color: Colors.white)),
               ),
               const SizedBox(width: 16),
               Column(
@@ -367,17 +377,21 @@ class _UsersHeader extends StatelessWidget {
                 ],
               ),
               const SizedBox(width: 12),
-              Container(
-                width: 40,
-                height: 40,
-                alignment: Alignment.center,
-                decoration: BoxDecoration(
-                  color: const Color(0xFF667EEA),
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: Text(
-                  fullName.isNotEmpty ? fullName[0].toUpperCase() : 'A',
-                  style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700),
+              InkWell(
+                onTap: onProfileTap,
+                borderRadius: BorderRadius.circular(10),
+                child: Container(
+                  width: 40,
+                  height: 40,
+                  alignment: Alignment.center,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF667EEA),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Text(
+                    fullName.isNotEmpty ? fullName[0].toUpperCase() : 'A',
+                    style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700),
+                  ),
                 ),
               ),
             ],

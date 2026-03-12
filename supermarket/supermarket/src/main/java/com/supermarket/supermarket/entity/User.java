@@ -9,6 +9,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -48,6 +49,12 @@ public class User {
     @Column(name = "id_card", length = 20)
     private String idCard;
 
+    @Column(name = "phone", length = 20)
+    private String phone;
+
+    @Column(name = "address", length = 255)
+    private String address;
+
     @Column(name = "status", length = 20)
     private String status;
 
@@ -56,6 +63,9 @@ public class User {
 
     @Column(name = "last_login")
     private LocalDateTime lastLogin;
+
+    @Column(name = "dob")
+    private LocalDate dob;
 
     @Column(name = "created_at")
     private LocalDateTime createdAt;

@@ -46,7 +46,10 @@ class _LoginPageState extends State<LoginPage> {
       if (roleName.contains('admin')) {
         Navigator.of(context).pushReplacement(
           MaterialPageRoute(
-            builder: (_) => AdminDashboardPage(fullName: result.fullName),
+            builder: (_) => AdminDashboardPage(
+              fullName: result.fullName,
+              userId: result.userId,
+            ),
           ),
         );
       } else {

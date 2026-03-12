@@ -1,6 +1,7 @@
 package com.supermarket.supermarket.service.impl;
 
 import com.supermarket.supermarket.dto.request.CreateUserRequest;
+import com.supermarket.supermarket.dto.request.UpdateProfileRequest;
 import com.supermarket.supermarket.dto.request.UpdateUserRequest;
 import com.supermarket.supermarket.dto.response.RoleOptionResponse;
 import com.supermarket.supermarket.dto.response.UserDetailResponse;
@@ -14,8 +15,10 @@ import com.supermarket.supermarket.repository.ShiftRepository;
 import com.supermarket.supermarket.repository.UserRepository;
 import com.supermarket.supermarket.service.UserService;
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -36,6 +39,7 @@ public class UserServiceImpl implements UserService {
     private final PasswordEncoder passwordEncoder;
     private static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
     private static final DateTimeFormatter TIME_FORMATTER = DateTimeFormatter.ofPattern("HH:mm");
+    private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
     @Override
     public List<UserListItemResponse> getAllUsers() {
@@ -92,18 +96,7 @@ public class UserServiceImpl implements UserService {
         User user = userRepository.findById(userId)
             .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
 
-        return UserDetailResponse.builder()
-            .id(user.getId())
-            .fullname(user.getFullname())
-            .username(user.getUsername())
-            .email(user.getEmail())
-            .role(user.getRole() == null ? "UNKNOWN" : user.getRole().getName())
-            .idCard(user.getIdCard())
-            .status(user.getStatus())
-            .avatar(user.getAvatar())
-            .lastLogin(formatDateTime(user.getLastLogin()))
-            .schedule(buildSchedule(user.getId()))
-            .build();
+        return toUserDetailResponse(user);
     }
 
     @Override
@@ -158,6 +151,29 @@ public class UserServiceImpl implements UserService {
         return toUserListItemResponse(updated);
     }
 
+    @Override
+    public UserDetailResponse updateProfile(Integer userId, UpdateProfileRequest request) {
+        User existing = userRepository.findById(userId)
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
+
+        String email = request.getEmail().trim();
+        String existingEmail = existing.getEmail() == null ? "" : existing.getEmail();
+        if (userRepository.existsByEmailIgnoreCase(email) && !existingEmail.equalsIgnoreCase(email)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Email already exists");
+        }
+
+        existing.setFullname(request.getFullname().trim());
+        existing.setEmail(email);
+        existing.setIdCard(normalizeOptionalText(request.getIdCard()));
+        existing.setPhone(normalizeOptionalText(request.getPhone()));
+        existing.setAddress(normalizeOptionalText(request.getAddress()));
+        existing.setDob(parseDob(request.getDob()));
+        existing.setUpdatedAt(LocalDateTime.now());
+
+        User updated = userRepository.save(existing);
+        return toUserDetailResponse(updated);
+    }
+
     private UserListItemResponse toUserListItemResponse(User user) {
         return UserListItemResponse.builder()
             .id(user.getId())
@@ -167,6 +183,24 @@ public class UserServiceImpl implements UserService {
             .role(user.getRole() == null ? "UNKNOWN" : user.getRole().getName())
             .status(user.getStatus())
             .idCard(user.getIdCard())
+            .build();
+    }
+
+    private UserDetailResponse toUserDetailResponse(User user) {
+        return UserDetailResponse.builder()
+            .id(user.getId())
+            .fullname(user.getFullname())
+            .username(user.getUsername())
+            .email(user.getEmail())
+            .role(user.getRole() == null ? "UNKNOWN" : user.getRole().getName())
+            .idCard(user.getIdCard())
+            .phone(user.getPhone())
+            .address(user.getAddress())
+            .status(user.getStatus())
+            .avatar(user.getAvatar())
+            .lastLogin(formatDateTime(user.getLastLogin()))
+            .dob(formatDate(user.getDob()))
+            .schedule(buildSchedule(user.getId()))
             .build();
     }
 
@@ -251,5 +285,21 @@ public class UserServiceImpl implements UserService {
 
     private String formatMoney(BigDecimal amount) {
         return amount == null ? "—" : amount.stripTrailingZeros().toPlainString();
+    }
+
+    private String formatDate(LocalDate date) {
+        return date == null ? "" : date.format(DATE_FORMATTER);
+    }
+
+    private LocalDate parseDob(String dob) {
+        String normalized = normalizeOptionalText(dob);
+        if (normalized == null) {
+            return null;
+        }
+        try {
+            return LocalDate.parse(normalized, DATE_FORMATTER);
+        } catch (DateTimeParseException ex) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "DOB must be yyyy-MM-dd");
+        }
     }
 }
