@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:supermarket_manager_system/data/services/user_api_service.dart';
 import 'package:supermarket_manager_system/domain/models/user_detail.dart';
+import 'package:supermarket_manager_system/presentation/pages/login_page.dart';
 import 'package:supermarket_manager_system/presentation/pages/users_page.dart';
 
 enum _AdminTab { dashboard, users, profile, profileEdit }
@@ -71,6 +72,37 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
     });
   }
 
+  Future<void> _logout() async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) {
+        return AlertDialog(
+          title: const Text('Logout'),
+          content: const Text('Are you sure you want to logout?'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(false),
+              child: const Text('Cancel'),
+            ),
+            ElevatedButton(
+              onPressed: () => Navigator.of(dialogContext).pop(true),
+              child: const Text('OK'),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (confirmed != true || !mounted) {
+      return;
+    }
+
+    Navigator.of(context).pushAndRemoveUntil(
+      MaterialPageRoute(builder: (_) => const LoginPage()),
+      (route) => false,
+    );
+  }
+
   String _formatClock(DateTime dateTime) {
     final hour12 = dateTime.hour % 12 == 0 ? 12 : dateTime.hour % 12;
     final minute = dateTime.minute.toString().padLeft(2, '0');
@@ -92,6 +124,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                   child: _SidebarMenu(
                     selectedTab: _selectedTab,
                     onSelectTab: _selectTab,
+                    onLogout: _logout,
                   ),
                 )
               : null,
@@ -103,6 +136,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                   child: _SidebarMenu(
                     selectedTab: _selectedTab,
                     onSelectTab: _selectTab,
+                    onLogout: _logout,
                   ),
                 ),
               Expanded(
@@ -148,10 +182,12 @@ class _SidebarMenu extends StatelessWidget {
   const _SidebarMenu({
     required this.selectedTab,
     required this.onSelectTab,
+    required this.onLogout,
   });
 
   final _AdminTab selectedTab;
   final ValueChanged<_AdminTab> onSelectTab;
+  final VoidCallback onLogout;
 
   @override
   Widget build(BuildContext context) {
@@ -214,7 +250,10 @@ class _SidebarMenu extends StatelessWidget {
             ),
           ),
           const Divider(color: Color.fromRGBO(255, 255, 255, 0.25), height: 1),
-          const _SidebarItem(label: 'Logout'),
+          _SidebarItem(
+            label: 'Logout',
+            onTap: onLogout,
+          ),
           const SizedBox(height: 12),
         ],
       ),
