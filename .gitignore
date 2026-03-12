@@ -1,0 +1,67 @@
+# ------------------------------
+# OS / machine-specific files
+# ------------------------------
+.DS_Store
+Thumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# ------------------------------
+# Editor / IDE local settings
+# ------------------------------
+.idea/
+.vscode/
+*.iml
+*.ipr
+*.iws
+
+# Cursor local metadata
+.cursor/
+
+# ------------------------------
+# Environment / local secrets
+# ------------------------------
+.env
+.env.*
+*.local
+
+# ------------------------------
+# Logs
+# ------------------------------
+*.log
+logs/
+
+# ------------------------------
+# Java / Spring Boot (backend)
+# ------------------------------
+**/target/
+**/.mvn/wrapper/maven-wrapper.jar
+
+# Optional local Spring config (keep real values out of git)
+**/application-local.properties
+**/application-dev.properties
+
+# ------------------------------
+# Flutter / Dart (frontend)
+# ------------------------------
+**/.dart_tool/
+**/.packages
+**/.flutter-plugins
+**/.flutter-plugins-dependencies
+**/.metadata
+**/build/
+
+# Flutter platform generated folders
+**/android/.gradle/
+**/android/local.properties
+**/ios/Pods/
+**/ios/Flutter/ephemeral/
+**/ios/Flutter/Generated.xcconfig
+**/ios/Flutter/flutter_export_environment.sh
+**/linux/flutter/ephemeral/
+**/macos/Flutter/ephemeral/
+**/windows/flutter/ephemeral/
+
+# Coverage and test artifacts
+**/coverage/
+
