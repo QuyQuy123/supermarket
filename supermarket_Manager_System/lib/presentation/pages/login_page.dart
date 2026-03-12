@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:supermarket_manager_system/data/services/auth_api_service.dart';
-import 'package:supermarket_manager_system/presentation/pages/admin_dashboard_page.dart';
-import 'package:supermarket_manager_system/presentation/pages/role_home_page.dart';
+import 'package:supermarket_manager_system/utils/app_session.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -43,24 +43,15 @@ class _LoginPageState extends State<LoginPage> {
       }
 
       final roleName = result.role.toLowerCase();
+      AppSession.instance.setLogin(
+        userId: result.userId,
+        fullName: result.fullName,
+        role: result.role,
+      );
       if (roleName.contains('admin')) {
-        Navigator.of(context).pushReplacement(
-          MaterialPageRoute(
-            builder: (_) => AdminDashboardPage(
-              fullName: result.fullName,
-              userId: result.userId,
-            ),
-          ),
-        );
+        context.go('/admin/dashboard');
       } else {
-        Navigator.of(context).pushReplacement(
-          MaterialPageRoute(
-            builder: (_) => RoleHomePage(
-              role: result.role,
-              fullName: result.fullName,
-            ),
-          ),
-        );
+        context.go('/role-home');
       }
     } catch (error) {
       if (!mounted) {

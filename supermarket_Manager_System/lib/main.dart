@@ -1,23 +1,134 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_web_plugins/url_strategy.dart';
+import 'package:go_router/go_router.dart';
+import 'package:supermarket_manager_system/presentation/pages/admin_dashboard_page.dart';
 import 'package:supermarket_manager_system/presentation/pages/login_page.dart';
+import 'package:supermarket_manager_system/presentation/pages/role_home_page.dart';
+import 'package:supermarket_manager_system/utils/app_session.dart';
 
 void main() {
+  usePathUrlStrategy();
   runApp(const SupermarketManagerApp());
 }
 
 class SupermarketManagerApp extends StatelessWidget {
   const SupermarketManagerApp({super.key});
 
+  static final GoRouter _router = GoRouter(
+    initialLocation: '/login',
+    refreshListenable: AppSession.instance,
+    redirect: (context, state) {
+      final path = state.uri.path;
+      final isLoggedIn = AppSession.instance.isLoggedIn;
+      final isLogin = path == '/login' || path == '/';
+
+      if (!isLoggedIn && !isLogin) {
+        return '/login';
+      }
+      if (isLoggedIn && isLogin) {
+        final role = AppSession.instance.role.toLowerCase();
+        if (role.contains('admin')) {
+          return '/admin/dashboard';
+        }
+        return '/role-home';
+      }
+      return null;
+    },
+    routes: [
+      GoRoute(
+        path: '/',
+        redirect: (context, state) => '/login',
+      ),
+      GoRoute(
+        path: '/login',
+        builder: (context, state) => const LoginPage(),
+      ),
+      GoRoute(
+        path: '/admin',
+        redirect: (context, state) => '/admin/dashboard',
+      ),
+      GoRoute(
+        path: '/admin/:section',
+        pageBuilder: (context, state) => NoTransitionPage(
+          key: const ValueKey('admin-shell'),
+          child: _buildAdminPage(
+            context: context,
+            initialTabKey: _resolveAdminTabKey(state),
+          ),
+        ),
+      ),
+      GoRoute(
+        path: '/admin/:section/:subSection',
+        pageBuilder: (context, state) => NoTransitionPage(
+          key: const ValueKey('admin-shell'),
+          child: _buildAdminPage(
+            context: context,
+            initialTabKey: _resolveAdminTabKey(state),
+          ),
+        ),
+      ),
+      GoRoute(
+        path: '/role-home',
+        builder: (context, state) {
+          return RoleHomePage(
+            role: AppSession.instance.role,
+            fullName: AppSession.instance.fullName,
+          );
+        },
+      ),
+    ],
+  );
+
+  static Widget _buildAdminPage({
+    required BuildContext context,
+    required String initialTabKey,
+  }) {
+    final userId = AppSession.instance.userId;
+    final fullName = AppSession.instance.fullName;
+    if (userId == null) {
+      return const LoginPage();
+    }
+    return AdminDashboardPage(
+      key: const ValueKey('admin-dashboard-shell'),
+      fullName: fullName,
+      userId: userId,
+      initialTabKey: initialTabKey,
+      onNavigatePath: (path) {
+        context.go(path);
+      },
+      onLogoutRequested: () {
+        AppSession.instance.clear();
+        context.go('/login');
+      },
+    );
+  }
+
+  static String _resolveAdminTabKey(GoRouterState state) {
+    final section = state.pathParameters['section'] ?? 'dashboard';
+    final subSection = state.pathParameters['subSection'];
+
+    if (section == 'users') {
+      return 'users';
+    }
+    if (section == 'profile' && subSection == 'edit') {
+      return 'profile-edit';
+    }
+    if (section == 'profile') {
+      return 'profile';
+    }
+    return 'dashboard';
+  }
+
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
+    return MaterialApp.router(
       debugShowCheckedModeBanner: false,
       title: 'Supermarket Manager',
       theme: ThemeData(
         scaffoldBackgroundColor: Colors.white,
         fontFamily: 'Segoe UI',
       ),
-      home: const LoginPage(),
+      routerConfig: _router,
     );
   }
 }

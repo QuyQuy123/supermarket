@@ -13,10 +13,16 @@ class AdminDashboardPage extends StatefulWidget {
     super.key,
     required this.fullName,
     required this.userId,
+    required this.initialTabKey,
+    this.onNavigatePath,
+    this.onLogoutRequested,
   });
 
   final String fullName;
   final int userId;
+  final String initialTabKey;
+  final ValueChanged<String>? onNavigatePath;
+  final VoidCallback? onLogoutRequested;
 
   @override
   State<AdminDashboardPage> createState() => _AdminDashboardPageState();
@@ -28,9 +34,28 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
   late DateTime _now;
   Timer? _clockTimer;
 
+  _AdminTab _tabFromKey(String key) {
+    return switch (key) {
+      'users' => _AdminTab.users,
+      'profile' => _AdminTab.profile,
+      'profile-edit' => _AdminTab.profileEdit,
+      _ => _AdminTab.dashboard,
+    };
+  }
+
+  String _pathForTab(_AdminTab tab) {
+    return switch (tab) {
+      _AdminTab.dashboard => '/admin/dashboard',
+      _AdminTab.users => '/admin/users',
+      _AdminTab.profile => '/admin/profile',
+      _AdminTab.profileEdit => '/admin/profile/edit',
+    };
+  }
+
   @override
   void initState() {
     super.initState();
+    _selectedTab = _tabFromKey(widget.initialTabKey);
     _now = DateTime.now();
     _clockTimer = Timer.periodic(const Duration(seconds: 1), (_) {
       if (!mounted) {
@@ -41,13 +66,24 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
   }
 
   @override
+  void didUpdateWidget(covariant AdminDashboardPage oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.initialTabKey != oldWidget.initialTabKey) {
+      _selectedTab = _tabFromKey(widget.initialTabKey);
+    }
+  }
+
+  @override
   void dispose() {
     _clockTimer?.cancel();
     super.dispose();
   }
 
-  void _selectTab(_AdminTab tab) {
+  void _selectTab(_AdminTab tab, {bool notifyRouter = true}) {
     setState(() => _selectedTab = tab);
+    if (notifyRouter) {
+      widget.onNavigatePath?.call(_pathForTab(tab));
+    }
     final isCompact = MediaQuery.sizeOf(context).width < 1024;
     if (isCompact) {
       Navigator.of(context).maybePop();
@@ -59,6 +95,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
       _editingProfile = detail;
       _selectedTab = _AdminTab.profileEdit;
     });
+    widget.onNavigatePath?.call(_pathForTab(_AdminTab.profileEdit));
     final isCompact = MediaQuery.sizeOf(context).width < 1024;
     if (isCompact) {
       Navigator.of(context).maybePop();
@@ -70,6 +107,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
       _editingProfile = detail;
       _selectedTab = _AdminTab.profile;
     });
+    widget.onNavigatePath?.call(_pathForTab(_AdminTab.profile));
   }
 
   Future<void> _logout() async {
@@ -94,6 +132,11 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
     );
 
     if (confirmed != true || !mounted) {
+      return;
+    }
+
+    if (widget.onLogoutRequested != null) {
+      widget.onLogoutRequested!();
       return;
     }
 
