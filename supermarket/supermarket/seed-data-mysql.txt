@@ -1,3 +1,4 @@
+--set data
 -- Seed data for MySQL database: supermarket
 -- Each table has 5 rows.
 -- Run on empty database to avoid duplicate primary key errors.
