@@ -50,6 +50,8 @@ class _LoginPageState extends State<LoginPage> {
       );
       if (roleName.contains('admin')) {
         context.go('/admin/dashboard');
+      } else if (roleName.contains('manager')) {
+        context.go('/manager/dashboard');
       } else {
         context.go('/role-home');
       }

@@ -1,9 +1,11 @@
+// ignore_for_file: unused_element, unused_element_parameter
+
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:supermarket_manager_system/data/services/user_api_service.dart';
 import 'package:supermarket_manager_system/domain/models/user_detail.dart';
 import 'package:supermarket_manager_system/presentation/pages/login_page.dart';
+import 'package:supermarket_manager_system/presentation/pages/profile_content_page.dart';
 import 'package:supermarket_manager_system/presentation/pages/users_page.dart';
 
 enum _AdminTab { dashboard, users, profile, profileEdit }
@@ -438,117 +440,14 @@ class _ProfileContent extends StatefulWidget {
 }
 
 class _ProfileContentState extends State<_ProfileContent> {
-  final _userApiService = UserApiService();
-  late Future<UserDetail> _profileFuture;
-
-  @override
-  void initState() {
-    super.initState();
-    _profileFuture = _userApiService.getUserDetail(widget.userId);
-  }
-
-  void _reloadProfile() {
-    setState(() => _profileFuture = _userApiService.getUserDetail(widget.userId));
-  }
-
   @override
   Widget build(BuildContext context) {
-    return Container(
-      color: const Color(0xFFF0F2F5),
-      child: FutureBuilder<UserDetail>(
-        future: _profileFuture,
-        builder: (context, snapshot) {
-          final detail = snapshot.data;
-          final displayName = detail?.fullname.trim().isNotEmpty == true
-              ? detail!.fullname
-              : widget.fullName;
-          return Column(
-            children: [
-              _ProfileHeader(
-                fullName: displayName,
-                isCompact: widget.isCompact,
-                currentTimeText: widget.currentTimeText,
-              ),
-              Expanded(
-                child: Builder(
-                  builder: (context) {
-                    if (snapshot.connectionState == ConnectionState.waiting) {
-                      return const Center(child: CircularProgressIndicator());
-                    }
-                    if (snapshot.hasError || detail == null) {
-                      return Center(
-                        child: Padding(
-                          padding: const EdgeInsets.all(24),
-                          child: Container(
-                            constraints: const BoxConstraints(maxWidth: 520),
-                            padding: const EdgeInsets.all(20),
-                            decoration: BoxDecoration(
-                              color: Colors.white,
-                              borderRadius: BorderRadius.circular(12),
-                              border: Border.all(color: const Color(0xFFE8EAED)),
-                            ),
-                            child: Column(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                const Text(
-                                  'Cannot load profile from database',
-                                  style: TextStyle(fontWeight: FontWeight.w700),
-                                ),
-                                const SizedBox(height: 10),
-                                Text(
-                                  '${snapshot.error}',
-                                  textAlign: TextAlign.center,
-                                  style: const TextStyle(color: Color(0xFF64748B)),
-                                ),
-                                const SizedBox(height: 14),
-                                ElevatedButton(
-                                  onPressed: _reloadProfile,
-                                  child: const Text('Retry'),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                      );
-                    }
-
-                    return SingleChildScrollView(
-                      padding: const EdgeInsets.all(24),
-                      child: LayoutBuilder(
-                        builder: (context, constraints) {
-                          final twoColumns = constraints.maxWidth >= 980;
-                          final leftCard = _ProfileInfoCard(detail: detail);
-                          final rightCard = _ProfileSettingsCard(
-                            detail: detail,
-                            onEditProfile: () => widget.onEditProfile(detail),
-                          );
-                          if (!twoColumns) {
-                            return Column(
-                              children: [
-                                leftCard,
-                                const SizedBox(height: 16),
-                                rightCard,
-                              ],
-                            );
-                          }
-                          return Row(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Expanded(child: leftCard),
-                              const SizedBox(width: 16),
-                              Expanded(child: rightCard),
-                            ],
-                          );
-                        },
-                      ),
-                    );
-                  },
-                ),
-              ),
-            ],
-          );
-        },
-      ),
+    return ProfileViewContent(
+      fullName: widget.fullName,
+      userId: widget.userId,
+      isCompact: widget.isCompact,
+      currentTimeText: widget.currentTimeText,
+      onEditProfile: widget.onEditProfile,
     );
   }
 }
@@ -906,219 +805,15 @@ class _ProfileEditContent extends StatefulWidget {
 }
 
 class _ProfileEditContentState extends State<_ProfileEditContent> {
-  final _formKey = GlobalKey<FormState>();
-  final _userApiService = UserApiService();
-
-  late final TextEditingController _fullnameController;
-  late final TextEditingController _emailController;
-  late final TextEditingController _idCardController;
-  late final TextEditingController _phoneController;
-  late final TextEditingController _addressController;
-  late final TextEditingController _dobController;
-  bool _isSaving = false;
-  String? _errorText;
-
-  @override
-  void initState() {
-    super.initState();
-    final detail = widget.initialDetail;
-    _fullnameController = TextEditingController(text: detail?.fullname ?? '');
-    _emailController = TextEditingController(text: detail?.email ?? '');
-    _idCardController = TextEditingController(text: detail?.idCard ?? '');
-    _phoneController = TextEditingController(text: detail?.phone ?? '');
-    _addressController = TextEditingController(text: detail?.address ?? '');
-    _dobController = TextEditingController(text: detail?.dob ?? '');
-  }
-
-  @override
-  void dispose() {
-    _fullnameController.dispose();
-    _emailController.dispose();
-    _idCardController.dispose();
-    _phoneController.dispose();
-    _addressController.dispose();
-    _dobController.dispose();
-    super.dispose();
-  }
-
-  Future<void> _submit() async {
-    if (!_formKey.currentState!.validate()) {
-      return;
-    }
-    setState(() {
-      _isSaving = true;
-      _errorText = null;
-    });
-
-    try {
-      final updated = await _userApiService.updateProfile(
-        userId: widget.userId,
-        fullname: _fullnameController.text.trim(),
-        email: _emailController.text.trim(),
-        idCard: _idCardController.text.trim(),
-        phone: _phoneController.text.trim(),
-        address: _addressController.text.trim(),
-        dob: _dobController.text.trim(),
-      );
-      if (!mounted) {
-        return;
-      }
-      widget.onSaved(updated);
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Profile updated successfully')),
-      );
-    } catch (error) {
-      if (!mounted) {
-        return;
-      }
-      setState(() {
-        _errorText = error.toString().replaceFirst('Exception: ', '');
-      });
-    } finally {
-      if (mounted) {
-        setState(() => _isSaving = false);
-      }
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
-    final displayName = _fullnameController.text.trim().isEmpty
-        ? 'Administrator'
-        : _fullnameController.text.trim();
-    return Container(
-      color: const Color(0xFFF0F2F5),
-      child: Column(
-        children: [
-          _ProfileHeader(
-            fullName: displayName,
-            isCompact: widget.isCompact,
-            currentTimeText: widget.currentTimeText,
-          ),
-          Expanded(
-            child: Center(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.all(24),
-                child: ConstrainedBox(
-                  constraints: const BoxConstraints(maxWidth: 760),
-                  child: Container(
-                    padding: const EdgeInsets.all(22),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(16),
-                      border: Border.all(color: const Color(0xFFE8EAED)),
-                    ),
-                    child: Form(
-                      key: _formKey,
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Text(
-                            'Update Profile',
-                            style: TextStyle(fontSize: 22, fontWeight: FontWeight.w700),
-                          ),
-                          const SizedBox(height: 16),
-                          const _ProfileInputLabel('Fullname'),
-                          const SizedBox(height: 6),
-                          _ProfileEditableField(
-                            controller: _fullnameController,
-                            enabled: !_isSaving,
-                            validator: (value) =>
-                                (value == null || value.trim().isEmpty) ? 'Fullname is required' : null,
-                          ),
-                          const SizedBox(height: 14),
-                          const _ProfileInputLabel('Email'),
-                          const SizedBox(height: 6),
-                          _ProfileEditableField(
-                            controller: _emailController,
-                            enabled: !_isSaving,
-                            validator: (value) {
-                              if (value == null || value.trim().isEmpty) {
-                                return 'Email is required';
-                              }
-                              if (!value.contains('@')) {
-                                return 'Email is invalid';
-                              }
-                              return null;
-                            },
-                          ),
-                          const SizedBox(height: 14),
-                          const _ProfileInputLabel('ID Card Number'),
-                          const SizedBox(height: 6),
-                          _ProfileEditableField(
-                            controller: _idCardController,
-                            enabled: !_isSaving,
-                          ),
-                          const SizedBox(height: 14),
-                          const _ProfileInputLabel('Phone'),
-                          const SizedBox(height: 6),
-                          _ProfileEditableField(
-                            controller: _phoneController,
-                            enabled: !_isSaving,
-                          ),
-                          const SizedBox(height: 14),
-                          const _ProfileInputLabel('Date Of Birth (yyyy-MM-dd)'),
-                          const SizedBox(height: 6),
-                          _ProfileEditableField(
-                            controller: _dobController,
-                            enabled: !_isSaving,
-                            validator: (value) {
-                              if (value == null || value.trim().isEmpty) {
-                                return null;
-                              }
-                              final pattern = RegExp(r'^\d{4}-\d{2}-\d{2}$');
-                              if (!pattern.hasMatch(value.trim())) {
-                                return 'DOB must be yyyy-MM-dd';
-                              }
-                              return null;
-                            },
-                          ),
-                          const SizedBox(height: 14),
-                          const _ProfileInputLabel('Address'),
-                          const SizedBox(height: 6),
-                          _ProfileEditableField(
-                            controller: _addressController,
-                            enabled: !_isSaving,
-                            maxLines: 4,
-                          ),
-                          if (_errorText != null) ...[
-                            const SizedBox(height: 14),
-                            Text(
-                              _errorText!,
-                              style: const TextStyle(color: Color(0xFFB91C1C)),
-                            ),
-                          ],
-                          const SizedBox(height: 20),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.end,
-                            children: [
-                              TextButton(
-                                onPressed: _isSaving ? null : widget.onCancel,
-                                child: const Text('Cancel'),
-                              ),
-                              const SizedBox(width: 10),
-                              ElevatedButton(
-                                onPressed: _isSaving ? null : _submit,
-                                child: _isSaving
-                                    ? const SizedBox(
-                                        width: 16,
-                                        height: 16,
-                                        child: CircularProgressIndicator(strokeWidth: 2),
-                                      )
-                                    : const Text('Save'),
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          ),
-        ],
-      ),
+    return ProfileEditContent(
+      userId: widget.userId,
+      initialDetail: widget.initialDetail,
+      isCompact: widget.isCompact,
+      currentTimeText: widget.currentTimeText,
+      onSaved: widget.onSaved,
+      onCancel: widget.onCancel,
     );
   }
 }

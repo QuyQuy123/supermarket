@@ -7,14 +7,14 @@ SET FOREIGN_KEY_CHECKS = 0;
 INSERT INTO `roles` (`id`, `name`) VALUES
 (1, 'ADMIN'),
 (2, 'MANAGER'),
-(3, 'CASHIER'),
+(3, 'CASHIER');
 
 
 INSERT INTO `users` (`id`, `username`, `password_hash`, `fullname`, `email`, `role_id`, `id_card`, `status`, `avatar`, `last_login`, `created_at`, `updated_at`) VALUES
 (1, 'admin01', '$2b$10$3IeAXThdO4cx2s/i98bMUup.wWgpC59R8CyU6VbqKQr4YX8m6AVKa', 'Admin One', 'admin01@supermarket.com', 1, 'ID100001', 'active', 'https://img.local/admin01.png', '2026-03-12 08:00:00', '2026-03-01 09:00:00', '2026-03-12 08:00:00'),
 (2, 'manager01', '$2b$10$Y2Hk44c1oe/Ilnmu8tc8YeuUdiE4xyil7w4erM22nPf/eFgjPk3ry', 'Manager One', 'manager01@supermarket.com', 2, 'ID100002', 'active', 'https://img.local/manager01.png', '2026-03-12 08:10:00', '2026-03-01 09:05:00', '2026-03-12 08:10:00'),
 (3, 'cashier01', '$2b$10$Tr4V2Gv3IWpQHLIC1XOAUuBERo1M3ngwb.E7jqu.KY32YdQ71BgBu', 'Cashier One', 'cashier01@supermarket.com', 3, 'ID100003', 'active', 'https://img.local/cashier01.png', '2026-03-12 08:20:00', '2026-03-01 09:10:00', '2026-03-12 08:20:00'),
-(4, 'cashier02', '$2b$10$liGc6O5gtJXdpBXtH9V6ke/r5UYKFijbW2K713sWht6EaACIZrIw.', 'Cashier Two', 'cashier02@supermarket.com', 3, 'ID100004', 'active', 'https://img.local/cashier02.png', '2026-03-12 08:30:00', '2026-03-01 09:15:00', '2026-03-12 08:30:00'),
+(4, 'cashier02', '$2b$10$liGc6O5gtJXdpBXtH9V6ke/r5UYKFijbW2K713sWht6EaACIZrIw.', 'Cashier Two', 'cashier02@supermarket.com', 3, 'ID100004', 'active', 'https://img.local/cashier02.png', '2026-03-12 08:30:00', '2026-03-01 09:15:00', '2026-03-12 08:30:00');
 
 
 INSERT INTO `discounts` (`id`, `name`, `percent`, `min_order_amount`, `start_date`, `end_date`, `created_at`, `updated_at`) VALUES

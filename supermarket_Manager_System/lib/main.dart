@@ -3,6 +3,7 @@ import 'package:flutter_web_plugins/url_strategy.dart';
 import 'package:go_router/go_router.dart';
 import 'package:supermarket_manager_system/presentation/pages/admin_dashboard_page.dart';
 import 'package:supermarket_manager_system/presentation/pages/login_page.dart';
+import 'package:supermarket_manager_system/presentation/pages/manager_dashboard_page.dart';
 import 'package:supermarket_manager_system/presentation/pages/role_home_page.dart';
 import 'package:supermarket_manager_system/utils/app_session.dart';
 
@@ -29,6 +30,9 @@ class SupermarketManagerApp extends StatelessWidget {
         final role = AppSession.instance.role.toLowerCase();
         if (role.contains('admin')) {
           return '/admin/dashboard';
+        }
+        if (role.contains('manager')) {
+          return '/manager/dashboard';
         }
         return '/role-home';
       }
@@ -76,6 +80,30 @@ class SupermarketManagerApp extends StatelessWidget {
           );
         },
       ),
+      GoRoute(
+        path: '/manager',
+        redirect: (context, state) => '/manager/dashboard',
+      ),
+      GoRoute(
+        path: '/manager/:section',
+        pageBuilder: (context, state) => NoTransitionPage(
+          key: const ValueKey('manager-dashboard'),
+          child: _buildManagerPage(
+            context: context,
+            initialTabKey: _resolveManagerTabKey(state),
+          ),
+        ),
+      ),
+      GoRoute(
+        path: '/manager/:section/:subSection',
+        pageBuilder: (context, state) => NoTransitionPage(
+          key: const ValueKey('manager-dashboard'),
+          child: _buildManagerPage(
+            context: context,
+            initialTabKey: _resolveManagerTabKey(state),
+          ),
+        ),
+      ),
     ],
   );
 
@@ -110,6 +138,39 @@ class SupermarketManagerApp extends StatelessWidget {
     if (section == 'users') {
       return 'users';
     }
+    if (section == 'profile' && subSection == 'edit') {
+      return 'profile-edit';
+    }
+    if (section == 'profile') {
+      return 'profile';
+    }
+    return 'dashboard';
+  }
+
+  static Widget _buildManagerPage({
+    required BuildContext context,
+    required String initialTabKey,
+  }) {
+    final userId = AppSession.instance.userId;
+    if (userId == null) {
+      return const LoginPage();
+    }
+    return ManagerDashboardPage(
+      key: const ValueKey('manager-dashboard-shell'),
+      fullName: AppSession.instance.fullName,
+      userId: userId,
+      initialTabKey: initialTabKey,
+      onNavigatePath: (path) => context.go(path),
+      onLogoutRequested: () {
+        AppSession.instance.clear();
+        context.go('/login');
+      },
+    );
+  }
+
+  static String _resolveManagerTabKey(GoRouterState state) {
+    final section = state.pathParameters['section'] ?? 'dashboard';
+    final subSection = state.pathParameters['subSection'];
     if (section == 'profile' && subSection == 'edit') {
       return 'profile-edit';
     }
