@@ -45,10 +45,13 @@ class _LoginPageState extends State<LoginPage> {
       final roleName = result.role.toLowerCase();
       AppSession.instance.setLogin(
         userId: result.userId,
+        roleId: result.roleId,
         fullName: result.fullName,
         role: result.role,
       );
-      if (roleName.contains('admin')) {
+      if (result.roleId == 3 || roleName.contains('cashier')) {
+        context.go('/cashier/open-shift');
+      } else if (roleName.contains('admin')) {
         context.go('/admin/dashboard');
       } else if (roleName.contains('manager')) {
         context.go('/manager/dashboard');

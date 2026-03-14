@@ -54,6 +54,7 @@ public class AuthServiceImpl implements AuthService {
             .success(true)
             .message("Login successful")
             .userId(user.getId())
+            .roleId(user.getRole() == null ? null : user.getRole().getId())
             .username(user.getUsername())
             .fullName(user.getFullname())
             .role(roleName)
@@ -92,7 +93,7 @@ public class AuthServiceImpl implements AuthService {
             return "/manager/dashboard";
         }
         if (normalized.contains("cashier")) {
-            return "/cashier/home";
+            return "/cashier/open-shift";
         }
         return "/home";
     }
