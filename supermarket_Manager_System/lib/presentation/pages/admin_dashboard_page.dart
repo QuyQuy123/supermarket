@@ -8,6 +8,7 @@ import 'package:supermarket_manager_system/presentation/pages/login_page.dart';
 import 'package:supermarket_manager_system/presentation/pages/orders_page.dart';
 import 'package:supermarket_manager_system/presentation/pages/profile_content_page.dart';
 import 'package:supermarket_manager_system/presentation/pages/users_page.dart';
+import 'package:supermarket_manager_system/presentation/widgets/change_password_dialog.dart';
 
 enum _AdminTab { dashboard, users, orders, profile, profileEdit }
 
@@ -775,16 +776,25 @@ class _ProfileSettingsCard extends StatelessWidget {
               ),
               const SizedBox(width: 12),
               Expanded(
-                child: Container(
-                  padding: const EdgeInsets.symmetric(vertical: 11),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF6B7280),
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: const Center(
-                    child: Text(
-                      'Change Password',
-                      style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700),
+                child: InkWell(
+                  onTap: () {
+                    showDialog(
+                      context: context,
+                      builder: (_) => ChangePasswordDialog(userId: detail.id),
+                    );
+                  },
+                  borderRadius: BorderRadius.circular(10),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(vertical: 11),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF6B7280),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: const Center(
+                      child: Text(
+                        'Change Password',
+                        style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700),
+                      ),
                     ),
                   ),
                 ),

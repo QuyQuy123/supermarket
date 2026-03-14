@@ -83,7 +83,10 @@ class _UsersContentState extends State<UsersContent> {
                       children: [
                         const Text(
                           'User Information',
-                          style: TextStyle(fontSize: 28, fontWeight: FontWeight.w700),
+                          style: TextStyle(
+                            fontSize: 28,
+                            fontWeight: FontWeight.w700,
+                          ),
                         ),
                         DecoratedBox(
                           decoration: BoxDecoration(
@@ -96,7 +99,10 @@ class _UsersContentState extends State<UsersContent> {
                             onPressed: _openAddUserDialog,
                             child: const Text(
                               '+ Add User',
-                              style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.w600,
+                              ),
                             ),
                           ),
                         ),
@@ -108,8 +114,11 @@ class _UsersContentState extends State<UsersContent> {
                         ? FutureBuilder<List<UserListItem>>(
                             future: _usersFuture,
                             builder: (context, snapshot) {
-                              if (snapshot.connectionState == ConnectionState.waiting) {
-                                return const Center(child: CircularProgressIndicator());
+                              if (snapshot.connectionState ==
+                                  ConnectionState.waiting) {
+                                return const Center(
+                                  child: CircularProgressIndicator(),
+                                );
                               }
                               if (snapshot.hasError) {
                                 return Center(
@@ -135,21 +144,31 @@ class _UsersContentState extends State<UsersContent> {
                                 decoration: BoxDecoration(
                                   color: Colors.white,
                                   borderRadius: BorderRadius.circular(12),
-                                  border: Border.all(color: const Color(0xFFE8EAED)),
+                                  border: Border.all(
+                                    color: const Color(0xFFE8EAED),
+                                  ),
                                 ),
                                 child: SingleChildScrollView(
                                   scrollDirection: Axis.horizontal,
                                   child: DataTable(
                                     horizontalMargin: 20,
                                     columnSpacing: 38,
-                                    headingRowColor: const WidgetStatePropertyAll(Color(0xFFF7F8FA)),
+                                    headingRowColor:
+                                        const WidgetStatePropertyAll(
+                                          Color(0xFFF7F8FA),
+                                        ),
                                     headingTextStyle: const TextStyle(
                                       fontWeight: FontWeight.w700,
                                       color: Color(0xFF4A5568),
                                       fontSize: 12,
                                     ),
                                     columns: const [
-                                      DataColumn(label: SizedBox(width: 28, child: Text('S/N'))),
+                                      DataColumn(
+                                        label: SizedBox(
+                                          width: 28,
+                                          child: Text('S/N'),
+                                        ),
+                                      ),
                                       DataColumn(label: Text('NAME')),
                                       DataColumn(label: Text('USERNAME')),
                                       DataColumn(label: Text('E-MAIL')),
@@ -161,7 +180,12 @@ class _UsersContentState extends State<UsersContent> {
                                     rows: users
                                         .asMap()
                                         .entries
-                                        .map((entry) => _buildRow(entry.key + 1, entry.value))
+                                        .map(
+                                          (entry) => _buildRow(
+                                            entry.key + 1,
+                                            entry.value,
+                                          ),
+                                        )
                                         .toList(),
                                   ),
                                 ),
@@ -170,7 +194,8 @@ class _UsersContentState extends State<UsersContent> {
                           )
                         : UserDetailContent(
                             userId: _selectedUserId!,
-                            onBack: () => setState(() => _selectedUserId = null),
+                            onBack: () =>
+                                setState(() => _selectedUserId = null),
                           ),
                   ),
                 ],
@@ -195,7 +220,19 @@ class _UsersContentState extends State<UsersContent> {
             ),
           ),
         ),
-        DataCell(Text(user.username)),
+        DataCell(
+          InkWell(
+            onTap: () => _openUserDetails(user.id),
+            child: Text(
+              user.username,
+              style: const TextStyle(
+                color: Color(0xFF667EEA),
+                fontWeight: FontWeight.w600,
+                decoration: TextDecoration.underline,
+              ),
+            ),
+          ),
+        ),
         DataCell(Text(user.email)),
         DataCell(_RoleBadge(role: user.role)),
         DataCell(_StatusBadge(status: user.status)),
@@ -241,10 +278,8 @@ class _UsersContentState extends State<UsersContent> {
     final updated = await showDialog<bool>(
       context: context,
       barrierDismissible: false,
-      builder: (_) => _EditUserDialog(
-        userApiService: _userApiService,
-        user: user,
-      ),
+      builder: (_) =>
+          _EditUserDialog(userApiService: _userApiService, user: user),
     );
 
     if (!mounted) {
@@ -275,7 +310,8 @@ class _UsersContentState extends State<UsersContent> {
               child: const Text('Cancel'),
             ),
             ElevatedButton(
-              onPressed: () => Navigator.of(dialogContext).pop(true),
+              onPressed: () =>
+                  Navigator.of(dialogContext, rootNavigator: true).pop(true),
               child: const Text('OK'),
             ),
           ],
@@ -308,7 +344,9 @@ class _UsersContentState extends State<UsersContent> {
         return;
       }
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(error.toString().replaceFirst('Exception: ', ''))),
+        SnackBar(
+          content: Text(error.toString().replaceFirst('Exception: ', '')),
+        ),
       );
     } finally {
       if (mounted) {
@@ -317,7 +355,8 @@ class _UsersContentState extends State<UsersContent> {
     }
   }
 
-  bool _isActiveStatus(String status) => status.trim().toLowerCase() == 'active';
+  bool _isActiveStatus(String status) =>
+      status.trim().toLowerCase() == 'active';
 }
 
 class _UsersHeader extends StatelessWidget {
@@ -357,12 +396,18 @@ class _UsersHeader extends StatelessWidget {
           Row(
             children: [
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 8,
+                ),
                 decoration: BoxDecoration(
                   color: const Color(0xFF667EEA),
                   borderRadius: BorderRadius.circular(8),
                 ),
-                child: Text(currentTimeText, style: const TextStyle(color: Colors.white)),
+                child: Text(
+                  currentTimeText,
+                  style: const TextStyle(color: Colors.white),
+                ),
               ),
               const SizedBox(width: 16),
               Column(
@@ -390,7 +435,10 @@ class _UsersHeader extends StatelessWidget {
                   ),
                   child: Text(
                     fullName.isNotEmpty ? fullName[0].toUpperCase() : 'A',
-                    style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700),
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w700,
+                    ),
                   ),
                 ),
               ),
@@ -580,8 +628,14 @@ class _AddUserDialogState extends State<_AddUserDialog> {
       }
       Navigator.of(context).pop(true);
     } catch (error) {
+      String errorMessage = error.toString().replaceFirst('Exception: ', '');
+      if (errorMessage.toLowerCase().contains('duplicate') ||
+          errorMessage.toLowerCase().contains('already exists') ||
+          errorMessage.toLowerCase().contains('unique')) {
+        errorMessage = 'Account already exists.';
+      }
       setState(() {
-        _errorText = error.toString().replaceFirst('Exception: ', '');
+        _errorText = errorMessage;
       });
     } finally {
       if (mounted) {
@@ -600,7 +654,7 @@ class _AddUserDialogState extends State<_AddUserDialog> {
         child: Container(
           decoration: BoxDecoration(
             color: Colors.white,
-            borderRadius: BorderRadius.circular(18),
+            borderRadius: BorderRadius.circular(12),
             boxShadow: const [
               BoxShadow(
                 color: Color(0x330F172A),
@@ -609,69 +663,59 @@ class _AddUserDialogState extends State<_AddUserDialog> {
               ),
             ],
           ),
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(18),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Container(
-                  padding: const EdgeInsets.fromLTRB(22, 16, 10, 16),
-                  decoration: const BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [Color(0xFF667EEA), Color(0xFF764BA2)],
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                padding: const EdgeInsets.fromLTRB(24, 24, 24, 16),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Text(
+                      'Create User Account',
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.w700,
+                        color: Color(0xFF1F2937),
+                      ),
                     ),
-                  ),
-                  child: Row(
-                    children: [
-                      Container(
-                        width: 36,
-                        height: 36,
-                        decoration: const BoxDecoration(
-                          color: Color(0x33FFFFFF),
-                          shape: BoxShape.circle,
-                        ),
-                        child: const Icon(Icons.person_add_alt_1, color: Colors.white),
+                    IconButton(
+                      onPressed: _isSubmitting
+                          ? null
+                          : () => Navigator.of(context).pop(false),
+                      icon: const Icon(
+                        Icons.close,
+                        color: Color(0xFF6B7280),
+                        size: 20,
                       ),
-                      const SizedBox(width: 12),
-                      const Expanded(
-                        child: Text(
-                          'Create User Account',
-                          style: TextStyle(
-                            fontSize: 21,
-                            fontWeight: FontWeight.w700,
-                            color: Colors.white,
-                          ),
-                        ),
-                      ),
-                      IconButton(
-                        onPressed: _isSubmitting ? null : () => Navigator.of(context).pop(false),
-                        icon: const Icon(Icons.close, color: Colors.white),
-                        style: IconButton.styleFrom(
-                          backgroundColor: const Color(0x33FFFFFF),
-                        ),
-                      ),
-                    ],
-                  ),
+                      padding: EdgeInsets.zero,
+                      constraints: const BoxConstraints(),
+                    ),
+                  ],
                 ),
-                Flexible(
-                  child: SingleChildScrollView(
-                    padding: const EdgeInsets.fromLTRB(24, 20, 24, 16),
-                    child: Form(
-                      key: _formKey,
-                      child: Column(
-                        children: [
-                          _buildSectionTitle('Basic Information'),
+              ),
+              const Divider(height: 1, color: Color(0xFFF3F4F6)),
+              SingleChildScrollView(
+                padding: const EdgeInsets.fromLTRB(24, 20, 24, 16),
+                child: Form(
+                  key: _formKey,
+                  child: Column(
+                    children: [
                       _buildTextField(
                         controller: _fullnameController,
                         label: 'Fullname',
                         hint: 'Enter name',
-                        validator: (v) => (v == null || v.trim().isEmpty) ? 'Fullname is required' : null,
+                        validator: (v) => (v == null || v.trim().isEmpty)
+                            ? 'Fullname is required'
+                            : null,
                       ),
                       _buildTextField(
                         controller: _usernameController,
                         label: 'Username',
-                        hint: 'Enter username',
-                        validator: (v) => (v == null || v.trim().isEmpty) ? 'Username is required' : null,
+                        hint: 'Enter Username',
+                        validator: (v) => (v == null || v.trim().isEmpty)
+                            ? 'Username is required'
+                            : null,
                       ),
                       _buildTextField(
                         controller: _emailController,
@@ -683,7 +727,7 @@ class _AddUserDialogState extends State<_AddUserDialog> {
                             return 'Email is required';
                           }
                           if (!v.contains('@')) {
-                            return 'Email is invalid';
+                            return 'Email must contain @';
                           }
                           return null;
                         },
@@ -697,33 +741,83 @@ class _AddUserDialogState extends State<_AddUserDialog> {
                           if (v == null || v.isEmpty) {
                             return 'Password is required';
                           }
-                          if (v.length < 6) {
-                            return 'Password must be at least 6 characters';
+                          if (v.length < 8) {
+                            return 'Must be at least 8 characters';
+                          }
+                          if (!v.contains(RegExp(r'[A-Z]'))) {
+                            return 'Must contain at least 1 uppercase letter';
+                          }
+                          if (!v.contains(RegExp(r'[a-z]'))) {
+                            return 'Must contain at least 1 lowercase letter';
+                          }
+                          if (!v.contains(RegExp(r'[0-9]'))) {
+                            return 'Must contain at least 1 number';
+                          }
+                          if (!v.contains(RegExp(r'[!@#$%^&*(),.?":{}|<>]'))) {
+                            return 'Must contain at least 1 special character';
                           }
                           return null;
                         },
                       ),
-                      const SizedBox(height: 2),
+                      const SizedBox(height: 8),
                       Align(
                         alignment: Alignment.centerLeft,
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            Checkbox(
-                              value: _showPassword,
-                              onChanged: _isSubmitting
-                                  ? null
-                                  : (value) => setState(() => _showPassword = value ?? false),
+                            SizedBox(
+                              width: 24,
+                              height: 24,
+                              child: Checkbox(
+                                value: _showPassword,
+                                onChanged: _isSubmitting
+                                    ? null
+                                    : (value) => setState(
+                                        () => _showPassword = value ?? false,
+                                      ),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(4),
+                                ),
+                                side: const BorderSide(
+                                  color: Color(0xFF9CA3AF),
+                                ),
+                              ),
                             ),
-                            const Text('Show password'),
+                            const SizedBox(width: 8),
+                            const Text(
+                              'Show password',
+                              style: TextStyle(
+                                color: Color(0xFF6B7280),
+                                fontSize: 13,
+                              ),
+                            ),
                           ],
                         ),
                       ),
-                      const SizedBox(height: 10),
-                      _buildSectionTitle('Optional Information'),
+                      const SizedBox(height: 16),
                       _buildTextField(
                         controller: _idCardController,
-                        label: 'ID Card (optional)',
+                        labelWidget: RichText(
+                          text: const TextSpan(
+                            text: 'ID Card ',
+                            style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w700,
+                              color: Color(0xFF4B5563),
+                              fontFamily: 'Inter',
+                            ),
+                            children: [
+                              TextSpan(
+                                text: '(có thể để trống)',
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w400,
+                                  color: Color(0xFF9CA3AF),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
                         hint: 'Enter ID card (optional)',
                       ),
                       if (_isLoadingRoles)
@@ -732,22 +826,80 @@ class _AddUserDialogState extends State<_AddUserDialog> {
                           child: LinearProgressIndicator(),
                         )
                       else
-                        DropdownButtonFormField<String>(
-                          initialValue: _selectedRole.isEmpty ? null : _selectedRole,
-                          items: _roles
-                              .map(
-                                (role) => DropdownMenuItem(
-                                  value: role.name,
-                                  child: Text(_formatRoleLabel(role.name)),
+                        Padding(
+                          padding: const EdgeInsets.only(bottom: 16),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Padding(
+                                padding: EdgeInsets.only(bottom: 8),
+                                child: Text(
+                                  'User Role',
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w700,
+                                    color: Color(0xFF4B5563),
+                                  ),
                                 ),
-                              )
-                              .toList(),
-                          onChanged: (_isSubmitting || _roles.isEmpty)
-                              ? null
-                              : (value) => setState(() => _selectedRole = value ?? ''),
-                          decoration: _inputDecoration('User Role', 'Choose User Role..'),
-                          validator: (value) =>
-                              (value == null || value.isEmpty) ? 'User role is required' : null,
+                              ),
+                              DropdownButtonFormField<String>(
+                                initialValue: _selectedRole.isEmpty
+                                    ? null
+                                    : _selectedRole,
+                                items: _roles
+                                    .map(
+                                      (role) => DropdownMenuItem(
+                                        value: role.name,
+                                        child: Text(
+                                          _formatRoleLabel(role.name),
+                                        ),
+                                      ),
+                                    )
+                                    .toList(),
+                                onChanged: (_isSubmitting || _roles.isEmpty)
+                                    ? null
+                                    : (value) => setState(
+                                        () => _selectedRole = value ?? '',
+                                      ),
+                                decoration: InputDecoration(
+                                  hintText: 'Choose User Role..',
+                                  hintStyle: const TextStyle(
+                                    color: Color(0xFF9CA3AF),
+                                    fontSize: 14,
+                                  ),
+                                  filled: true,
+                                  fillColor: Colors.white,
+                                  contentPadding: const EdgeInsets.symmetric(
+                                    horizontal: 16,
+                                    vertical: 14,
+                                  ),
+                                  border: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  enabledBorder: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(8),
+                                    borderSide: const BorderSide(
+                                      color: Color(0xFFD1D5DB),
+                                    ),
+                                  ),
+                                  focusedBorder: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(8),
+                                    borderSide: const BorderSide(
+                                      color: Color(0xFF14B8A6),
+                                    ),
+                                  ),
+                                ),
+                                icon: const Icon(
+                                  Icons.keyboard_arrow_down,
+                                  color: Color(0xFF6B7280),
+                                ),
+                                validator: (value) =>
+                                    (value == null || value.isEmpty)
+                                    ? 'User role is required'
+                                    : null,
+                              ),
+                            ],
+                          ),
                         ),
                       if (_rolesErrorText != null) ...[
                         const SizedBox(height: 8),
@@ -756,7 +908,9 @@ class _AddUserDialogState extends State<_AddUserDialog> {
                             Expanded(
                               child: Text(
                                 _rolesErrorText!,
-                                style: const TextStyle(color: Color(0xFFB91C1C)),
+                                style: const TextStyle(
+                                  color: Color(0xFFB91C1C),
+                                ),
                               ),
                             ),
                             TextButton(
@@ -773,50 +927,85 @@ class _AddUserDialogState extends State<_AddUserDialog> {
                           style: const TextStyle(color: Color(0xFFB91C1C)),
                         ),
                       ],
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-                Container(
-                  padding: const EdgeInsets.fromLTRB(24, 14, 24, 18),
-                  decoration: const BoxDecoration(
-                    color: Color(0xFFFAFBFC),
-                    border: Border(top: BorderSide(color: Color(0xFFE8EAED))),
-                  ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.end,
-                    children: [
-                      TextButton(
-                        onPressed: _isSubmitting ? null : () => Navigator.of(context).pop(false),
-                        style: TextButton.styleFrom(
-                          foregroundColor: const Color(0xFFB91C1C),
-                          side: const BorderSide(color: Color(0xFFFCA5A5)),
-                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-                        ),
-                        child: const Text('Dismiss'),
-                      ),
-                      const SizedBox(width: 12),
-                      ElevatedButton(
-                        onPressed: (_isSubmitting || _isLoadingRoles || _roles.isEmpty) ? null : _submit,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFF14B8A6),
-                          foregroundColor: Colors.white,
-                          padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
-                        ),
-                        child: _isSubmitting
-                            ? const SizedBox(
-                                width: 18,
-                                height: 18,
-                                child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
-                              )
-                            : const Text('Create'),
-                      ),
                     ],
                   ),
                 ),
-              ],
-            ),
+              ),
+              Container(
+                padding: const EdgeInsets.fromLTRB(24, 16, 24, 20),
+                decoration: const BoxDecoration(
+                  color: Color(0xFFF9FAFB),
+                  borderRadius: BorderRadius.only(
+                    bottomLeft: Radius.circular(12),
+                    bottomRight: Radius.circular(12),
+                  ),
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    ElevatedButton(
+                      onPressed: _isSubmitting
+                          ? null
+                          : () => Navigator.of(context).pop(false),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(
+                          0xFFE53E3E,
+                        ), // Red to match image
+                        foregroundColor: Colors.white,
+                        elevation: 0,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 24,
+                          vertical: 14,
+                        ),
+                        textStyle: const TextStyle(
+                          fontWeight: FontWeight.w700,
+                          fontSize: 14,
+                        ),
+                      ),
+                      child: const Text('Dismiss'),
+                    ),
+                    const SizedBox(width: 12),
+                    ElevatedButton(
+                      onPressed:
+                          (_isSubmitting || _isLoadingRoles || _roles.isEmpty)
+                          ? null
+                          : _submit,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(
+                          0xFF14B8A6,
+                        ), // Teal to match image
+                        foregroundColor: Colors.white,
+                        elevation: 0,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 24,
+                          vertical: 14,
+                        ),
+                        textStyle: const TextStyle(
+                          fontWeight: FontWeight.w700,
+                          fontSize: 14,
+                        ),
+                      ),
+                      child: _isSubmitting
+                          ? const SizedBox(
+                              width: 18,
+                              height: 18,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: Colors.white,
+                              ),
+                            )
+                          : const Text('Create'),
+                    ),
+                  ],
+                ),
+              ),
+            ],
           ),
         ),
       ),
@@ -825,56 +1014,72 @@ class _AddUserDialogState extends State<_AddUserDialog> {
 
   Widget _buildTextField({
     required TextEditingController controller,
-    required String label,
+    String? label,
+    Widget? labelWidget,
     required String hint,
     String? Function(String?)? validator,
     bool obscureText = false,
     TextInputType keyboardType = TextInputType.text,
   }) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 14),
-      child: TextFormField(
-        controller: controller,
-        validator: validator,
-        obscureText: obscureText,
-        keyboardType: keyboardType,
-        enabled: !_isSubmitting,
-        decoration: _inputDecoration(label, hint),
-      ),
-    );
-  }
-
-  InputDecoration _inputDecoration(String label, String hint) {
-    return InputDecoration(
-      labelText: label,
-      hintText: hint,
-      filled: true,
-      fillColor: const Color(0xFFF8FAFC),
-      contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
-      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-      enabledBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
-        borderSide: const BorderSide(color: Color(0xFFD1D5DB)),
-      ),
-      focusedBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
-        borderSide: const BorderSide(color: Color(0xFF14B8A6)),
-      ),
-    );
-  }
-
-  Widget _buildSectionTitle(String title) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 10),
-      child: Row(
+      padding: const EdgeInsets.only(bottom: 16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            title,
-            style: const TextStyle(
-              fontSize: 13,
-              fontWeight: FontWeight.w700,
-              color: Color(0xFF475569),
-              letterSpacing: 0.2,
+          if (labelWidget != null)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 8),
+              child: labelWidget,
+            )
+          else if (label != null)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 8),
+              child: Text(
+                label,
+                style: const TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w700,
+                  color: Color(0xFF4B5563),
+                ),
+              ),
+            ),
+          TextFormField(
+            controller: controller,
+            validator: validator,
+            obscureText: obscureText,
+            keyboardType: keyboardType,
+            enabled: !_isSubmitting,
+            decoration: InputDecoration(
+              hintText: hint,
+              hintStyle: const TextStyle(
+                color: Color(0xFF9CA3AF),
+                fontSize: 14,
+              ),
+              filled: true,
+              fillColor: Colors.white,
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: 16,
+                vertical: 14,
+              ),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8),
+                borderSide: const BorderSide(color: Color(0xFFD1D5DB)),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8),
+                borderSide: const BorderSide(color: Color(0xFF14B8A6)),
+              ),
+              errorBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8),
+                borderSide: const BorderSide(color: Color(0xFFE53E3E)),
+              ),
+              focusedErrorBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8),
+                borderSide: const BorderSide(color: Color(0xFFE53E3E)),
+              ),
             ),
           ),
         ],
@@ -892,10 +1097,7 @@ class _AddUserDialogState extends State<_AddUserDialog> {
 }
 
 class _EditUserDialog extends StatefulWidget {
-  const _EditUserDialog({
-    required this.userApiService,
-    required this.user,
-  });
+  const _EditUserDialog({required this.userApiService, required this.user});
 
   final UserApiService userApiService;
   final UserListItem user;
@@ -1003,8 +1205,14 @@ class _EditUserDialogState extends State<_EditUserDialog> {
       }
       Navigator.of(context).pop(true);
     } catch (error) {
+      String errorMessage = error.toString().replaceFirst('Exception: ', '');
+      if (errorMessage.toLowerCase().contains('duplicate') ||
+          errorMessage.toLowerCase().contains('already exists') ||
+          errorMessage.toLowerCase().contains('unique')) {
+        errorMessage = 'Account already exists.';
+      }
       setState(() {
-        _errorText = error.toString().replaceFirst('Exception: ', '');
+        _errorText = errorMessage;
       });
     } finally {
       if (mounted) {
@@ -1023,7 +1231,7 @@ class _EditUserDialogState extends State<_EditUserDialog> {
         child: Container(
           decoration: BoxDecoration(
             color: Colors.white,
-            borderRadius: BorderRadius.circular(18),
+            borderRadius: BorderRadius.circular(12),
             boxShadow: const [
               BoxShadow(
                 color: Color(0x330F172A),
@@ -1032,69 +1240,62 @@ class _EditUserDialogState extends State<_EditUserDialog> {
               ),
             ],
           ),
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(18),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Container(
-                  padding: const EdgeInsets.fromLTRB(22, 16, 10, 16),
-                  decoration: const BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [Color(0xFF667EEA), Color(0xFF764BA2)],
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                padding: const EdgeInsets.fromLTRB(24, 24, 24, 16),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Text(
+                      'Update User Account',
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.w700,
+                        color: Color(0xFF1F2937),
+                      ),
                     ),
-                  ),
-                  child: Row(
-                    children: [
-                      Container(
-                        width: 36,
-                        height: 36,
-                        decoration: const BoxDecoration(
-                          color: Color(0x33FFFFFF),
-                          shape: BoxShape.circle,
-                        ),
-                        child: const Icon(Icons.edit_note, color: Colors.white),
+                    IconButton(
+                      onPressed: _isSubmitting
+                          ? null
+                          : () => Navigator.of(
+                              context,
+                              rootNavigator: true,
+                            ).pop(false),
+                      icon: const Icon(
+                        Icons.close,
+                        color: Color(0xFF6B7280),
+                        size: 20,
                       ),
-                      const SizedBox(width: 12),
-                      const Expanded(
-                        child: Text(
-                          'Update User Account',
-                          style: TextStyle(
-                            fontSize: 21,
-                            fontWeight: FontWeight.w700,
-                            color: Colors.white,
-                          ),
-                        ),
-                      ),
-                      IconButton(
-                        onPressed: _isSubmitting ? null : () => Navigator.of(context).pop(false),
-                        icon: const Icon(Icons.close, color: Colors.white),
-                        style: IconButton.styleFrom(
-                          backgroundColor: const Color(0x33FFFFFF),
-                        ),
-                      ),
-                    ],
-                  ),
+                      padding: EdgeInsets.zero,
+                      constraints: const BoxConstraints(),
+                    ),
+                  ],
                 ),
-                Flexible(
-                  child: SingleChildScrollView(
-                    padding: const EdgeInsets.fromLTRB(24, 20, 24, 16),
-                    child: Form(
-                      key: _formKey,
-                      child: Column(
-                        children: [
-                          _buildSectionTitle('Basic Information'),
+              ),
+              const Divider(height: 1, color: Color(0xFFF3F4F6)),
+              SingleChildScrollView(
+                padding: const EdgeInsets.fromLTRB(24, 20, 24, 16),
+                child: Form(
+                  key: _formKey,
+                  child: Column(
+                    children: [
                       _buildTextField(
                         controller: _fullnameController,
                         label: 'Fullname',
                         hint: 'Enter name',
-                        validator: (v) => (v == null || v.trim().isEmpty) ? 'Fullname is required' : null,
+                        validator: (v) => (v == null || v.trim().isEmpty)
+                            ? 'Fullname is required'
+                            : null,
                       ),
                       _buildTextField(
                         controller: _usernameController,
                         label: 'Username',
-                        hint: 'Enter username',
-                        validator: (v) => (v == null || v.trim().isEmpty) ? 'Username is required' : null,
+                        hint: 'Enter Username',
+                        validator: (v) => (v == null || v.trim().isEmpty)
+                            ? 'Username is required'
+                            : null,
                       ),
                       _buildTextField(
                         controller: _emailController,
@@ -1106,47 +1307,117 @@ class _EditUserDialogState extends State<_EditUserDialog> {
                             return 'Email is required';
                           }
                           if (!v.contains('@')) {
-                            return 'Email is invalid';
+                            return 'Email must contain @';
                           }
                           return null;
                         },
                       ),
                       _buildTextField(
                         controller: _passwordController,
-                        label: 'Password (optional)',
+                        labelWidget: RichText(
+                          text: const TextSpan(
+                            text: 'Password ',
+                            style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w700,
+                              color: Color(0xFF4B5563),
+                              fontFamily: 'Inter',
+                            ),
+                            children: [
+                              TextSpan(
+                                text: '(có thể để trống)',
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w400,
+                                  color: Color(0xFF9CA3AF),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
                         hint: 'Leave blank to keep current',
                         obscureText: !_showPassword,
                         validator: (v) {
                           if (v == null || v.isEmpty) {
                             return null;
                           }
-                          if (v.length < 6) {
-                            return 'Password must be at least 6 characters';
+                          if (v.length < 8) {
+                            return 'Must be at least 8 characters';
+                          }
+                          if (!v.contains(RegExp(r'[A-Z]'))) {
+                            return 'Must contain at least 1 uppercase letter';
+                          }
+                          if (!v.contains(RegExp(r'[a-z]'))) {
+                            return 'Must contain at least 1 lowercase letter';
+                          }
+                          if (!v.contains(RegExp(r'[0-9]'))) {
+                            return 'Must contain at least 1 number';
+                          }
+                          if (!v.contains(RegExp(r'[!@#$%^&*(),.?":{}|<>]'))) {
+                            return 'Must contain at least 1 special character';
                           }
                           return null;
                         },
                       ),
-                      const SizedBox(height: 2),
+                      const SizedBox(height: 8),
                       Align(
                         alignment: Alignment.centerLeft,
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            Checkbox(
-                              value: _showPassword,
-                              onChanged: _isSubmitting
-                                  ? null
-                                  : (value) => setState(() => _showPassword = value ?? false),
+                            SizedBox(
+                              width: 24,
+                              height: 24,
+                              child: Checkbox(
+                                value: _showPassword,
+                                onChanged: _isSubmitting
+                                    ? null
+                                    : (value) => setState(
+                                        () => _showPassword = value ?? false,
+                                      ),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(4),
+                                ),
+                                side: const BorderSide(
+                                  color: Color(0xFF9CA3AF),
+                                ),
+                              ),
                             ),
-                            const Text('Show password'),
+                            const SizedBox(width: 8),
+                            const Text(
+                              'Show password',
+                              style: TextStyle(
+                                color: Color(0xFF6B7280),
+                                fontSize: 13,
+                              ),
+                            ),
                           ],
                         ),
                       ),
-                      const SizedBox(height: 10),
-                      _buildSectionTitle('Optional Information'),
+                      const SizedBox(height: 16),
                       _buildTextField(
                         controller: _idCardController,
-                        label: 'ID Card (optional)',
+                        labelWidget: RichText(
+                          text: const TextSpan(
+                            text: 'ID Card ',
+                            style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w700,
+                              color: Color(0xFF4B5563),
+                              fontFamily: 'Inter',
+                            ),
+                            children: [
+                              TextSpan(
+                                text: '(có thể để trống)',
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w400,
+                                  color: Color(0xFF9CA3AF),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
                         hint: 'Enter ID card (optional)',
                       ),
                       if (_isLoadingRoles)
@@ -1155,22 +1426,80 @@ class _EditUserDialogState extends State<_EditUserDialog> {
                           child: LinearProgressIndicator(),
                         )
                       else
-                        DropdownButtonFormField<String>(
-                          initialValue: _selectedRole.isEmpty ? null : _selectedRole,
-                          items: _roles
-                              .map(
-                                (role) => DropdownMenuItem(
-                                  value: role.name,
-                                  child: Text(_formatRoleLabel(role.name)),
+                        Padding(
+                          padding: const EdgeInsets.only(bottom: 16),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Padding(
+                                padding: EdgeInsets.only(bottom: 8),
+                                child: Text(
+                                  'User Role',
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w700,
+                                    color: Color(0xFF4B5563),
+                                  ),
                                 ),
-                              )
-                              .toList(),
-                          onChanged: (_isSubmitting || _roles.isEmpty)
-                              ? null
-                              : (value) => setState(() => _selectedRole = value ?? ''),
-                          decoration: _inputDecoration('User Role', 'Choose User Role..'),
-                          validator: (value) =>
-                              (value == null || value.isEmpty) ? 'User role is required' : null,
+                              ),
+                              DropdownButtonFormField<String>(
+                                initialValue: _selectedRole.isEmpty
+                                    ? null
+                                    : _selectedRole,
+                                items: _roles
+                                    .map(
+                                      (role) => DropdownMenuItem(
+                                        value: role.name,
+                                        child: Text(
+                                          _formatRoleLabel(role.name),
+                                        ),
+                                      ),
+                                    )
+                                    .toList(),
+                                onChanged: (_isSubmitting || _roles.isEmpty)
+                                    ? null
+                                    : (value) => setState(
+                                        () => _selectedRole = value ?? '',
+                                      ),
+                                decoration: InputDecoration(
+                                  hintText: 'Choose User Role..',
+                                  hintStyle: const TextStyle(
+                                    color: Color(0xFF9CA3AF),
+                                    fontSize: 14,
+                                  ),
+                                  filled: true,
+                                  fillColor: Colors.white,
+                                  contentPadding: const EdgeInsets.symmetric(
+                                    horizontal: 16,
+                                    vertical: 14,
+                                  ),
+                                  border: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  enabledBorder: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(8),
+                                    borderSide: const BorderSide(
+                                      color: Color(0xFFD1D5DB),
+                                    ),
+                                  ),
+                                  focusedBorder: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(8),
+                                    borderSide: const BorderSide(
+                                      color: Color(0xFF14B8A6),
+                                    ),
+                                  ),
+                                ),
+                                icon: const Icon(
+                                  Icons.keyboard_arrow_down,
+                                  color: Color(0xFF6B7280),
+                                ),
+                                validator: (value) =>
+                                    (value == null || value.isEmpty)
+                                    ? 'User role is required'
+                                    : null,
+                              ),
+                            ],
+                          ),
                         ),
                       if (_rolesErrorText != null) ...[
                         const SizedBox(height: 8),
@@ -1179,7 +1508,9 @@ class _EditUserDialogState extends State<_EditUserDialog> {
                             Expanded(
                               child: Text(
                                 _rolesErrorText!,
-                                style: const TextStyle(color: Color(0xFFB91C1C)),
+                                style: const TextStyle(
+                                  color: Color(0xFFB91C1C),
+                                ),
                               ),
                             ),
                             TextButton(
@@ -1196,50 +1527,81 @@ class _EditUserDialogState extends State<_EditUserDialog> {
                           style: const TextStyle(color: Color(0xFFB91C1C)),
                         ),
                       ],
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-                Container(
-                  padding: const EdgeInsets.fromLTRB(24, 14, 24, 18),
-                  decoration: const BoxDecoration(
-                    color: Color(0xFFFAFBFC),
-                    border: Border(top: BorderSide(color: Color(0xFFE8EAED))),
-                  ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.end,
-                    children: [
-                      TextButton(
-                        onPressed: _isSubmitting ? null : () => Navigator.of(context).pop(false),
-                        style: TextButton.styleFrom(
-                          foregroundColor: const Color(0xFFB91C1C),
-                          side: const BorderSide(color: Color(0xFFFCA5A5)),
-                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-                        ),
-                        child: const Text('Cancel'),
-                      ),
-                      const SizedBox(width: 12),
-                      ElevatedButton(
-                        onPressed: (_isSubmitting || _isLoadingRoles || _roles.isEmpty) ? null : _submit,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFF14B8A6),
-                          foregroundColor: Colors.white,
-                          padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
-                        ),
-                        child: _isSubmitting
-                            ? const SizedBox(
-                                width: 18,
-                                height: 18,
-                                child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
-                              )
-                            : const Text('Update'),
-                      ),
                     ],
                   ),
                 ),
-              ],
-            ),
+              ),
+              Container(
+                padding: const EdgeInsets.fromLTRB(24, 16, 24, 20),
+                decoration: const BoxDecoration(
+                  color: Color(0xFFF9FAFB),
+                  borderRadius: BorderRadius.only(
+                    bottomLeft: Radius.circular(12),
+                    bottomRight: Radius.circular(12),
+                  ),
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    ElevatedButton(
+                      onPressed: _isSubmitting
+                          ? null
+                          : () => Navigator.of(context).pop(false),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFFE53E3E), // Red
+                        foregroundColor: Colors.white,
+                        elevation: 0,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 24,
+                          vertical: 14,
+                        ),
+                        textStyle: const TextStyle(
+                          fontWeight: FontWeight.w700,
+                          fontSize: 14,
+                        ),
+                      ),
+                      child: const Text('Cancel'),
+                    ),
+                    const SizedBox(width: 12),
+                    ElevatedButton(
+                      onPressed:
+                          (_isSubmitting || _isLoadingRoles || _roles.isEmpty)
+                          ? null
+                          : _submit,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF14B8A6), // Teal
+                        foregroundColor: Colors.white,
+                        elevation: 0,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 24,
+                          vertical: 14,
+                        ),
+                        textStyle: const TextStyle(
+                          fontWeight: FontWeight.w700,
+                          fontSize: 14,
+                        ),
+                      ),
+                      child: _isSubmitting
+                          ? const SizedBox(
+                              width: 18,
+                              height: 18,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: Colors.white,
+                              ),
+                            )
+                          : const Text('Update'),
+                    ),
+                  ],
+                ),
+              ),
+            ],
           ),
         ),
       ),
@@ -1248,56 +1610,72 @@ class _EditUserDialogState extends State<_EditUserDialog> {
 
   Widget _buildTextField({
     required TextEditingController controller,
-    required String label,
+    String? label,
+    Widget? labelWidget,
     required String hint,
     String? Function(String?)? validator,
     bool obscureText = false,
     TextInputType keyboardType = TextInputType.text,
   }) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 14),
-      child: TextFormField(
-        controller: controller,
-        validator: validator,
-        obscureText: obscureText,
-        keyboardType: keyboardType,
-        enabled: !_isSubmitting,
-        decoration: _inputDecoration(label, hint),
-      ),
-    );
-  }
-
-  InputDecoration _inputDecoration(String label, String hint) {
-    return InputDecoration(
-      labelText: label,
-      hintText: hint,
-      filled: true,
-      fillColor: const Color(0xFFF8FAFC),
-      contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
-      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-      enabledBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
-        borderSide: const BorderSide(color: Color(0xFFD1D5DB)),
-      ),
-      focusedBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
-        borderSide: const BorderSide(color: Color(0xFF14B8A6)),
-      ),
-    );
-  }
-
-  Widget _buildSectionTitle(String title) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 10),
-      child: Row(
+      padding: const EdgeInsets.only(bottom: 16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            title,
-            style: const TextStyle(
-              fontSize: 13,
-              fontWeight: FontWeight.w700,
-              color: Color(0xFF475569),
-              letterSpacing: 0.2,
+          if (labelWidget != null)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 8),
+              child: labelWidget,
+            )
+          else if (label != null)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 8),
+              child: Text(
+                label,
+                style: const TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w700,
+                  color: Color(0xFF4B5563),
+                ),
+              ),
+            ),
+          TextFormField(
+            controller: controller,
+            validator: validator,
+            obscureText: obscureText,
+            keyboardType: keyboardType,
+            enabled: !_isSubmitting,
+            decoration: InputDecoration(
+              hintText: hint,
+              hintStyle: const TextStyle(
+                color: Color(0xFF9CA3AF),
+                fontSize: 14,
+              ),
+              filled: true,
+              fillColor: Colors.white,
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: 16,
+                vertical: 14,
+              ),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8),
+                borderSide: const BorderSide(color: Color(0xFFD1D5DB)),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8),
+                borderSide: const BorderSide(color: Color(0xFF14B8A6)),
+              ),
+              errorBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8),
+                borderSide: const BorderSide(color: Color(0xFFE53E3E)),
+              ),
+              focusedErrorBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8),
+                borderSide: const BorderSide(color: Color(0xFFE53E3E)),
+              ),
             ),
           ),
         ],

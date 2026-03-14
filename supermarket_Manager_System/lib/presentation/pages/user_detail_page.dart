@@ -43,38 +43,46 @@ class _UserDetailContentState extends State<UserDetailContent> {
           padding: const EdgeInsets.all(24),
           children: [
             TextButton.icon(
-              style: TextButton.styleFrom(alignment: Alignment.centerLeft),
+              style: TextButton.styleFrom(
+                alignment: Alignment.centerLeft,
+                foregroundColor: const Color(0xFF667EEA),
+                padding: EdgeInsets.zero,
+              ),
               onPressed: widget.onBack,
-              icon: const Icon(Icons.arrow_back),
-              label: const Text('Back to Users list'),
+              icon: const Icon(Icons.arrow_back, size: 20),
+              label: const Text(
+                'Back to Users list',
+                style: TextStyle(fontWeight: FontWeight.w600),
+              ),
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: 12),
             const Text(
               'User Information',
-              style: TextStyle(fontSize: 30, fontWeight: FontWeight.w700),
+              style: TextStyle(fontSize: 24, fontWeight: FontWeight.w700, color: Color(0xFF334155)),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 20),
             _DetailCard(user: user),
-            const SizedBox(height: 12),
-            ElevatedButton.icon(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF667EEA),
-                padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
-              ),
-              onPressed: () => setState(() => _showSchedule = !_showSchedule),
-              icon: const Icon(Icons.visibility, color: Colors.white),
-              label: Text(
-                _showSchedule ? 'Hide' : 'View',
-                style: const TextStyle(color: Colors.white),
+            const SizedBox(height: 24),
+            Align(
+              alignment: Alignment.centerLeft,
+              child: ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF7C5DAB),
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                ),
+                onPressed: () => setState(() => _showSchedule = !_showSchedule),
+                child: const Text('View Details', style: TextStyle(fontWeight: FontWeight.w600)),
               ),
             ),
             if (_showSchedule) ...[
-              const SizedBox(height: 18),
+              const SizedBox(height: 24),
               const Text(
                 'Work schedule (week)',
-                style: TextStyle(fontSize: 22, fontWeight: FontWeight.w700),
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700, color: Color(0xFF334155)),
               ),
-              const SizedBox(height: 10),
+              const SizedBox(height: 12),
               _ScheduleTable(schedule: user.schedule),
             ],
           ],
@@ -250,38 +258,61 @@ class _DetailCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(24),
+      padding: const EdgeInsets.symmetric(vertical: 16),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: const Color(0xFFE8EAED)),
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x14000000),
+            blurRadius: 10,
+            offset: Offset(0, 4),
+          ),
+        ],
       ),
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Row(
-            children: [
-              _Avatar(user: user),
-              const SizedBox(width: 18),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    user.fullname,
-                    style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w700),
-                  ),
-                  Text(user.role, style: const TextStyle(color: Color(0xFF6B7280))),
-                ],
-              ),
-            ],
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+            child: Row(
+              children: [
+                _Avatar(user: user),
+                const SizedBox(width: 20),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      user.fullname,
+                      style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700, color: Color(0xFF334155)),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      user.role,
+                      style: const TextStyle(color: Color(0xFF94A3B8), fontWeight: FontWeight.w500),
+                    ),
+                  ],
+                ),
+              ],
+            ),
           ),
-          const SizedBox(height: 18),
-          _DetailRow(label: 'Fullname', value: user.fullname),
-          _DetailRow(label: 'Username', value: user.username),
-          _DetailRow(label: 'e-Mail', value: user.email),
-          _DetailRow(label: 'Role', value: user.role),
-          _DetailRow(label: 'ID Card', value: user.idCard.isEmpty ? '—' : user.idCard),
-          _DetailRow(label: 'Status', value: user.status),
-          _DetailRow(label: 'Last Login', value: user.lastLogin),
+          const SizedBox(height: 12),
+          const Divider(color: Color(0xFFF1F5F9), thickness: 1.5, height: 1),
+          const SizedBox(height: 8),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 24),
+            child: Column(
+              children: [
+                _DetailRow(label: 'Fullname', value: user.fullname),
+                _DetailRow(label: 'Username', value: user.username),
+                _DetailRow(label: 'e-Mail', value: user.email),
+                _DetailRow(label: 'Role', value: user.role),
+                _DetailRow(label: 'ID Card', value: user.idCard.isEmpty ? '—' : user.idCard),
+                _DetailRow(label: 'Status', value: user.status, isStatus: true),
+                _DetailRow(label: 'Last Login', value: user.lastLogin, isLastLogin: true, isLast: true),
+              ],
+            ),
+          ),
         ],
       ),
     );
@@ -301,8 +332,8 @@ class _Avatar extends StatelessWidget {
         borderRadius: BorderRadius.circular(60),
         child: Image.network(
           user.avatar,
-          width: 120,
-          height: 120,
+          width: 80,
+          height: 80,
           fit: BoxFit.cover,
           errorBuilder: (_, error, stackTrace) => _avatarFallback(initial),
         ),
@@ -313,18 +344,16 @@ class _Avatar extends StatelessWidget {
 
   Widget _avatarFallback(String initial) {
     return Container(
-      width: 120,
-      height: 120,
+      width: 80,
+      height: 80,
       decoration: const BoxDecoration(
         shape: BoxShape.circle,
-        gradient: LinearGradient(
-          colors: [Color(0xFF667EEA), Color(0xFF764BA2)],
-        ),
+        color: Color(0xFFE2E8F0),
       ),
       alignment: Alignment.center,
       child: Text(
         initial,
-        style: const TextStyle(color: Colors.white, fontSize: 40, fontWeight: FontWeight.w700),
+        style: const TextStyle(color: Color(0xFF64748B), fontSize: 32, fontWeight: FontWeight.w700),
       ),
     );
   }
@@ -334,29 +363,72 @@ class _DetailRow extends StatelessWidget {
   const _DetailRow({
     required this.label,
     required this.value,
+    this.isStatus = false,
+    this.isLastLogin = false,
+    this.isLast = false,
   });
 
   final String label;
   final String value;
+  final bool isStatus;
+  final bool isLastLogin;
+  final bool isLast;
 
   @override
   Widget build(BuildContext context) {
+    Widget valueWidget;
+
+    if (isStatus || isLastLogin) {
+      final isActive = value.toLowerCase() == 'active';
+      final bgColor = (isStatus && isActive) || isLastLogin ? const Color(0xFFD1FAE5) : const Color(0xFFFEE2E2);
+      final textColor = (isStatus && isActive) || isLastLogin ? const Color(0xFF059669) : const Color(0xFFDC2626);
+
+      valueWidget = Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+        decoration: BoxDecoration(
+          color: bgColor,
+          borderRadius: BorderRadius.circular(6),
+        ),
+        child: Text(
+          value.isEmpty ? '—' : value,
+          style: TextStyle(
+            color: textColor,
+            fontWeight: FontWeight.w600,
+            fontSize: 13,
+          ),
+        ),
+      );
+    } else {
+      valueWidget = Text(
+        value.isEmpty ? '—' : value,
+        style: const TextStyle(color: Color(0xFF64748B), fontSize: 14),
+      );
+    }
+
     return Container(
-      padding: const EdgeInsets.symmetric(vertical: 12),
-      decoration: const BoxDecoration(
-        border: Border(bottom: BorderSide(color: Color(0xFFF0F0F0))),
+      padding: const EdgeInsets.symmetric(vertical: 16),
+      decoration: BoxDecoration(
+        border: isLast ? null : const Border(bottom: BorderSide(color: Color(0xFFF1F5F9))),
       ),
       child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           SizedBox(
-            width: 160,
+            width: 180,
             child: Text(
               label,
-              style: const TextStyle(fontWeight: FontWeight.w600, color: Color(0xFF6B7280)),
+              style: const TextStyle(
+                fontWeight: FontWeight.w600,
+                color: Color(0xFF64748B),
+                fontSize: 14,
+              ),
             ),
           ),
           Expanded(
-            child: Text(value.isEmpty ? '—' : value),
+            child: Align(
+              alignment: Alignment.centerLeft,
+              child: valueWidget,
+            ),
           ),
         ],
       ),

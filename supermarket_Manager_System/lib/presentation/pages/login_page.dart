@@ -171,7 +171,7 @@ class _LoginPageState extends State<LoginPage> {
                   const SizedBox(height: 20),
                   Center(
                     child: TextButton(
-                      onPressed: () {},
+                      onPressed: () => context.push('/forgot-password'),
                       style: TextButton.styleFrom(
                         foregroundColor: const Color(0xFF667EEA),
                       ),

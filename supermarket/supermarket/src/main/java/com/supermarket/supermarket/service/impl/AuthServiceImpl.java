@@ -2,14 +2,22 @@ package com.supermarket.supermarket.service.impl;
 
 import com.supermarket.supermarket.dto.request.LoginRequest;
 import com.supermarket.supermarket.dto.response.LoginResponse;
+import com.supermarket.supermarket.entity.PasswordResetToken;
 import com.supermarket.supermarket.entity.Role;
 import com.supermarket.supermarket.entity.User;
+import com.supermarket.supermarket.repository.PasswordResetTokenRepository;
 import com.supermarket.supermarket.repository.UserRepository;
 import com.supermarket.supermarket.service.AuthService;
+import com.supermarket.supermarket.service.EmailService;
 import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Optional;
+import java.util.Random;
+import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
@@ -17,17 +25,33 @@ public class AuthServiceImpl implements AuthService {
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
+    private final PasswordResetTokenRepository passwordResetTokenRepository;
+    private final EmailService emailService;
 
     @Override
     public LoginResponse login(LoginRequest request) {
         String identifier = request.getEmail().trim();
+        List<User> users = userRepository.findByUsernameIgnoreCaseOrEmailIgnoreCase(identifier, identifier);
 
-        return userRepository.findByUsernameIgnoreCaseOrEmailIgnoreCase(identifier, identifier)
-            .map(user -> validatePasswordAndBuildResponse(user, request.getPassword()))
-            .orElseGet(() -> LoginResponse.builder()
+        if (users.isEmpty()) {
+            return LoginResponse.builder()
                 .success(false)
                 .message("Invalid email/username or password")
-                .build());
+                .build();
+        }
+
+        // Try to find a user where the password matches
+        for (User user : users) {
+            LoginResponse response = validatePasswordAndBuildResponse(user, request.getPassword());
+            if (response.isSuccess()) {
+                return response;
+            }
+        }
+
+        return LoginResponse.builder()
+            .success(false)
+            .message("Invalid email/username or password")
+            .build();
     }
 
     private LoginResponse validatePasswordAndBuildResponse(User user, String rawPassword) {
@@ -66,17 +90,15 @@ public class AuthServiceImpl implements AuthService {
             return false;
         }
 
-        // Supports both BCrypt hash and plain text seed data.
-        if (storedPasswordHash.startsWith("$2a$") || storedPasswordHash.startsWith("$2b$")) {
-            try {
-                return passwordEncoder.matches(rawPassword, storedPasswordHash);
-            } catch (IllegalArgumentException ex) {
-                // Handle invalid BCrypt strings in seed/demo data.
-                return rawPassword.equals(storedPasswordHash);
-            }
+        // Try BCrypt matching first. Any valid BCrypt hash ($2a$, $2b$, $2y$, etc.) 
+        // will be handled correctly by the encoder.
+        try {
+            return passwordEncoder.matches(rawPassword, storedPasswordHash);
+        } catch (Exception e) {
+            // If it's not a valid BCrypt hash, fallback to plain text comparison 
+            // to support raw seed/demo data.
+            return rawPassword.equals(storedPasswordHash);
         }
-
-        return rawPassword.equals(storedPasswordHash);
     }
 
     private String getRoleName(Role role) {
@@ -95,5 +117,67 @@ public class AuthServiceImpl implements AuthService {
             return "/cashier/home";
         }
         return "/home";
+    }
+
+    @Override
+    @Transactional
+    public void sendOtpForPasswordReset(String email) {
+        String trimmedEmail = email.trim();
+        List<User> users = userRepository.findByUsernameIgnoreCaseOrEmailIgnoreCase(trimmedEmail, trimmedEmail);
+
+        // Delete expired tokens
+        passwordResetTokenRepository.deleteExpiredTokens(LocalDateTime.now());
+
+        // Generate OTP
+        String otp = generateOtp();
+
+        // Save token - link to the first user if any exist
+        PasswordResetToken token = PasswordResetToken.builder()
+            .user(users.isEmpty() ? null : users.get(0))
+            .email(trimmedEmail)
+            .otp(otp)
+            .token(java.util.UUID.randomUUID().toString())
+            .expiresAt(LocalDateTime.now().plusMinutes(10))
+            .build();
+        passwordResetTokenRepository.save(token);
+
+        // Send email
+        emailService.sendOtpEmail(trimmedEmail, otp);
+    }
+
+    @Override
+    public boolean verifyOtp(String otp) {
+        Optional<PasswordResetToken> tokenOpt = passwordResetTokenRepository.findByOtpAndExpiresAtAfter(otp, LocalDateTime.now());
+        return tokenOpt.isPresent();
+    }
+
+    @Override
+    @Transactional
+    public void resetPassword(String otp, String newPassword) {
+        PasswordResetToken token = passwordResetTokenRepository.findByOtpAndExpiresAtAfter(otp, LocalDateTime.now())
+            .orElseThrow(() -> new RuntimeException("Invalid or expired OTP"));
+
+        String resetEmail = token.getEmail();
+        List<User> usersToUpdate = userRepository.findByUsernameIgnoreCaseOrEmailIgnoreCase(resetEmail, resetEmail);
+
+        if (usersToUpdate.isEmpty()) {
+            throw new RuntimeException("No users associated with this OTP. If you entered a non-existent email, you cannot reset a password for it.");
+        }
+
+        String hashedPw = passwordEncoder.encode(newPassword);
+        for (User user : usersToUpdate) {
+            user.setPasswordHash(hashedPw);
+            user.setUpdatedAt(LocalDateTime.now());
+            userRepository.save(user);
+        }
+
+        // Consume token
+        passwordResetTokenRepository.delete(token);
+    }
+
+    private String generateOtp() {
+        Random random = new Random();
+        int otp = 100000 + random.nextInt(900000);
+        return String.valueOf(otp);
     }
 }

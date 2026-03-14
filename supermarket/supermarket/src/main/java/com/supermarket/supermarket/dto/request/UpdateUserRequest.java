@@ -1,7 +1,7 @@
 package com.supermarket.supermarket.dto.request;
 
-import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 import lombok.Getter;
 import lombok.Setter;
@@ -19,11 +19,11 @@ public class UpdateUserRequest {
     private String username;
 
     @NotBlank(message = "Email is required")
-    @Email(message = "Email is invalid")
+    @Pattern(regexp = ".*@.*", message = "Email must contain @")
     @Size(max = 100, message = "Email must be <= 100 characters")
     private String email;
 
-    @Size(min = 6, max = 100, message = "Password must be between 6 and 100 characters")
+    @Size(min = 8, max = 100, message = "Password must be at least 8 characters")
     private String password;
 
     @Size(max = 20, message = "ID card must be <= 20 characters")
