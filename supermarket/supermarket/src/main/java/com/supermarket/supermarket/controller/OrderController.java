@@ -1,11 +1,13 @@
 package com.supermarket.supermarket.controller;
 
+import com.supermarket.supermarket.dto.response.OrderDetailResponse;
 import com.supermarket.supermarket.dto.response.OrderListItemResponse;
 import com.supermarket.supermarket.service.OrderService;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -19,6 +21,11 @@ public class OrderController {
     @GetMapping
     public ResponseEntity<List<OrderListItemResponse>> getAllOrders() {
         return ResponseEntity.ok(orderService.getAllOrders());
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<OrderDetailResponse> getOrderDetail(@PathVariable("id") Integer id) {
+        return ResponseEntity.ok(orderService.getOrderDetail(id));
     }
 }
 
