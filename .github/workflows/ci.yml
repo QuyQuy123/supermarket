@@ -24,7 +24,7 @@ jobs:
       - name: Build Spring Boot
         run: |
           cd supermarket
-          ./mvnw clean install
+          mvn clean install
 
   frontend:
     runs-on: ubuntu-latest
