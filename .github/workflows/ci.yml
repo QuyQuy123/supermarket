@@ -1,0 +1,52 @@
+name: CI Build
+
+on:
+  pull_request:
+    branches: [ main ]
+
+jobs:
+
+  backend:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v3
+
+      - name: Setup Java
+        uses: actions/setup-java@v3
+        with:
+          distribution: temurin
+          java-version: 21
+
+      - name: Build Spring Boot
+        run: |
+          cd supermarket
+          ./mvnw clean install
+
+  frontend:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v3
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.19.0'
+
+      - name: Install dependencies
+        run: |
+          cd supermarket_Manager_System
+          flutter pub get
+
+      - name: Analyze code
+        run: |
+          cd supermarket_Manager_System
+          flutter analyze
+
+      - name: Build Flutter Web
+        run: |
+          cd supermarket_Manager_System
+          flutter build web
