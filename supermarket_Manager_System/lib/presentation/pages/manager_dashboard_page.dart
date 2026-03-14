@@ -2,9 +2,10 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:supermarket_manager_system/domain/models/user_detail.dart';
+import 'package:supermarket_manager_system/presentation/pages/orders_page.dart';
 import 'package:supermarket_manager_system/presentation/pages/profile_content_page.dart';
 
-enum _ManagerTab { dashboard, profile, profileEdit }
+enum _ManagerTab { dashboard, orders, profile, profileEdit }
 
 class ManagerDashboardPage extends StatefulWidget {
   const ManagerDashboardPage({
@@ -35,6 +36,7 @@ class _ManagerDashboardPageState extends State<ManagerDashboardPage> {
   _ManagerTab _tabFromKey(String key) {
     return switch (key) {
       'profile' => _ManagerTab.profile,
+      'orders' => _ManagerTab.orders,
       'profile-edit' => _ManagerTab.profileEdit,
       _ => _ManagerTab.dashboard,
     };
@@ -43,6 +45,7 @@ class _ManagerDashboardPageState extends State<ManagerDashboardPage> {
   String _pathForTab(_ManagerTab tab) {
     return switch (tab) {
       _ManagerTab.dashboard => '/manager/dashboard',
+      _ManagerTab.orders => '/manager/orders',
       _ManagerTab.profile => '/manager/profile',
       _ManagerTab.profileEdit => '/manager/profile/edit',
     };
@@ -150,6 +153,7 @@ class _ManagerDashboardPageState extends State<ManagerDashboardPage> {
                     onLogout: _logout,
                     selectedTab: _selectedTab,
                     onDashboardTap: () => _selectTab(_ManagerTab.dashboard),
+                    onOrdersTap: () => _selectTab(_ManagerTab.orders),
                   ),
                 )
               : null,
@@ -162,6 +166,7 @@ class _ManagerDashboardPageState extends State<ManagerDashboardPage> {
                     onLogout: _logout,
                     selectedTab: _selectedTab,
                     onDashboardTap: () => _selectTab(_ManagerTab.dashboard),
+                    onOrdersTap: () => _selectTab(_ManagerTab.orders),
                   ),
                 ),
               Expanded(
@@ -193,6 +198,13 @@ class _ManagerDashboardPageState extends State<ManagerDashboardPage> {
                         ],
                       ),
                     ),
+                  _ManagerTab.orders => OrdersContent(
+                      fullName: widget.fullName,
+                      isCompact: isCompact,
+                      currentTimeText: _formatClock(_now),
+                      roleLabel: 'Manager',
+                      onProfileTap: () => _selectTab(_ManagerTab.profile),
+                    ),
                   _ManagerTab.profile => ProfileViewContent(
                       fullName: widget.fullName,
                       userId: widget.userId,
@@ -223,11 +235,13 @@ class _ManagerSidebar extends StatelessWidget {
     required this.onLogout,
     required this.selectedTab,
     required this.onDashboardTap,
+    required this.onOrdersTap,
   });
 
   final VoidCallback onLogout;
   final _ManagerTab selectedTab;
   final VoidCallback onDashboardTap;
+  final VoidCallback onOrdersTap;
 
   @override
   Widget build(BuildContext context) {
@@ -266,10 +280,14 @@ class _ManagerSidebar extends StatelessWidget {
                       active: selectedTab == _ManagerTab.dashboard,
                       onTap: onDashboardTap,
                     ),
+                    _ManagerSidebarItem(
+                      label: 'Orders',
+                      active: selectedTab == _ManagerTab.orders,
+                      onTap: onOrdersTap,
+                    ),
                     const _ManagerSidebarItem(label: 'Suppliers'),
                     const _ManagerSidebarItem(label: 'Category'),
                     const _ManagerSidebarItem(label: 'Products'),
-                    const _ManagerSidebarItem(label: 'Orders'),
                     const _ManagerSidebarItem(label: 'Creditors'),
                     const _ManagerSidebarItem(label: 'Expired'),
                     const _ManagerSidebarItem(label: 'Reports'),
