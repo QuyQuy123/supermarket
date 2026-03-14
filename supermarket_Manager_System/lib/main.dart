@@ -223,20 +223,20 @@ class SupermarketManagerApp extends StatelessWidget {
     return 'dashboard';
   }
 
-  static String _defaultPathForCurrentSession() {
-    final roleId = AppSession.instance.roleId;
-    final role = AppSession.instance.role.toLowerCase();
-    if (roleId == 3 || role.contains('cashier')) {
-      return '/cashier/open-shift';
-    }
-    if (role.contains('admin')) {
-      return '/admin/dashboard';
-    }
-    if (role.contains('manager')) {
-      return '/manager/dashboard';
-    }
-    return '/role-home';
-  }
+  // static String _defaultPathForCurrentSession() {
+  //   final roleId = AppSession.instance.roleId;
+  //   final role = AppSession.instance.role.toLowerCase();
+  //   if (roleId == 3 || role.contains('cashier')) {
+  //     return '/cashier/open-shift';
+  //   }
+  //   if (role.contains('admin')) {
+  //     return '/admin/dashboard';
+  //   }
+  //   if (role.contains('manager')) {
+  //     return '/manager/dashboard';
+  //   }
+  //   return '/role-home';
+  // }
 
   @override
   Widget build(BuildContext context) {
