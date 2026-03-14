@@ -1,2 +1,178 @@
---test ci cd
---test ci cd v2
+
+QUY TRINH LAM VIEC NHOM CHUAN (TUNG BUOC)
+=========================================
+
+MUC TIEU
+--------
+- Moi thanh vien lam viec tren 1 branch rieng.
+- Khong code truc tiep tren main.
+- Moi thay doi vao main phai qua Pull Request + CI.
+
+
+BUOC 1 - CAP NHAT CODE MOI NHAT TU MAIN
+---------------------------------------
+Truoc khi code, luon cap nhat main:
+
+git checkout main
+git pull origin main
+
+
+BUOC 2 - TAO NHANH LAM VIEC
+---------------------------
+Vi du ban lam chuc nang login:
+
+git checkout -b feature-login
+
+Hoac:
+
+git checkout -b feature-namefunction
+
+
+BUOC 3 - CODE CHUC NANG
+-----------------------
+Sau khi code xong, kiem tra trang thai:
+
+git status
+
+
+BUOC 4 - ADD CODE VAO STAGING
+-----------------------------
+Add tat ca:
+
+git add .
+
+Hoac add file cu the:
+
+git add src/UserService.java
+
+
+BUOC 5 - COMMIT
+---------------
+git commit -m "add login feature"
+
+
+BUOC 6 - LAY CODE MOI NHAT TU MAIN DE TRANH CONFLICT
+----------------------------------------------------
+BUOC NAY RAT QUAN TRONG.
+
+Khuyen nghi dung merge main vao branch feature:
+
+git checkout main
+git pull origin main
+git checkout feature-login
+git merge main
+
+
+
+TRUONG HOP 1 - KHONG CO CONFLICT
+--------------------------------
+Git co the bao:
+- Already up to date.
+Hoac merge thanh cong.
+
+Luc nay push branch:
+
+git push origin feature-login
+
+
+TRUONG HOP 2 - CO CONFLICT
+--------------------------
+Git bao vi du:
+CONFLICT (content): Merge conflict in file.java
+
+Buoc 6.1 - Mo file bi conflict.
+Ban se thay doan dang:
+
+<<<<<<< HEAD
+code cua ban
+=======
+code tu main
+>>>>>>> main
+
+Buoc 6.2 - Sua lai code dung theo logic mong muon.
+
+
+Va xoa toan bo marker:
+- <<<<<<<
+- =======
+- >>>>>>>
+
+Buoc 6.3 - Add lai file da sua:
+
+git add .
+
+Buoc 6.4 - Commit merge conflict:
+
+git commit -m "resolve merge conflict"
+
+Buoc 6.5 - Push len branch:
+
+git push origin feature-login
+
+
+BUOC 7 - TAO PULL REQUEST
+-------------------------
+Tren GitHub:
+- Pull requests
+- New Pull Request
+
+Chon:
+- compare: feature-login
+- base: main
+
+
+BUOC 8 - CI CHAY TU DONG
+------------------------
+Khi tao PR, GitHub Actions se chay cac job (vi du):
+- backend build
+- frontend build
+- test/lint (neu co)
+
+Neu tat ca PASS thi moi du dieu kien merge.
+
+
+BUOC 9 - MERGE VAO MAIN
+-----------------------
+Sau khi:
+- CI PASS
+- Duoc review/approve (neu co rule)
+
+Tien hanh:
+- Merge Pull Request
+
+
+BUOC 10 - CAP NHAT LAI LOCAL SAU KHI MERGE
+------------------------------------------
+git checkout main
+git pull origin main
+
+Xoa branch local da merge:
+
+git branch -d feature-login
+
+
+
+Tuong tu quay tro lai lam tiep cac feature khác , moi feature tao 1 nhanh , merge  voi main xong thi xoa nhanh do di 
+Luu y : khong de code qua to moi merge , xong moi chuc nang sẽ tien hanh merge luôn 
+và truoc khi push, hay pull main ve 
+
+
+SO DO WORKFLOW
+--------------
+main
+ |
+ |- feature-A
+ |- feature-B
+ \- feature-C
+
+FLOW CHUAN:
+code
+ -> add
+ -> commit
+ -> pull/merge main
+ -> fix conflict (neu co)
+ -> push branch
+ -> Pull Request
+ -> CI chay
+ -> merge main
+
