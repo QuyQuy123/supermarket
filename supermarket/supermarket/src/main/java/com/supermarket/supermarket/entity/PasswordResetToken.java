@@ -29,11 +29,14 @@ public class PasswordResetToken {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "user_id", nullable = false)
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id", nullable = true, columnDefinition = "INT NULL")
     private User user;
 
-    @Column(name = "token", nullable = false, length = 500)
+    @Column(name = "email", length = 100)
+    private String email;
+
+    @Column(name = "token", nullable = true, length = 500)
     private String token;
 
     @Column(name = "otp", length = 10)

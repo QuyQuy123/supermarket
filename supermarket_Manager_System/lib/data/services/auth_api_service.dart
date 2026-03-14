@@ -13,10 +13,7 @@ class AuthApiService {
     final response = await http.post(
       uri,
       headers: {'Content-Type': 'application/json'},
-      body: jsonEncode({
-        'email': emailOrUsername,
-        'password': password,
-      }),
+      body: jsonEncode({'email': emailOrUsername, 'password': password}),
     );
 
     if (response.body.isEmpty) {
@@ -31,5 +28,68 @@ class AuthApiService {
     }
 
     throw Exception(result.message);
+  }
+
+  Future<String> forgotPassword(String email) async {
+    final uri = Uri.parse(
+      '${ApiConstants.baseUrl}${ApiConstants.forgotPasswordPath}?email=${Uri.encodeComponent(email)}',
+    );
+    final response = await http.post(uri);
+
+    if (response.statusCode >= 200 && response.statusCode < 300) {
+      return response.body;
+    } else {
+      String errorMessage = response.body;
+      if (errorMessage.startsWith('Error: ')) {
+        errorMessage = errorMessage.replaceFirst('Error: ', '');
+      }
+      if (errorMessage.isEmpty) {
+        errorMessage = 'Failed to send OTP (Status: ${response.statusCode})';
+      }
+      throw errorMessage;
+    }
+  }
+
+  Future<String> verifyOtp(String otp) async {
+    final uri = Uri.parse(
+      '${ApiConstants.baseUrl}${ApiConstants.verifyOtpPath}?otp=${Uri.encodeComponent(otp)}',
+    );
+    final response = await http.post(uri);
+
+    if (response.statusCode >= 200 && response.statusCode < 300) {
+      return response.body;
+    } else {
+      String errorMessage = response.body;
+      if (errorMessage.startsWith('Error: ')) {
+        errorMessage = errorMessage.replaceFirst('Error: ', '');
+      }
+      if (errorMessage.isEmpty) {
+        errorMessage = 'Invalid OTP (Status: ${response.statusCode})';
+      }
+      throw errorMessage;
+    }
+  }
+
+  Future<String> resetPassword({
+    required String otp,
+    required String newPassword,
+  }) async {
+    final uri = Uri.parse(
+      '${ApiConstants.baseUrl}${ApiConstants.resetPasswordPath}?otp=${Uri.encodeComponent(otp)}&newPassword=${Uri.encodeComponent(newPassword)}',
+    );
+    final response = await http.post(uri);
+
+    if (response.statusCode >= 200 && response.statusCode < 300) {
+      return response.body;
+    } else {
+      String errorMessage = response.body;
+      if (errorMessage.startsWith('Error: ')) {
+        errorMessage = errorMessage.replaceFirst('Error: ', '');
+      }
+      if (errorMessage.isEmpty) {
+        errorMessage = 'Failed to reset password (Status: ${response.statusCode})';
+      }
+      throw errorMessage;
+    }
   }
 }

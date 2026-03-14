@@ -7,6 +7,9 @@ import 'package:supermarket_manager_system/presentation/pages/cashier_open_shift
 import 'package:supermarket_manager_system/presentation/pages/login_page.dart';
 import 'package:supermarket_manager_system/presentation/pages/manager_dashboard_page.dart';
 import 'package:supermarket_manager_system/presentation/pages/role_home_page.dart';
+import 'package:supermarket_manager_system/presentation/pages/forgot_password_page.dart';
+import 'package:supermarket_manager_system/presentation/pages/verify_otp_page.dart';
+import 'package:supermarket_manager_system/presentation/pages/set_new_password_page.dart';
 import 'package:supermarket_manager_system/utils/app_session.dart';
 
 void main() {
@@ -23,13 +26,21 @@ class SupermarketManagerApp extends StatelessWidget {
     redirect: (context, state) {
       final path = state.uri.path;
       final isLoggedIn = AppSession.instance.isLoggedIn;
-      final isLogin = path == '/login' || path == '/';
+      final isPublicRoute = path == '/login' || path == '/' || path == '/forgot-password' || path == '/verify-otp' || path == '/set-new-password';
 
-      if (!isLoggedIn && !isLogin) {
+      if (!isLoggedIn && !isPublicRoute) {
         return '/login';
       }
-      if (isLoggedIn && isLogin) {
-        return _defaultPathForCurrentSession();
+
+      if (isLoggedIn && (path == '/login' || path == '/')) {
+        final role = AppSession.instance.role.toLowerCase();
+        if (role.contains('admin')) {
+          return '/admin/dashboard';
+        }
+        if (role.contains('manager')) {
+          return '/manager/dashboard';
+        }
+        return '/role-home';
       }
       return null;
     },
@@ -41,6 +52,21 @@ class SupermarketManagerApp extends StatelessWidget {
       GoRoute(
         path: '/login',
         builder: (context, state) => const LoginPage(),
+      ),
+      GoRoute(
+        path: '/forgot-password',
+        builder: (context, state) => const ForgotPasswordPage(),
+      ),
+      GoRoute(
+        path: '/verify-otp',
+        builder: (context, state) => const VerifyOtpPage(),
+      ),
+      GoRoute(
+        path: '/set-new-password',
+        builder: (context, state) {
+          final otp = state.uri.queryParameters['otp'] ?? '';
+          return SetNewPasswordPage(otp: otp);
+        },
       ),
       GoRoute(
         path: '/admin',
