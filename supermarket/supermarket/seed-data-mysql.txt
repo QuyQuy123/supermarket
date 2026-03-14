@@ -91,15 +91,12 @@ INSERT INTO `order_items` (`id`, `order_id`, `product_id`, `product_name`, `unit
 INSERT INTO `refresh_tokens` (`id`, `user_id`, `token`, `expires_at`) VALUES
 (1, 1, 'rt_admin_0001', '2026-04-01 00:00:00'),
 (2, 2, 'rt_manager_0001', '2026-04-01 00:00:00'),
-(3, 3, 'rt_cashier01_0001', '2026-04-01 00:00:00'),
-(4, 4, 'rt_cashier02_0001', '2026-04-01 00:00:00'),
-(5, 5, 'rt_staff01_0001', '2026-04-01 00:00:00');
+(3, 3, 'rt_cashier01_0001', '2026-04-01 00:00:00');
 
 INSERT INTO `password_reset_tokens` (`id`, `user_id`, `token`, `otp`, `expires_at`) VALUES
 (1, 1, 'prt_admin_0001', '111111', '2026-03-13 00:00:00'),
 (2, 2, 'prt_manager_0001', '222222', '2026-03-13 00:00:00'),
 (3, 3, 'prt_cashier01_0001', '333333', '2026-03-13 00:00:00'),
-(4, 4, 'prt_cashier02_0001', '444444', '2026-03-13 00:00:00'),
-(5, 5, 'prt_staff01_0001', '555555', '2026-03-13 00:00:00');
+(4, 4, 'prt_cashier02_0001', '444444', '2026-03-13 00:00:00');
 
 SET FOREIGN_KEY_CHECKS = 1;
