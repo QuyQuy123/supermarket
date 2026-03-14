@@ -138,6 +138,9 @@ class SupermarketManagerApp extends StatelessWidget {
     if (section == 'users') {
       return 'users';
     }
+    if (section == 'orders') {
+      return 'orders';
+    }
     if (section == 'profile' && subSection == 'edit') {
       return 'profile-edit';
     }
@@ -173,6 +176,9 @@ class SupermarketManagerApp extends StatelessWidget {
     final subSection = state.pathParameters['subSection'];
     if (section == 'profile' && subSection == 'edit') {
       return 'profile-edit';
+    }
+    if (section == 'orders') {
+      return 'orders';
     }
     if (section == 'profile') {
       return 'profile';
