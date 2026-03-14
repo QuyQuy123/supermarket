@@ -7,7 +7,9 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface UserRepository extends JpaRepository<User, Integer> {
 
-    Optional<User> findByUsernameIgnoreCaseOrEmailIgnoreCase(String username, String email);
+    List<User> findByUsernameIgnoreCaseOrEmailIgnoreCase(String username, String email);
+
+    Optional<User> findByUsernameIgnoreCase(String username);
 
     List<User> findAllByOrderByIdAsc();
 

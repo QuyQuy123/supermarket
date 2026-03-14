@@ -3,6 +3,7 @@ package com.supermarket.supermarket.service.impl;
 import com.supermarket.supermarket.dto.request.CreateUserRequest;
 import com.supermarket.supermarket.dto.request.UpdateProfileRequest;
 import com.supermarket.supermarket.dto.request.UpdateUserRequest;
+import com.supermarket.supermarket.dto.request.ChangePasswordRequest;
 import com.supermarket.supermarket.dto.response.RoleOptionResponse;
 import com.supermarket.supermarket.dto.response.UserDetailResponse;
 import com.supermarket.supermarket.dto.response.UserScheduleItemResponse;
@@ -172,6 +173,20 @@ public class UserServiceImpl implements UserService {
 
         User updated = userRepository.save(existing);
         return toUserDetailResponse(updated);
+    }
+
+    @Override
+    public void changePassword(Integer userId, ChangePasswordRequest request) {
+        User existing = userRepository.findById(userId)
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
+
+        if (!passwordEncoder.matches(request.getCurrentPassword(), existing.getPasswordHash())) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Incorrect current password");
+        }
+
+        existing.setPasswordHash(passwordEncoder.encode(request.getNewPassword()));
+        existing.setUpdatedAt(LocalDateTime.now());
+        userRepository.save(existing);
     }
 
     private UserListItemResponse toUserListItemResponse(User user) {

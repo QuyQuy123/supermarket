@@ -188,4 +188,29 @@ class UserApiService {
     }
     return UserDetail.fromJson(decoded);
   }
+
+  Future<void> changePassword({
+    required int userId,
+    required String currentPassword,
+    required String newPassword,
+  }) async {
+    final uri = Uri.parse('${ApiConstants.baseUrl}${ApiConstants.usersPath}/$userId/password');
+    final response = await http.put(
+      uri,
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({
+        'currentPassword': currentPassword,
+        'newPassword': newPassword,
+      }),
+    );
+
+    if (response.statusCode >= 200 && response.statusCode < 300) {
+      return;
+    }
+
+    if (response.body.isNotEmpty) {
+      throw Exception(response.body);
+    }
+    throw Exception('Failed to change password');
+  }
 }

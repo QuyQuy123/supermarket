@@ -22,4 +22,6 @@ public interface UserService {
     UserListItemResponse updateUserStatus(Integer userId, String status);
 
     UserDetailResponse updateProfile(Integer userId, UpdateProfileRequest request);
+
+    void changePassword(Integer userId, com.supermarket.supermarket.dto.request.ChangePasswordRequest request);
 }

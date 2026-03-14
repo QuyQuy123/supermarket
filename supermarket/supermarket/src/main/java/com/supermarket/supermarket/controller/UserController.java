@@ -4,6 +4,7 @@ import com.supermarket.supermarket.dto.request.CreateUserRequest;
 import com.supermarket.supermarket.dto.request.UpdateProfileRequest;
 import com.supermarket.supermarket.dto.request.UpdateUserRequest;
 import com.supermarket.supermarket.dto.request.UpdateUserStatusRequest;
+import com.supermarket.supermarket.dto.request.ChangePasswordRequest;
 import com.supermarket.supermarket.dto.response.RoleOptionResponse;
 import com.supermarket.supermarket.dto.response.UserDetailResponse;
 import com.supermarket.supermarket.dto.response.UserListItemResponse;
@@ -71,5 +72,14 @@ public class UserController {
         @Valid @RequestBody UpdateProfileRequest request
     ) {
         return ResponseEntity.ok(userService.updateProfile(id, request));
+    }
+
+    @PutMapping("/{id}/password")
+    public ResponseEntity<Void> changePassword(
+        @PathVariable("id") Integer id,
+        @Valid @RequestBody ChangePasswordRequest request
+    ) {
+        userService.changePassword(id, request);
+        return ResponseEntity.ok().build();
     }
 }
