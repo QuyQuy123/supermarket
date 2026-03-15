@@ -104,6 +104,7 @@ class _SuppliersContentState extends State<SuppliersContent> {
                         ),
                       ),
                     ],
+                  ),
                   const SizedBox(height: 20),
                   Expanded(
                     child: FutureBuilder<List<SupplierListItem>>(
