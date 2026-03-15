@@ -178,6 +178,9 @@ class SupermarketManagerApp extends StatelessWidget {
     if (section == 'orders') {
       return 'orders';
     }
+    if (section == 'suppliers') {
+      return 'suppliers';
+    }
     if (section == 'profile' && subSection == 'edit') {
       return 'profile-edit';
     }
@@ -216,6 +219,9 @@ class SupermarketManagerApp extends StatelessWidget {
     }
     if (section == 'orders') {
       return 'orders';
+    }
+    if (section == 'suppliers') {
+      return 'suppliers';
     }
     if (section == 'profile') {
       return 'profile';
