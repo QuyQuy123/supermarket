@@ -30,6 +30,11 @@ public class SupplierController {
         return ResponseEntity.ok(supplierService.getAllSuppliers());
     }
 
+    @GetMapping("/{id}")
+    public ResponseEntity<SupplierListItemResponse> getSupplierById(@PathVariable("id") Integer id) {
+        return ResponseEntity.ok(supplierService.getSupplierById(id));
+    }
+
     @PostMapping
     public ResponseEntity<SupplierListItemResponse> createSupplier(
         @Valid @RequestBody CreateSupplierRequest request
@@ -47,7 +52,7 @@ public class SupplierController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteSupplier(@PathVariable Integer id) {
+    public ResponseEntity<Void> deleteSupplier(@PathVariable("id") Integer id) {
         supplierService.deleteSupplier(id);
         return ResponseEntity.noContent().build();
     }

@@ -215,6 +215,7 @@ class _ManagerDashboardPageState extends State<ManagerDashboardPage> {
                       isCompact: isCompact,
                       currentTimeText: _formatClock(_now),
                       onProfileTap: () => _selectTab(_ManagerTab.profile),
+                      basePath: 'manager',
                     ),
                   _ManagerTab.profile => ProfileViewContent(
                       fullName: widget.fullName,

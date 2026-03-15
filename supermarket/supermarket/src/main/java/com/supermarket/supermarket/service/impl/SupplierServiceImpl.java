@@ -28,6 +28,13 @@ public class SupplierServiceImpl implements SupplierService {
     }
 
     @Override
+    public SupplierListItemResponse getSupplierById(Integer id) {
+        return supplierRepository.findById(id)
+            .map(this::toListItemResponse)
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Supplier not found with id: " + id));
+    }
+
+    @Override
     public SupplierListItemResponse createSupplier(CreateSupplierRequest request) {
         String status = (request.getStatus() != null && !request.getStatus().isBlank())
             ? request.getStatus().trim()

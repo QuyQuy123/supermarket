@@ -7,6 +7,7 @@ import 'package:supermarket_manager_system/presentation/pages/cashier_open_shift
 import 'package:supermarket_manager_system/presentation/pages/login_page.dart';
 import 'package:supermarket_manager_system/presentation/pages/manager_dashboard_page.dart';
 import 'package:supermarket_manager_system/presentation/pages/role_home_page.dart';
+import 'package:supermarket_manager_system/presentation/pages/supplier_detail_page.dart';
 import 'package:supermarket_manager_system/presentation/pages/forgot_password_page.dart';
 import 'package:supermarket_manager_system/presentation/pages/verify_otp_page.dart';
 import 'package:supermarket_manager_system/presentation/pages/set_new_password_page.dart';
@@ -70,27 +71,42 @@ class SupermarketManagerApp extends StatelessWidget {
       ),
       GoRoute(
         path: '/admin',
-        redirect: (context, state) => '/admin/dashboard',
-      ),
-      GoRoute(
-        path: '/admin/:section',
-        pageBuilder: (context, state) => NoTransitionPage(
-          key: const ValueKey('admin-shell'),
-          child: _buildAdminPage(
-            context: context,
-            initialTabKey: _resolveAdminTabKey(state),
+        redirect: (context, state) {
+          if (state.uri.path == '/admin') return '/admin/dashboard';
+          return null;
+        },
+        routes: [
+          GoRoute(
+            path: 'supplier-detail/:id',
+            pageBuilder: (context, state) {
+              final id = int.tryParse(state.pathParameters['id'] ?? '') ?? 0;
+              return MaterialPage(
+                key: ValueKey('admin-supplier-detail-$id'),
+                child: SupplierDetailPage(supplierId: id, basePath: 'admin'),
+              );
+            },
           ),
-        ),
-      ),
-      GoRoute(
-        path: '/admin/:section/:subSection',
-        pageBuilder: (context, state) => NoTransitionPage(
-          key: const ValueKey('admin-shell'),
-          child: _buildAdminPage(
-            context: context,
-            initialTabKey: _resolveAdminTabKey(state),
+          GoRoute(
+            path: ':section',
+            pageBuilder: (context, state) => NoTransitionPage(
+              key: const ValueKey('admin-shell'),
+              child: _buildAdminPage(
+                context: context,
+                initialTabKey: _resolveAdminTabKey(state),
+              ),
+            ),
           ),
-        ),
+          GoRoute(
+            path: ':section/:subSection',
+            pageBuilder: (context, state) => NoTransitionPage(
+              key: const ValueKey('admin-shell'),
+              child: _buildAdminPage(
+                context: context,
+                initialTabKey: _resolveAdminTabKey(state),
+              ),
+            ),
+          ),
+        ],
       ),
       GoRoute(
         path: '/role-home',
@@ -119,27 +135,42 @@ class SupermarketManagerApp extends StatelessWidget {
       ),
       GoRoute(
         path: '/manager',
-        redirect: (context, state) => '/manager/dashboard',
-      ),
-      GoRoute(
-        path: '/manager/:section',
-        pageBuilder: (context, state) => NoTransitionPage(
-          key: const ValueKey('manager-dashboard'),
-          child: _buildManagerPage(
-            context: context,
-            initialTabKey: _resolveManagerTabKey(state),
+        redirect: (context, state) {
+          if (state.uri.path == '/manager') return '/manager/dashboard';
+          return null;
+        },
+        routes: [
+          GoRoute(
+            path: 'supplier-detail/:id',
+            pageBuilder: (context, state) {
+              final id = int.tryParse(state.pathParameters['id'] ?? '') ?? 0;
+              return MaterialPage(
+                key: ValueKey('manager-supplier-detail-$id'),
+                child: SupplierDetailPage(supplierId: id, basePath: 'manager'),
+              );
+            },
           ),
-        ),
-      ),
-      GoRoute(
-        path: '/manager/:section/:subSection',
-        pageBuilder: (context, state) => NoTransitionPage(
-          key: const ValueKey('manager-dashboard'),
-          child: _buildManagerPage(
-            context: context,
-            initialTabKey: _resolveManagerTabKey(state),
+          GoRoute(
+            path: ':section',
+            pageBuilder: (context, state) => NoTransitionPage(
+              key: const ValueKey('manager-dashboard'),
+              child: _buildManagerPage(
+                context: context,
+                initialTabKey: _resolveManagerTabKey(state),
+              ),
+            ),
           ),
-        ),
+          GoRoute(
+            path: ':section/:subSection',
+            pageBuilder: (context, state) => NoTransitionPage(
+              key: const ValueKey('manager-dashboard'),
+              child: _buildManagerPage(
+                context: context,
+                initialTabKey: _resolveManagerTabKey(state),
+              ),
+            ),
+          ),
+        ],
       ),
     ],
   );

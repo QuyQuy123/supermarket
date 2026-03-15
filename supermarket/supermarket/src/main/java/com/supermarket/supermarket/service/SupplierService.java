@@ -9,6 +9,8 @@ public interface SupplierService {
 
     List<SupplierListItemResponse> getAllSuppliers();
 
+    SupplierListItemResponse getSupplierById(Integer id);
+
     SupplierListItemResponse createSupplier(CreateSupplierRequest request);
 
     SupplierListItemResponse updateSupplier(Integer id, UpdateSupplierRequest request);
