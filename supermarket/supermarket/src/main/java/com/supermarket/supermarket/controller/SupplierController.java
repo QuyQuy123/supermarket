@@ -52,12 +52,6 @@ public class SupplierController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteSupplier(@PathVariable Integer id) {
-        supplierService.deleteSupplier(id);
-        return ResponseEntity.noContent().build();
-    }
-
-    @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteSupplier(@PathVariable("id") Integer id) {
         supplierService.deleteSupplier(id);
         return ResponseEntity.noContent().build();
