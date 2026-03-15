@@ -24,6 +24,23 @@ class SupplierApiService {
         .toList();
   }
 
+  Future<SupplierListItem> getSupplierById(int id) async {
+    final uri = Uri.parse(
+      '${ApiConstants.baseUrl}${ApiConstants.suppliersPath}/$id',
+    );
+    final response = await http.get(uri);
+
+    if (response.statusCode == 404) {
+      throw Exception('Supplier not found');
+    }
+    if (response.statusCode < 200 || response.statusCode >= 300) {
+      throw Exception('Failed to load supplier');
+    }
+
+    final decoded = jsonDecode(response.body) as Map<String, dynamic>;
+    return SupplierListItem.fromJson(decoded);
+  }
+
   Future<void> createSupplier({
     required String supplierName,
     String? companyName,
@@ -90,5 +107,23 @@ class SupplierApiService {
       throw Exception(response.body);
     }
     throw Exception('Failed to update supplier');
+  }
+
+  Future<void> deleteSupplier(int id) async {
+    final uri = Uri.parse(
+      '${ApiConstants.baseUrl}${ApiConstants.suppliersPath}/$id',
+    );
+    final response = await http.delete(uri);
+
+    if (response.statusCode == 404) {
+      throw Exception('Supplier not found');
+    }
+    if (response.statusCode >= 200 && response.statusCode < 300) {
+      return;
+    }
+    if (response.body.isNotEmpty) {
+      throw Exception(response.body);
+    }
+    throw Exception('Failed to delete supplier');
   }
 }

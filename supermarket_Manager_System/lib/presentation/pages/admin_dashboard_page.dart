@@ -217,6 +217,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                       isCompact: isCompact,
                       currentTimeText: _formatClock(_now),
                       onProfileTap: () => _selectTab(_AdminTab.profile),
+                      basePath: 'admin',
                     ),
                   _AdminTab.profile => _ProfileContent(
                       fullName: widget.fullName,

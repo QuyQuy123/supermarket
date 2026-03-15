@@ -9,6 +9,7 @@ import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -29,6 +30,11 @@ public class SupplierController {
         return ResponseEntity.ok(supplierService.getAllSuppliers());
     }
 
+    @GetMapping("/{id}")
+    public ResponseEntity<SupplierListItemResponse> getSupplierById(@PathVariable("id") Integer id) {
+        return ResponseEntity.ok(supplierService.getSupplierById(id));
+    }
+
     @PostMapping
     public ResponseEntity<SupplierListItemResponse> createSupplier(
         @Valid @RequestBody CreateSupplierRequest request
@@ -44,5 +50,11 @@ public class SupplierController {
     ) {
         SupplierListItemResponse updated = supplierService.updateSupplier(id, request);
         return ResponseEntity.ok(updated);
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteSupplier(@PathVariable("id") Integer id) {
+        supplierService.deleteSupplier(id);
+        return ResponseEntity.noContent().build();
     }
 }

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:supermarket_manager_system/data/services/supplier_api_service.dart';
 import 'package:supermarket_manager_system/domain/models/supplier_list_item.dart';
 
@@ -9,12 +10,14 @@ class SuppliersContent extends StatefulWidget {
     required this.isCompact,
     required this.currentTimeText,
     required this.onProfileTap,
+    this.basePath = 'admin',
   });
 
   final String fullName;
   final bool isCompact;
   final String currentTimeText;
   final VoidCallback onProfileTap;
+  final String basePath;
 
   @override
   State<SuppliersContent> createState() => _SuppliersContentState();
@@ -53,6 +56,49 @@ class _SuppliersContentState extends State<SuppliersContent> {
       _reloadSuppliers();
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Supplier created successfully')),
+      );
+    }
+  }
+
+  Future<void> _openDeleteSupplierPopup(SupplierListItem supplier) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Delete Supplier'),
+        content: Text(
+          'Are you sure you want to delete "${supplier.supplierName.isEmpty ? "this supplier" : supplier.supplierName}"? This action cannot be undone.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(true),
+            style: TextButton.styleFrom(foregroundColor: Colors.red),
+            child: const Text('Delete'),
+          ),
+        ],
+      ),
+    );
+
+    if (!mounted || confirmed != true) return;
+
+    try {
+      await _supplierApiService.deleteSupplier(supplier.id);
+      if (!mounted) return;
+      _reloadSuppliers();
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Supplier deleted successfully')),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(e.toString().replaceFirst('Exception: ', '')),
+          backgroundColor: Colors.red,
+        ),
       );
     }
   }
@@ -194,7 +240,7 @@ class _SuppliersContentState extends State<SuppliersContent> {
                                 DataColumn(label: Text('STATUS')),
                                 DataColumn(
                                   label: SizedBox(
-                                    width: 90,
+                                    width: 280,
                                     child: Text('ACTIONS'),
                                   ),
                                 ),
@@ -239,16 +285,45 @@ class _SuppliersContentState extends State<SuppliersContent> {
         DataCell(_StatusChip(status: supplier.status)),
         DataCell(
           SizedBox(
-            width: 90,
-            child: OutlinedButton.icon(
-              onPressed: () => _openUpdateSupplierDialog(supplier),
-              icon: const Icon(Icons.edit_outlined, size: 18),
-              label: const Text('Edit'),
-              style: OutlinedButton.styleFrom(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                foregroundColor: const Color(0xFF667EEA),
-                side: const BorderSide(color: Color(0xFF667EEA)),
-              ),
+            width: 280,
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                OutlinedButton.icon(
+                  onPressed: () => context.push(
+                    '/${widget.basePath}/supplier-detail/${supplier.id}',
+                  ),
+                  icon: const Icon(Icons.visibility_outlined, size: 18),
+                  label: const Text('View'),
+                  style: OutlinedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+                    foregroundColor: const Color(0xFF667EEA),
+                    side: const BorderSide(color: Color(0xFF667EEA)),
+                  ),
+                ),
+                const SizedBox(width: 6),
+                OutlinedButton.icon(
+                  onPressed: () => _openUpdateSupplierDialog(supplier),
+                  icon: const Icon(Icons.edit_outlined, size: 18),
+                  label: const Text('Edit'),
+                  style: OutlinedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+                    foregroundColor: const Color(0xFF667EEA),
+                    side: const BorderSide(color: Color(0xFF667EEA)),
+                  ),
+                ),
+                const SizedBox(width: 6),
+                OutlinedButton.icon(
+                  onPressed: () => _openDeleteSupplierPopup(supplier),
+                  icon: const Icon(Icons.delete_outline, size: 18),
+                  label: const Text('Delete'),
+                  style: OutlinedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+                    foregroundColor: Colors.red,
+                    side: const BorderSide(color: Colors.red),
+                  ),
+                ),
+              ],
             ),
           ),
         ),

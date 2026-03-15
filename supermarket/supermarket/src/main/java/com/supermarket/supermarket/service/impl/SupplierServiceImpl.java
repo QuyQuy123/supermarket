@@ -28,6 +28,13 @@ public class SupplierServiceImpl implements SupplierService {
     }
 
     @Override
+    public SupplierListItemResponse getSupplierById(Integer id) {
+        return supplierRepository.findById(id)
+            .map(this::toListItemResponse)
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Supplier not found with id: " + id));
+    }
+
+    @Override
     public SupplierListItemResponse createSupplier(CreateSupplierRequest request) {
         String status = (request.getStatus() != null && !request.getStatus().isBlank())
             ? request.getStatus().trim()
@@ -63,6 +70,14 @@ public class SupplierServiceImpl implements SupplierService {
         supplier.setUpdatedAt(LocalDateTime.now());
         supplier = supplierRepository.save(supplier);
         return toListItemResponse(supplier);
+    }
+
+    @Override
+    public void deleteSupplier(Integer id) {
+        if (!supplierRepository.existsById(id)) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Supplier not found with id: " + id);
+        }
+        supplierRepository.deleteById(id);
     }
 
     private static String trimOrNull(String value) {
