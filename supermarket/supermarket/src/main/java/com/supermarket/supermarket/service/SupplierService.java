@@ -12,4 +12,6 @@ public interface SupplierService {
     SupplierListItemResponse createSupplier(CreateSupplierRequest request);
 
     SupplierListItemResponse updateSupplier(Integer id, UpdateSupplierRequest request);
+
+    void deleteSupplier(Integer id);
 }

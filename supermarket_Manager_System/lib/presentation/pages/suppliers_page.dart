@@ -169,8 +169,8 @@ class _SuppliersContentState extends State<SuppliersContent> {
                           child: SingleChildScrollView(
                             scrollDirection: Axis.horizontal,
                             child: DataTable(
-                              horizontalMargin: 20,
-                              columnSpacing: 38,
+                              horizontalMargin: 16,
+                              columnSpacing: 16,
                               headingRowColor: const WidgetStatePropertyAll(
                                 Color(0xFFF7F8FA),
                               ),
@@ -186,15 +186,45 @@ class _SuppliersContentState extends State<SuppliersContent> {
                                     child: Text('S/N'),
                                   ),
                                 ),
-                                DataColumn(label: Text('SUPPLIER NAME')),
-                                DataColumn(label: Text('COMPANY')),
-                                DataColumn(label: Text('EMAIL')),
-                                DataColumn(label: Text('PHONE')),
-                                DataColumn(label: Text('ADDRESS')),
-                                DataColumn(label: Text('STATUS')),
+                                DataColumn(
+                                  label: SizedBox(
+                                    width: 100,
+                                    child: Text('SUPPLIER NAME'),
+                                  ),
+                                ),
                                 DataColumn(
                                   label: SizedBox(
                                     width: 90,
+                                    child: Text('COMPANY'),
+                                  ),
+                                ),
+                                DataColumn(
+                                  label: SizedBox(
+                                    width: 110,
+                                    child: Text('EMAIL'),
+                                  ),
+                                ),
+                                DataColumn(
+                                  label: SizedBox(
+                                    width: 80,
+                                    child: Text('PHONE'),
+                                  ),
+                                ),
+                                DataColumn(
+                                  label: SizedBox(
+                                    width: 90,
+                                    child: Text('ADDRESS'),
+                                  ),
+                                ),
+                                DataColumn(
+                                  label: SizedBox(
+                                    width: 70,
+                                    child: Text('STATUS'),
+                                  ),
+                                ),
+                                DataColumn(
+                                  label: SizedBox(
+                                    width: 200,
                                     child: Text('ACTIONS'),
                                   ),
                                 ),
@@ -224,31 +254,144 @@ class _SuppliersContentState extends State<SuppliersContent> {
     );
   }
 
+  Future<void> _openDeleteSupplierPopup(SupplierListItem supplier) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Delete Supplier'),
+        content: Text(
+          'Are you sure you want to delete "${supplier.supplierName.isEmpty ? "this supplier" : supplier.supplierName}"? This action cannot be undone.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(true),
+            style: TextButton.styleFrom(
+              foregroundColor: Colors.red,
+            ),
+            child: const Text('Delete'),
+          ),
+        ],
+      ),
+    );
+
+    if (!mounted || confirmed != true) return;
+
+    try {
+      await _supplierApiService.deleteSupplier(supplier.id);
+      if (!mounted) return;
+      _reloadSuppliers();
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Supplier deleted successfully')),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            e.toString().replaceFirst('Exception: ', ''),
+          ),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
+
   DataRow _buildRow(int index, SupplierListItem supplier) {
     return DataRow(
       cells: [
         DataCell(SizedBox(width: 28, child: Text(index.toString()))),
-        DataCell(Text(
-          supplier.supplierName.isEmpty ? '-' : supplier.supplierName,
-          style: const TextStyle(fontWeight: FontWeight.w500),
-        )),
-        DataCell(Text(supplier.companyName.isEmpty ? '-' : supplier.companyName)),
-        DataCell(Text(supplier.email.isEmpty ? '-' : supplier.email)),
-        DataCell(Text(supplier.phone.isEmpty ? '-' : supplier.phone)),
-        DataCell(Text(supplier.address.isEmpty ? '-' : supplier.address)),
-        DataCell(_StatusChip(status: supplier.status)),
+        DataCell(
+          SizedBox(
+            width: 100,
+            child: Text(
+              supplier.supplierName.isEmpty ? '-' : supplier.supplierName,
+              style: const TextStyle(fontWeight: FontWeight.w500),
+              overflow: TextOverflow.ellipsis,
+              maxLines: 1,
+            ),
+          ),
+        ),
         DataCell(
           SizedBox(
             width: 90,
-            child: OutlinedButton.icon(
-              onPressed: () => _openUpdateSupplierDialog(supplier),
-              icon: const Icon(Icons.edit_outlined, size: 18),
-              label: const Text('Edit'),
-              style: OutlinedButton.styleFrom(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                foregroundColor: const Color(0xFF667EEA),
-                side: const BorderSide(color: Color(0xFF667EEA)),
-              ),
+            child: Text(
+              supplier.companyName.isEmpty ? '-' : supplier.companyName,
+              overflow: TextOverflow.ellipsis,
+              maxLines: 1,
+            ),
+          ),
+        ),
+        DataCell(
+          SizedBox(
+            width: 110,
+            child: Text(
+              supplier.email.isEmpty ? '-' : supplier.email,
+              overflow: TextOverflow.ellipsis,
+              maxLines: 1,
+            ),
+          ),
+        ),
+        DataCell(
+          SizedBox(
+            width: 80,
+            child: Text(
+              supplier.phone.isEmpty ? '-' : supplier.phone,
+              overflow: TextOverflow.ellipsis,
+              maxLines: 1,
+            ),
+          ),
+        ),
+        DataCell(
+          SizedBox(
+            width: 90,
+            child: Text(
+              supplier.address.isEmpty ? '-' : supplier.address,
+              overflow: TextOverflow.ellipsis,
+              maxLines: 1,
+            ),
+          ),
+        ),
+        DataCell(
+          SizedBox(width: 70, child: _StatusChip(status: supplier.status)),
+        ),
+        DataCell(
+          SizedBox(
+            width: 200,
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              mainAxisAlignment: MainAxisAlignment.start,
+              children: [
+                Flexible(
+                  child: OutlinedButton.icon(
+                    onPressed: () => _openUpdateSupplierDialog(supplier),
+                    icon: const Icon(Icons.edit_outlined, size: 18),
+                    label: const Text('Edit'),
+                    style: OutlinedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+                      foregroundColor: const Color(0xFF667EEA),
+                      side: const BorderSide(color: Color(0xFF667EEA)),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 6),
+                Flexible(
+                  child: OutlinedButton.icon(
+                    onPressed: () => _openDeleteSupplierPopup(supplier),
+                    icon: const Icon(Icons.delete_outline, size: 18),
+                    label: const Text('Delete'),
+                    style: OutlinedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+                      foregroundColor: Colors.red,
+                      side: const BorderSide(color: Colors.red),
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
         ),
