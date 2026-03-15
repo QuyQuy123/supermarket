@@ -71,6 +71,8 @@ class SupplierApiService {
     final body = <String, dynamic>{
       'supplierName': supplierName.trim(),
       'companyName': companyName?.trim().isEmpty ?? true ? null : companyName!.trim(),
+      'companyName':
+          companyName?.trim().isEmpty ?? true ? null : companyName!.trim(),
       'email': email?.trim().isEmpty ?? true ? null : email!.trim(),
       'phone': phone?.trim().isEmpty ?? true ? null : phone!.trim(),
       'address': address?.trim().isEmpty ?? true ? null : address!.trim(),
