@@ -29,7 +29,7 @@ class SupplierListItem {
       phone: (json['phone'] as String?) ?? '',
       address: (json['address'] as String?) ?? '',
       status: (json['status'] as String?) ?? '',
-      createdAt: createdAt == null ? null : createdAt.toString(),
+      createdAt: createdAt?.toString(),
     );
   }
 }
