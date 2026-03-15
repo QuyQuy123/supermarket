@@ -57,27 +57,6 @@ class _SuppliersContentState extends State<SuppliersContent> {
     }
   }
 
-  Future<void> _openAddSupplierDialog() async {
-    final created = await showDialog<bool>(
-      context: context,
-      barrierDismissible: false,
-      builder: (_) => _AddSupplierDialog(
-        supplierApiService: _supplierApiService,
-      ),
-    );
-
-    if (!mounted) {
-      return;
-    }
-
-    if (created == true) {
-      _reloadSuppliers();
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Supplier created successfully')),
-      );
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -125,37 +104,6 @@ class _SuppliersContentState extends State<SuppliersContent> {
                         ),
                       ),
                     ],
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      const Text(
-                        'List Supplier',
-                        style: TextStyle(
-                          fontSize: 28,
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                      DecoratedBox(
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(10),
-                          gradient: const LinearGradient(
-                            colors: [Color(0xFF667EEA), Color(0xFF764BA2)],
-                          ),
-                        ),
-                        child: TextButton(
-                          onPressed: _openAddSupplierDialog,
-                          child: const Text(
-                            '+ Add Supplier',
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
                   const SizedBox(height: 20),
                   Expanded(
                     child: FutureBuilder<List<SupplierListItem>>(
@@ -535,7 +483,7 @@ class _AddSupplierDialogState extends State<_AddSupplierDialog> {
                   ),
                   const SizedBox(height: 16),
                   DropdownButtonFormField<String>(
-                    value: _status,
+                    initialValue: _status,
                     decoration: const InputDecoration(
                       labelText: 'Status',
                       border: OutlineInputBorder(),
