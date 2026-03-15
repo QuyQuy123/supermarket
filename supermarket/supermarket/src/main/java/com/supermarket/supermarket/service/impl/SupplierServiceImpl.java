@@ -51,6 +51,7 @@ public class SupplierServiceImpl implements SupplierService {
     public SupplierListItemResponse updateSupplier(Integer id, UpdateSupplierRequest request) {
         Supplier supplier = supplierRepository.findById(id)
             .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Supplier not found with id: " + id));
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Supplier not found"));
         String status = (request.getStatus() != null && !request.getStatus().isBlank())
             ? request.getStatus().trim()
             : "active";

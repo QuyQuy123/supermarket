@@ -50,5 +50,10 @@ public class SupplierController {
     public ResponseEntity<Void> deleteSupplier(@PathVariable Integer id) {
         supplierService.deleteSupplier(id);
         return ResponseEntity.noContent().build();
+        @PathVariable("id") Integer id,
+        @Valid @RequestBody UpdateSupplierRequest request
+    ) {
+        SupplierListItemResponse updated = supplierService.updateSupplier(id, request);
+        return ResponseEntity.ok(updated);
     }
 }
