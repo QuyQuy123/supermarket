@@ -147,8 +147,8 @@ class _SuppliersContentState extends State<SuppliersContent> {
                           child: SingleChildScrollView(
                             scrollDirection: Axis.horizontal,
                             child: DataTable(
-                              horizontalMargin: 20,
-                              columnSpacing: 38,
+                              horizontalMargin: 16,
+                              columnSpacing: 16,
                               headingRowColor: const WidgetStatePropertyAll(
                                 Color(0xFFF7F8FA),
                               ),
@@ -164,12 +164,48 @@ class _SuppliersContentState extends State<SuppliersContent> {
                                     child: Text('S/N'),
                                   ),
                                 ),
-                                DataColumn(label: Text('SUPPLIER NAME')),
-                                DataColumn(label: Text('COMPANY')),
-                                DataColumn(label: Text('EMAIL')),
-                                DataColumn(label: Text('PHONE')),
-                                DataColumn(label: Text('ADDRESS')),
-                                DataColumn(label: Text('STATUS')),
+                                DataColumn(
+                                  label: SizedBox(
+                                    width: 100,
+                                    child: Text('SUPPLIER NAME'),
+                                  ),
+                                ),
+                                DataColumn(
+                                  label: SizedBox(
+                                    width: 90,
+                                    child: Text('COMPANY'),
+                                  ),
+                                ),
+                                DataColumn(
+                                  label: SizedBox(
+                                    width: 110,
+                                    child: Text('EMAIL'),
+                                  ),
+                                ),
+                                DataColumn(
+                                  label: SizedBox(
+                                    width: 80,
+                                    child: Text('PHONE'),
+                                  ),
+                                ),
+                                DataColumn(
+                                  label: SizedBox(
+                                    width: 90,
+                                    child: Text('ADDRESS'),
+                                  ),
+                                ),
+                                DataColumn(
+                                  label: SizedBox(
+                                    width: 70,
+                                    child: Text('STATUS'),
+                                  ),
+                                ),
+                                DataColumn(
+                                  label: SizedBox(
+                                    width: 200,
+                                    child: Text('ACTIONS'),
+                                  ),
+                                ),
                               ],
                               rows: suppliers
                                   .asMap()
@@ -196,19 +232,167 @@ class _SuppliersContentState extends State<SuppliersContent> {
     );
   }
 
+  Future<void> _openUpdateSupplierDialog(SupplierListItem supplier) async {
+    final updated = await showDialog<bool>(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => _UpdateSupplierDialog(
+        supplierApiService: _supplierApiService,
+        supplier: supplier,
+      ),
+    );
+
+    if (!mounted) return;
+
+    if (updated == true) {
+      _reloadSuppliers();
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Supplier updated successfully')),
+      );
+    }
+  }
+
+  Future<void> _openDeleteSupplierPopup(SupplierListItem supplier) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Delete Supplier'),
+        content: Text(
+          'Are you sure you want to delete "${supplier.supplierName.isEmpty ? "this supplier" : supplier.supplierName}"? This action cannot be undone.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(true),
+            style: TextButton.styleFrom(
+              foregroundColor: Colors.red,
+            ),
+            child: const Text('Delete'),
+          ),
+        ],
+      ),
+    );
+
+    if (!mounted || confirmed != true) return;
+
+    try {
+      await _supplierApiService.deleteSupplier(supplier.id);
+      if (!mounted) return;
+      _reloadSuppliers();
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Supplier deleted successfully')),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            e.toString().replaceFirst('Exception: ', ''),
+          ),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
+
   DataRow _buildRow(int index, SupplierListItem supplier) {
     return DataRow(
       cells: [
         DataCell(SizedBox(width: 28, child: Text(index.toString()))),
-        DataCell(Text(
-          supplier.supplierName.isEmpty ? '-' : supplier.supplierName,
-          style: const TextStyle(fontWeight: FontWeight.w500),
-        )),
-        DataCell(Text(supplier.companyName.isEmpty ? '-' : supplier.companyName)),
-        DataCell(Text(supplier.email.isEmpty ? '-' : supplier.email)),
-        DataCell(Text(supplier.phone.isEmpty ? '-' : supplier.phone)),
-        DataCell(Text(supplier.address.isEmpty ? '-' : supplier.address)),
-        DataCell(_StatusChip(status: supplier.status)),
+        DataCell(
+          SizedBox(
+            width: 100,
+            child: Text(
+              supplier.supplierName.isEmpty ? '-' : supplier.supplierName,
+              style: const TextStyle(fontWeight: FontWeight.w500),
+              overflow: TextOverflow.ellipsis,
+              maxLines: 1,
+            ),
+          ),
+        ),
+        DataCell(
+          SizedBox(
+            width: 90,
+            child: Text(
+              supplier.companyName.isEmpty ? '-' : supplier.companyName,
+              overflow: TextOverflow.ellipsis,
+              maxLines: 1,
+            ),
+          ),
+        ),
+        DataCell(
+          SizedBox(
+            width: 110,
+            child: Text(
+              supplier.email.isEmpty ? '-' : supplier.email,
+              overflow: TextOverflow.ellipsis,
+              maxLines: 1,
+            ),
+          ),
+        ),
+        DataCell(
+          SizedBox(
+            width: 80,
+            child: Text(
+              supplier.phone.isEmpty ? '-' : supplier.phone,
+              overflow: TextOverflow.ellipsis,
+              maxLines: 1,
+            ),
+          ),
+        ),
+        DataCell(
+          SizedBox(
+            width: 90,
+            child: Text(
+              supplier.address.isEmpty ? '-' : supplier.address,
+              overflow: TextOverflow.ellipsis,
+              maxLines: 1,
+            ),
+          ),
+        ),
+        DataCell(
+          SizedBox(width: 70, child: _StatusChip(status: supplier.status)),
+        ),
+        DataCell(
+          SizedBox(
+            width: 200,
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              mainAxisAlignment: MainAxisAlignment.start,
+              children: [
+                Flexible(
+                  child: OutlinedButton.icon(
+                    onPressed: () => _openUpdateSupplierDialog(supplier),
+                    icon: const Icon(Icons.edit_outlined, size: 18),
+                    label: const Text('Edit'),
+                    style: OutlinedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+                      foregroundColor: const Color(0xFF667EEA),
+                      side: const BorderSide(color: Color(0xFF667EEA)),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 6),
+                Flexible(
+                  child: OutlinedButton.icon(
+                    onPressed: () => _openDeleteSupplierPopup(supplier),
+                    icon: const Icon(Icons.delete_outline, size: 18),
+                    label: const Text('Delete'),
+                    style: OutlinedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+                      foregroundColor: Colors.red,
+                      side: const BorderSide(color: Colors.red),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
       ],
     );
   }
@@ -428,6 +612,224 @@ class _AddSupplierDialogState extends State<_AddSupplierDialog> {
                 children: [
                   const Text(
                     'Add Supplier',
+                    style: TextStyle(
+                      fontSize: 22,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  TextFormField(
+                    controller: _supplierNameController,
+                    decoration: const InputDecoration(
+                      labelText: 'Supplier Name *',
+                      border: OutlineInputBorder(),
+                    ),
+                    validator: (v) {
+                      if (v == null || v.trim().isEmpty) {
+                        return 'Supplier name is required';
+                      }
+                      return null;
+                    },
+                  ),
+                  const SizedBox(height: 16),
+                  TextFormField(
+                    controller: _companyNameController,
+                    decoration: const InputDecoration(
+                      labelText: 'Company Name',
+                      border: OutlineInputBorder(),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  TextFormField(
+                    controller: _emailController,
+                    keyboardType: TextInputType.emailAddress,
+                    decoration: const InputDecoration(
+                      labelText: 'Email',
+                      border: OutlineInputBorder(),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  TextFormField(
+                    controller: _phoneController,
+                    keyboardType: TextInputType.phone,
+                    decoration: const InputDecoration(
+                      labelText: 'Phone',
+                      border: OutlineInputBorder(),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  TextFormField(
+                    controller: _addressController,
+                    maxLines: 2,
+                    decoration: const InputDecoration(
+                      labelText: 'Address',
+                      border: OutlineInputBorder(),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  DropdownButtonFormField<String>(
+                    initialValue: _status,
+                    decoration: const InputDecoration(
+                      labelText: 'Status',
+                      border: OutlineInputBorder(),
+                    ),
+                    items: const [
+                      DropdownMenuItem(value: 'active', child: Text('Active')),
+                      DropdownMenuItem(
+                          value: 'deactive', child: Text('Deactive')),
+                    ],
+                    onChanged: _isSubmitting
+                        ? null
+                        : (v) => setState(() => _status = v ?? 'active'),
+                  ),
+                  if (_errorText != null) ...[
+                    const SizedBox(height: 12),
+                    Text(
+                      _errorText!,
+                      style: const TextStyle(color: Colors.red, fontSize: 13),
+                    ),
+                  ],
+                  const SizedBox(height: 24),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      TextButton(
+                        onPressed: _isSubmitting
+                            ? null
+                            : () => Navigator.of(context).pop(false),
+                        child: const Text('Cancel'),
+                      ),
+                      const SizedBox(width: 12),
+                      ElevatedButton(
+                        onPressed: _isSubmitting ? null : _submit,
+                        child: _isSubmitting
+                            ? const SizedBox(
+                                width: 20,
+                                height: 20,
+                                child: CircularProgressIndicator(strokeWidth: 2),
+                              )
+                            : const Text('Save'),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _UpdateSupplierDialog extends StatefulWidget {
+  const _UpdateSupplierDialog({
+    required this.supplierApiService,
+    required this.supplier,
+  });
+
+  final SupplierApiService supplierApiService;
+  final SupplierListItem supplier;
+
+  @override
+  State<_UpdateSupplierDialog> createState() => _UpdateSupplierDialogState();
+}
+
+class _UpdateSupplierDialogState extends State<_UpdateSupplierDialog> {
+  late final TextEditingController _supplierNameController;
+  late final TextEditingController _companyNameController;
+  late final TextEditingController _emailController;
+  late final TextEditingController _phoneController;
+  late final TextEditingController _addressController;
+
+  final _formKey = GlobalKey<FormState>();
+  late String _status;
+  bool _isSubmitting = false;
+  String? _errorText;
+
+  @override
+  void initState() {
+    super.initState();
+    _supplierNameController = TextEditingController(text: widget.supplier.supplierName);
+    _companyNameController = TextEditingController(text: widget.supplier.companyName);
+    _emailController = TextEditingController(text: widget.supplier.email);
+    _phoneController = TextEditingController(text: widget.supplier.phone);
+    _addressController = TextEditingController(text: widget.supplier.address);
+    _status = widget.supplier.status.isEmpty ? 'active' : widget.supplier.status;
+  }
+
+  @override
+  void dispose() {
+    _supplierNameController.dispose();
+    _companyNameController.dispose();
+    _emailController.dispose();
+    _phoneController.dispose();
+    _addressController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _submit() async {
+    if (!_formKey.currentState!.validate()) return;
+
+    setState(() {
+      _isSubmitting = true;
+      _errorText = null;
+    });
+
+    try {
+      await widget.supplierApiService.updateSupplier(
+        id: widget.supplier.id,
+        supplierName: _supplierNameController.text.trim(),
+        companyName: _companyNameController.text.trim().isEmpty
+            ? null
+            : _companyNameController.text.trim(),
+        email: _emailController.text.trim().isEmpty
+            ? null
+            : _emailController.text.trim(),
+        phone: _phoneController.text.trim().isEmpty
+            ? null
+            : _phoneController.text.trim(),
+        address: _addressController.text.trim().isEmpty
+            ? null
+            : _addressController.text.trim(),
+        status: _status,
+      );
+
+      if (!mounted) return;
+      Navigator.of(context).pop(true);
+    } catch (error) {
+      final errorMessage =
+          error.toString().replaceFirst('Exception: ', '');
+      setState(() => _errorText = errorMessage);
+    } finally {
+      if (mounted) {
+        setState(() => _isSubmitting = false);
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Dialog(
+      backgroundColor: Colors.transparent,
+      insetPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 520),
+        child: Container(
+          padding: const EdgeInsets.all(24),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: SingleChildScrollView(
+            child: Form(
+              key: _formKey,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  const Text(
+                    'Update Supplier',
                     style: TextStyle(
                       fontSize: 22,
                       fontWeight: FontWeight.w700,
