@@ -51,12 +51,12 @@ class SupplierApiService {
   }) async {
     final uri = Uri.parse('${ApiConstants.baseUrl}${ApiConstants.suppliersPath}');
     final body = <String, dynamic>{
-      'supplierName': supplierName.trim(),
-      'companyName': companyName?.trim().isEmpty ?? true ? null : companyName!.trim(),
-      'email': email?.trim().isEmpty ?? true ? null : email!.trim(),
-      'phone': phone?.trim().isEmpty ?? true ? null : phone!.trim(),
-      'address': address?.trim().isEmpty ?? true ? null : address!.trim(),
-      'status': status?.trim().isEmpty ?? true ? null : status!.trim(),
+      "supplierName": supplierName.trim(),
+      "companyName": companyName?.trim().isEmpty ?? true ? null : companyName!.trim(),
+      "email": email?.trim().isEmpty ?? true ? null : email!.trim(),
+      "phone": phone?.trim().isEmpty ?? true ? null : phone!.trim(),
+      "address": address?.trim().isEmpty ?? true ? null : address!.trim(),
+      "status": status?.trim().isEmpty ?? true ? null : status!.trim(),
     };
     final response = await http.post(
       uri,
@@ -86,10 +86,9 @@ class SupplierApiService {
       '${ApiConstants.baseUrl}${ApiConstants.suppliersPath}/$id',
     );
     final body = <String, dynamic>{
-      'supplierName': supplierName.trim(),
-      'companyName':
-          companyName?.trim().isEmpty ?? true ? null : companyName!.trim(),
-      'email': email?.trim().isEmpty ?? true ? null : email!.trim(),
+      "supplierName": supplierName.trim(),
+      "companyName": companyName?.trim().isEmpty ?? true ? null : companyName!.trim(),
+      "email": email?.trim().isEmpty ?? true ? null : email!.trim(),
       'phone': phone?.trim().isEmpty ?? true ? null : phone!.trim(),
       'address': address?.trim().isEmpty ?? true ? null : address!.trim(),
       'status': status?.trim().isEmpty ?? true ? null : status!.trim(),
@@ -100,6 +99,9 @@ class SupplierApiService {
       body: jsonEncode(body),
     );
 
+    if (response.statusCode == 404) {
+      throw Exception('Supplier not found');
+    }
     if (response.statusCode >= 200 && response.statusCode < 300) {
       return;
     }
