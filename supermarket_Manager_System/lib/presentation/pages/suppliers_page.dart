@@ -57,6 +57,28 @@ class _SuppliersContentState extends State<SuppliersContent> {
     }
   }
 
+  Future<void> _openUpdateSupplierDialog(SupplierListItem supplier) async {
+    final updated = await showDialog<bool>(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => _UpdateSupplierDialog(
+        supplierApiService: _supplierApiService,
+        supplier: supplier,
+      ),
+    );
+
+    if (!mounted) {
+      return;
+    }
+
+    if (updated == true) {
+      _reloadSuppliers();
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Supplier updated successfully')),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -170,6 +192,12 @@ class _SuppliersContentState extends State<SuppliersContent> {
                                 DataColumn(label: Text('PHONE')),
                                 DataColumn(label: Text('ADDRESS')),
                                 DataColumn(label: Text('STATUS')),
+                                DataColumn(
+                                  label: SizedBox(
+                                    width: 90,
+                                    child: Text('ACTIONS'),
+                                  ),
+                                ),
                               ],
                               rows: suppliers
                                   .asMap()
@@ -209,7 +237,249 @@ class _SuppliersContentState extends State<SuppliersContent> {
         DataCell(Text(supplier.phone.isEmpty ? '-' : supplier.phone)),
         DataCell(Text(supplier.address.isEmpty ? '-' : supplier.address)),
         DataCell(_StatusChip(status: supplier.status)),
+        DataCell(
+          SizedBox(
+            width: 90,
+            child: OutlinedButton.icon(
+              onPressed: () => _openUpdateSupplierDialog(supplier),
+              icon: const Icon(Icons.edit_outlined, size: 18),
+              label: const Text('Edit'),
+              style: OutlinedButton.styleFrom(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                foregroundColor: const Color(0xFF667EEA),
+                side: const BorderSide(color: Color(0xFF667EEA)),
+              ),
+            ),
+          ),
+        ),
       ],
+    );
+  }
+}
+
+class _UpdateSupplierDialog extends StatefulWidget {
+  const _UpdateSupplierDialog({
+    required this.supplierApiService,
+    required this.supplier,
+  });
+
+  final SupplierApiService supplierApiService;
+  final SupplierListItem supplier;
+
+  @override
+  State<_UpdateSupplierDialog> createState() => _UpdateSupplierDialogState();
+}
+
+class _UpdateSupplierDialogState extends State<_UpdateSupplierDialog> {
+  late final TextEditingController _supplierNameController;
+  late final TextEditingController _companyNameController;
+  late final TextEditingController _emailController;
+  late final TextEditingController _phoneController;
+  late final TextEditingController _addressController;
+
+  late String _status;
+  bool _isSubmitting = false;
+  String? _errorText;
+
+  @override
+  void initState() {
+    super.initState();
+    final s = widget.supplier;
+    _supplierNameController = TextEditingController(text: s.supplierName);
+    _companyNameController = TextEditingController(text: s.companyName);
+    _emailController = TextEditingController(text: s.email);
+    _phoneController = TextEditingController(text: s.phone);
+    _addressController = TextEditingController(text: s.address);
+    _status = s.status.isEmpty ? 'active' : s.status;
+  }
+
+  @override
+  void dispose() {
+    _supplierNameController.dispose();
+    _companyNameController.dispose();
+    _emailController.dispose();
+    _phoneController.dispose();
+    _addressController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _submit() async {
+    final formKey = _formKey.currentState;
+    if (formKey == null || !formKey.validate()) {
+      return;
+    }
+
+    setState(() {
+      _isSubmitting = true;
+      _errorText = null;
+    });
+
+    try {
+      await widget.supplierApiService.updateSupplier(
+        id: widget.supplier.id,
+        supplierName: _supplierNameController.text.trim(),
+        companyName: _companyNameController.text.trim().isEmpty
+            ? null
+            : _companyNameController.text.trim(),
+        email: _emailController.text.trim().isEmpty
+            ? null
+            : _emailController.text.trim(),
+        phone: _phoneController.text.trim().isEmpty
+            ? null
+            : _phoneController.text.trim(),
+        address: _addressController.text.trim().isEmpty
+            ? null
+            : _addressController.text.trim(),
+        status: _status,
+      );
+
+      if (!mounted) {
+        return;
+      }
+      Navigator.of(context).pop(true);
+    } catch (error) {
+      final errorMessage =
+          error.toString().replaceFirst('Exception: ', '');
+      setState(() {
+        _errorText = errorMessage;
+      });
+    } finally {
+      if (mounted) {
+        setState(() => _isSubmitting = false);
+      }
+    }
+  }
+
+  final _formKey = GlobalKey<FormState>();
+
+  @override
+  Widget build(BuildContext context) {
+    return Dialog(
+      backgroundColor: Colors.transparent,
+      insetPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 520),
+        child: Container(
+          padding: const EdgeInsets.all(24),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: SingleChildScrollView(
+            child: Form(
+              key: _formKey,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  const Text(
+                    'Update Supplier',
+                    style: TextStyle(
+                      fontSize: 22,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  TextFormField(
+                    controller: _supplierNameController,
+                    decoration: const InputDecoration(
+                      labelText: 'Supplier Name *',
+                      border: OutlineInputBorder(),
+                    ),
+                    validator: (v) {
+                      if (v == null || v.trim().isEmpty) {
+                        return 'Supplier name is required';
+                      }
+                      return null;
+                    },
+                  ),
+                  const SizedBox(height: 16),
+                  TextFormField(
+                    controller: _companyNameController,
+                    decoration: const InputDecoration(
+                      labelText: 'Company Name',
+                      border: OutlineInputBorder(),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  TextFormField(
+                    controller: _emailController,
+                    keyboardType: TextInputType.emailAddress,
+                    decoration: const InputDecoration(
+                      labelText: 'Email',
+                      border: OutlineInputBorder(),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  TextFormField(
+                    controller: _phoneController,
+                    keyboardType: TextInputType.phone,
+                    decoration: const InputDecoration(
+                      labelText: 'Phone',
+                      border: OutlineInputBorder(),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  TextFormField(
+                    controller: _addressController,
+                    maxLines: 2,
+                    decoration: const InputDecoration(
+                      labelText: 'Address',
+                      border: OutlineInputBorder(),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  DropdownButtonFormField<String>(
+                    initialValue: _status,
+                    decoration: const InputDecoration(
+                      labelText: 'Status',
+                      border: OutlineInputBorder(),
+                    ),
+                    items: const [
+                      DropdownMenuItem(value: 'active', child: Text('Active')),
+                      DropdownMenuItem(
+                          value: 'deactive', child: Text('Deactive')),
+                    ],
+                    onChanged: _isSubmitting
+                        ? null
+                        : (v) => setState(() => _status = v ?? 'active'),
+                  ),
+                  if (_errorText != null) ...[
+                    const SizedBox(height: 12),
+                    Text(
+                      _errorText!,
+                      style: const TextStyle(color: Colors.red, fontSize: 13),
+                    ),
+                  ],
+                  const SizedBox(height: 24),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      TextButton(
+                        onPressed: _isSubmitting
+                            ? null
+                            : () => Navigator.of(context).pop(false),
+                        child: const Text('Cancel'),
+                      ),
+                      const SizedBox(width: 12),
+                      ElevatedButton(
+                        onPressed: _isSubmitting ? null : _submit,
+                        child: _isSubmitting
+                            ? const SizedBox(
+                                width: 20,
+                                height: 20,
+                                child: CircularProgressIndicator(strokeWidth: 2),
+                              )
+                            : const Text('Update'),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
     );
   }
 }

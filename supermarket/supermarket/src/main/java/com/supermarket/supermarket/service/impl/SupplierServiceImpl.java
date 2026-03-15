@@ -1,6 +1,7 @@
 package com.supermarket.supermarket.service.impl;
 
 import com.supermarket.supermarket.dto.request.CreateSupplierRequest;
+import com.supermarket.supermarket.dto.request.UpdateSupplierRequest;
 import com.supermarket.supermarket.dto.response.SupplierListItemResponse;
 import com.supermarket.supermarket.entity.Supplier;
 import com.supermarket.supermarket.repository.SupplierRepository;
@@ -8,7 +9,9 @@ import com.supermarket.supermarket.service.SupplierService;
 import java.time.LocalDateTime;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 
 @Service
 @RequiredArgsConstructor
@@ -40,6 +43,24 @@ public class SupplierServiceImpl implements SupplierService {
             .createdAt(now)
             .updatedAt(now)
             .build();
+        supplier = supplierRepository.save(supplier);
+        return toListItemResponse(supplier);
+    }
+
+    @Override
+    public SupplierListItemResponse updateSupplier(Integer id, UpdateSupplierRequest request) {
+        Supplier supplier = supplierRepository.findById(id)
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Supplier not found"));
+        String status = (request.getStatus() != null && !request.getStatus().isBlank())
+            ? request.getStatus().trim()
+            : "active";
+        supplier.setSupplierName(request.getSupplierName().trim());
+        supplier.setCompanyName(trimOrNull(request.getCompanyName()));
+        supplier.setEmail(trimOrNull(request.getEmail()));
+        supplier.setPhone(trimOrNull(request.getPhone()));
+        supplier.setAddress(trimOrNull(request.getAddress()));
+        supplier.setStatus(status);
+        supplier.setUpdatedAt(LocalDateTime.now());
         supplier = supplierRepository.save(supplier);
         return toListItemResponse(supplier);
     }
