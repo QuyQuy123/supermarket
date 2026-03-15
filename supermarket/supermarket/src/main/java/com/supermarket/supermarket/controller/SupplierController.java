@@ -45,11 +45,16 @@ public class SupplierController {
 
     @PutMapping("/{id}")
     public ResponseEntity<SupplierListItemResponse> updateSupplier(
-        @PathVariable("id") Integer id,
+        @PathVariable Integer id,
         @Valid @RequestBody UpdateSupplierRequest request
     ) {
-        SupplierListItemResponse updated = supplierService.updateSupplier(id, request);
-        return ResponseEntity.ok(updated);
+        return ResponseEntity.ok(supplierService.updateSupplier(id, request));
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteSupplier(@PathVariable Integer id) {
+        supplierService.deleteSupplier(id);
+        return ResponseEntity.noContent().build();
     }
 
     @DeleteMapping("/{id}")
