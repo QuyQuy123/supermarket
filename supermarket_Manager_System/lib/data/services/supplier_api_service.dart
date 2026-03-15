@@ -69,11 +69,9 @@ class SupplierApiService {
       '${ApiConstants.baseUrl}${ApiConstants.suppliersPath}/$id',
     );
     final body = <String, dynamic>{
-      'supplierName': supplierName.trim(),
-      'companyName': companyName?.trim().isEmpty ?? true ? null : companyName!.trim(),
-      'companyName':
-          companyName?.trim().isEmpty ?? true ? null : companyName!.trim(),
-      'email': email?.trim().isEmpty ?? true ? null : email!.trim(),
+      "supplierName": supplierName.trim(),
+      "companyName": companyName?.trim().isEmpty ?? true ? null : companyName!.trim(),
+      "email": email?.trim().isEmpty ?? true ? null : email!.trim(),
       'phone': phone?.trim().isEmpty ?? true ? null : phone!.trim(),
       'address': address?.trim().isEmpty ?? true ? null : address!.trim(),
       'status': status?.trim().isEmpty ?? true ? null : status!.trim(),
