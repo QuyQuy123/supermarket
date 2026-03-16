@@ -463,7 +463,7 @@ class _AddProductPageState extends State<AddProductPage> {
         ),
         const SizedBox(height: 8),
         DropdownButtonFormField<int>(
-          value: _selectedSupplierId,
+          initialValue: _selectedSupplierId,
           decoration: const InputDecoration(
             border: OutlineInputBorder(),
             hintText: 'Choose...',
@@ -490,7 +490,7 @@ class _AddProductPageState extends State<AddProductPage> {
         ),
         const SizedBox(height: 8),
         DropdownButtonFormField<int>(
-          value: _selectedCategoryId,
+          initialValue: _selectedCategoryId,
           decoration: const InputDecoration(
             border: OutlineInputBorder(),
             hintText: 'Choose...',
