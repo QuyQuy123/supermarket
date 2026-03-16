@@ -9,6 +9,7 @@ import lombok.Getter;
 public class OrderListItemResponse {
     private Integer id;
     private String orderNo;
+    private String orderDateTime;
     private String customerName;
     private String customerPhone;
     private BigDecimal total;
