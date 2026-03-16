@@ -2,8 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_web_plugins/url_strategy.dart';
 import 'package:go_router/go_router.dart';
 import 'package:supermarket_manager_system/presentation/pages/admin_dashboard_page.dart';
-import 'package:supermarket_manager_system/presentation/pages/cashier_barcode_scanner_page.dart';
-import 'package:supermarket_manager_system/presentation/pages/cashier_customer_page.dart';
+import 'package:supermarket_manager_system/presentation/pages/cashier_dashboard_page.dart';
 import 'package:supermarket_manager_system/presentation/pages/cashier_open_shift_page.dart';
 import 'package:supermarket_manager_system/presentation/pages/login_page.dart';
 import 'package:supermarket_manager_system/presentation/pages/manager_dashboard_page.dart';
@@ -133,15 +132,27 @@ class SupermarketManagerApp extends StatelessWidget {
         ),
       ),
       GoRoute(
-        path: '/cashier/barcode-scanner',
-        builder: (context, state) => CashierBarcodeScannerPage(
-          fullName: AppSession.instance.fullName,
+        path: '/cashier/:section',
+        pageBuilder: (context, state) => NoTransitionPage(
+          key: const ValueKey('cashier-shell'),
+          child: _buildCashierPage(
+            context: context,
+            initialTabKey: _resolveCashierTabKey(state),
+            initialPhone: _resolveCashierPhone(state),
+            initialOrderId: _resolveCashierOrderId(state),
+          ),
         ),
       ),
       GoRoute(
-        path: '/cashier/customers',
-        builder: (context, state) => CashierCustomerPage(
-          fullName: AppSession.instance.fullName,
+        path: '/cashier/:section/:subSection',
+        pageBuilder: (context, state) => NoTransitionPage(
+          key: const ValueKey('cashier-shell'),
+          child: _buildCashierPage(
+            context: context,
+            initialTabKey: _resolveCashierTabKey(state),
+            initialPhone: _resolveCashierPhone(state),
+            initialOrderId: _resolveCashierOrderId(state),
+          ),
         ),
       ),
       GoRoute(
@@ -251,6 +262,60 @@ class SupermarketManagerApp extends StatelessWidget {
         context.go('/login');
       },
     );
+  }
+
+  static Widget _buildCashierPage({
+    required BuildContext context,
+    required String initialTabKey,
+    required String initialPhone,
+    required int? initialOrderId,
+  }) {
+    final userId = AppSession.instance.userId;
+    if (userId == null) {
+      return const LoginPage();
+    }
+    return CashierDashboardPage(
+      key: const ValueKey('cashier-dashboard-shell'),
+      fullName: AppSession.instance.fullName,
+      userId: userId,
+      initialTabKey: initialTabKey,
+      initialPhone: initialPhone,
+      initialOrderId: initialOrderId,
+      onNavigatePath: (path) => context.go(path),
+      onLogoutRequested: () {
+        AppSession.instance.clear();
+        context.go('/login');
+      },
+    );
+  }
+
+  static String _resolveCashierTabKey(GoRouterState state) {
+    final section = state.pathParameters['section'] ?? 'barcode-scanner';
+    final subSection = state.pathParameters['subSection'];
+    if (section == 'customers' && subSection == 'history') {
+      return 'customer-history';
+    }
+    if (section == 'orders' && subSection == 'detail') {
+      return 'order-detail';
+    }
+    if (section == 'profile' && subSection == 'edit') {
+      return 'profile-edit';
+    }
+    if (section == 'profile') {
+      return 'profile';
+    }
+    if (section == 'customers') {
+      return 'customers';
+    }
+    return 'scanner';
+  }
+
+  static String _resolveCashierPhone(GoRouterState state) {
+    return state.uri.queryParameters['phone'] ?? '';
+  }
+
+  static int? _resolveCashierOrderId(GoRouterState state) {
+    return int.tryParse(state.uri.queryParameters['orderId'] ?? '');
   }
 
   static String _resolveManagerTabKey(GoRouterState state) {

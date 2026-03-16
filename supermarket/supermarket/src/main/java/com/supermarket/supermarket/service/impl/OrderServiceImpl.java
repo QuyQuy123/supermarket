@@ -9,6 +9,8 @@ import com.supermarket.supermarket.repository.OrderItemRepository;
 import com.supermarket.supermarket.repository.SalesOrderRepository;
 import com.supermarket.supermarket.service.OrderService;
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Objects;
 import lombok.RequiredArgsConstructor;
@@ -19,6 +21,7 @@ import org.springframework.web.server.ResponseStatusException;
 @Service
 @RequiredArgsConstructor
 public class OrderServiceImpl implements OrderService {
+    private static final DateTimeFormatter ORDER_DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss");
 
     private final SalesOrderRepository salesOrderRepository;
     private final OrderItemRepository orderItemRepository;
@@ -58,6 +61,7 @@ public class OrderServiceImpl implements OrderService {
         return OrderListItemResponse.builder()
             .id(order.getId())
             .orderNo(emptyAsDash(order.getOrderNo()))
+            .orderDateTime(resolveOrderDateTime(order))
             .customerName(resolveCustomerName(order))
             .customerPhone(emptyAsDash(order.getCustomerPhone()))
             .total(orZero(order.getSubtotal()))
@@ -109,6 +113,22 @@ public class OrderServiceImpl implements OrderService {
             .qty(qty)
             .amount(orZero(item.getAmount()))
             .build();
+    }
+
+    private String resolveOrderDateTime(SalesOrder order) {
+        LocalDateTime dateTime = null;
+        if (order.getOrderDate() != null) {
+            dateTime = LocalDateTime.of(
+                order.getOrderDate(),
+                order.getOrderTime() == null ? java.time.LocalTime.MIDNIGHT : order.getOrderTime()
+            );
+        } else if (order.getCreatedAt() != null) {
+            dateTime = order.getCreatedAt();
+        }
+        if (dateTime == null) {
+            return "—";
+        }
+        return ORDER_DATE_TIME_FORMATTER.format(dateTime);
     }
 }
 
