@@ -140,5 +140,14 @@ public class ProductServiceImpl implements ProductService {
         }
         return value.trim();
     }
+
+    @Override
+    @Transactional
+    public void deleteProduct(Integer id) {
+        if (!productRepository.existsById(id)) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Product not found with id: " + id);
+        }
+        productRepository.deleteById(id);
+    }
 }
 
