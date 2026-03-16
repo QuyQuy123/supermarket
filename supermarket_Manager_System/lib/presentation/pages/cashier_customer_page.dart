@@ -2,6 +2,8 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:supermarket_manager_system/data/services/customer_api_service.dart';
+import 'package:supermarket_manager_system/domain/models/customer_list_item.dart';
 import 'package:supermarket_manager_system/utils/app_session.dart';
 
 class CashierCustomerPage extends StatefulWidget {
@@ -20,6 +22,10 @@ class _CashierCustomerPageState extends State<CashierCustomerPage> {
   late DateTime _now;
   Timer? _clockTimer;
   final TextEditingController _totalCashEndController = TextEditingController();
+  final _customerApiService = CustomerApiService();
+  List<CustomerListItem> _customers = const [];
+  bool _isLoadingCustomers = true;
+  String? _loadCustomersError;
 
   @override
   void initState() {
@@ -30,6 +36,7 @@ class _CashierCustomerPageState extends State<CashierCustomerPage> {
         setState(() => _now = DateTime.now());
       }
     });
+    _loadCustomers();
   }
 
   @override
@@ -45,6 +52,40 @@ class _CashierCustomerPageState extends State<CashierCustomerPage> {
 
   String _twoDigits(int value) {
     return value.toString().padLeft(2, '0');
+  }
+
+  Future<void> _loadCustomers() async {
+    setState(() {
+      _isLoadingCustomers = true;
+      _loadCustomersError = null;
+    });
+    try {
+      final customers = await _customerApiService.getCustomers();
+      if (!mounted) {
+        return;
+      }
+      setState(() {
+        _customers = customers;
+        _isLoadingCustomers = false;
+      });
+    } catch (error) {
+      if (!mounted) {
+        return;
+      }
+      setState(() {
+        _isLoadingCustomers = false;
+        _loadCustomersError = error.toString().replaceFirst('Exception: ', '');
+      });
+    }
+  }
+
+  String _money(double amount) => '${amount.toStringAsFixed(0)}đ';
+
+  String _discountText(double percent) {
+    if (percent <= 0) {
+      return '—';
+    }
+    return '${percent.toStringAsFixed(0)}%';
   }
 
   Future<void> _openCloseShiftDialog() async {
@@ -237,13 +278,6 @@ class _CashierCustomerPageState extends State<CashierCustomerPage> {
   @override
   Widget build(BuildContext context) {
     final fullName = widget.fullName.isEmpty ? 'Cashier' : widget.fullName;
-    final customers = const [
-      _CustomerRow('1', 'Nguyen Van A', '0901234567', '1,250', '18', '2,450,000đ', '5%'),
-      _CustomerRow('2', 'Tran Thi B', '0912345678', '820', '12', '1,180,500đ', '3%'),
-      _CustomerRow('3', 'Le Van C', '0923456789', '450', '7', '685,200đ', '—'),
-      _CustomerRow('4', 'Pham Thi D', '0934567890', '2,100', '32', '4,920,000đ', '10%'),
-      _CustomerRow('5', 'Hoang Van E', '0945678901', '120', '3', '156,000đ', '—'),
-    ];
 
     return Scaffold(
       backgroundColor: const Color(0xFFF0F2F5),
@@ -366,7 +400,7 @@ class _CashierCustomerPageState extends State<CashierCustomerPage> {
                               style: TextStyle(fontSize: 30, fontWeight: FontWeight.w700),
                             ),
                             ElevatedButton.icon(
-                              onPressed: () => _openCustomerDialog(
+                              onPressed: () => _openAddCustomerDialog(
                                 title: 'Add Customer',
                                 submitText: 'Submit',
                               ),
@@ -381,53 +415,96 @@ class _CashierCustomerPageState extends State<CashierCustomerPage> {
                         ),
                         const SizedBox(height: 16),
                         Expanded(
-                          child: Container(
-                            decoration: BoxDecoration(
-                              color: Colors.white,
-                              borderRadius: BorderRadius.circular(12),
-                              border: Border.all(color: const Color(0xFFE8EAED)),
-                            ),
-                            child: SingleChildScrollView(
-                              scrollDirection: Axis.horizontal,
-                              child: DataTable(
-                                headingRowColor: const WidgetStatePropertyAll(Color(0xFFF7F8FA)),
-                                columns: const [
-                                  DataColumn(label: Text('S/N')),
-                                  DataColumn(label: Text('CUSTOMER')),
-                                  DataColumn(label: Text('PHONE')),
-                                  DataColumn(label: Text('POINTS')),
-                                  DataColumn(label: Text('PURCHASES')),
-                                  DataColumn(label: Text('TOTAL AMOUNT')),
-                                  DataColumn(label: Text('DISCOUNT')),
-                                  DataColumn(label: Text('ACTIONS')),
-                                ],
-                                rows: customers
-                                    .map(
-                                      (c) => DataRow(
-                                        cells: [
-                                          DataCell(Text(c.sn)),
-                                          DataCell(Text(c.customer)),
-                                          DataCell(Text(c.phone)),
-                                          DataCell(Text(c.points)),
-                                          DataCell(Text(c.purchases)),
-                                          DataCell(Text(c.totalAmount)),
-                                          DataCell(Text(c.discount)),
-                                          DataCell(
-                                            TextButton(
-                                              onPressed: () => _openCustomerDialog(
-                                                title: 'Update Customer',
-                                                submitText: 'Update',
-                                              ),
-                                              child: const Text('Edit'),
-                                            ),
+                          child: _isLoadingCustomers
+                              ? const Center(child: CircularProgressIndicator())
+                              : _loadCustomersError != null
+                                  ? Center(
+                                      child: Column(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          Text(
+                                            'Cannot load customers: $_loadCustomersError',
+                                            textAlign: TextAlign.center,
+                                          ),
+                                          const SizedBox(height: 10),
+                                          ElevatedButton(
+                                            onPressed: _loadCustomers,
+                                            child: const Text('Retry'),
                                           ),
                                         ],
                                       ),
                                     )
-                                    .toList(),
-                              ),
-                            ),
-                          ),
+                                  : Container(
+                                      decoration: BoxDecoration(
+                                        color: Colors.white,
+                                        borderRadius: BorderRadius.circular(12),
+                                        border: Border.all(color: const Color(0xFFE8EAED)),
+                                      ),
+                                      child: SingleChildScrollView(
+                                        scrollDirection: Axis.horizontal,
+                                        child: DataTable(
+                                          headingRowColor: const WidgetStatePropertyAll(
+                                            Color(0xFFF7F8FA),
+                                          ),
+                                          columns: const [
+                                            DataColumn(label: Text('S/N')),
+                                            DataColumn(label: Text('CUSTOMER')),
+                                            DataColumn(label: Text('PHONE')),
+                                            DataColumn(label: Text('POINTS')),
+                                            DataColumn(label: Text('PURCHASES')),
+                                            DataColumn(label: Text('TOTAL AMOUNT')),
+                                            DataColumn(label: Text('DISCOUNT')),
+                                            DataColumn(label: Text('ACTIONS')),
+                                          ],
+                                          rows: _customers
+                                              .asMap()
+                                              .entries
+                                              .map(
+                                                (entry) => DataRow(
+                                                  cells: [
+                                                    DataCell(Text((entry.key + 1).toString())),
+                                                    DataCell(Text(entry.value.name)),
+                                                    DataCell(
+                                                      InkWell(
+                                                        onTap: () => context.go(
+                                                          '/cashier/customers/history?phone=${Uri.encodeComponent(entry.value.phone)}',
+                                                        ),
+                                                        child: Text(
+                                                          entry.value.phone,
+                                                          style: const TextStyle(
+                                                            color: Color(0xFF3B82F6),
+                                                            fontWeight: FontWeight.w600,
+                                                          ),
+                                                        ),
+                                                      ),
+                                                    ),
+                                                    DataCell(Text(entry.value.points.toString())),
+                                                    DataCell(
+                                                      Text(entry.value.totalPurchases.toString()),
+                                                    ),
+                                                    DataCell(Text(_money(entry.value.totalAmount))),
+                                                    DataCell(
+                                                      Text(
+                                                        _discountText(
+                                                          entry.value.discountPercent,
+                                                        ),
+                                                      ),
+                                                    ),
+                                                    DataCell(
+                                                      TextButton(
+                                                        onPressed: () => _openUpdateCustomerDialog(
+                                                          entry.value,
+                                                        ),
+                                                        child: const Text('Edit'),
+                                                      ),
+                                                    ),
+                                                  ],
+                                                ),
+                                              )
+                                              .toList(),
+                                        ),
+                                      ),
+                                    ),
                         ),
                       ],
                     ),
@@ -441,7 +518,7 @@ class _CashierCustomerPageState extends State<CashierCustomerPage> {
     );
   }
 
-  Future<void> _openCustomerDialog({
+  Future<void> _openAddCustomerDialog({
     required String title,
     required String submitText,
   }) async {
@@ -523,26 +600,253 @@ class _CashierCustomerPageState extends State<CashierCustomerPage> {
     phoneController.dispose();
     amountController.dispose();
   }
-}
 
-class _CustomerRow {
-  const _CustomerRow(
-    this.sn,
-    this.customer,
-    this.phone,
-    this.points,
-    this.purchases,
-    this.totalAmount,
-    this.discount,
-  );
+  Future<void> _openUpdateCustomerDialog(CustomerListItem customer) async {
+    final index = _customers.indexWhere((c) => c.id == customer.id);
+    if (index < 0) {
+      return;
+    }
+    final phoneController = TextEditingController(text: customer.phone);
+    final amountController = TextEditingController(
+      text: customer.totalAmount.toStringAsFixed(0),
+    );
 
-  final String sn;
-  final String customer;
-  final String phone;
-  final String points;
-  final String purchases;
-  final String totalAmount;
-  final String discount;
+    await showDialog<void>(
+      context: context,
+      barrierDismissible: true,
+      builder: (dialogContext) {
+        return Dialog(
+          insetPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
+          backgroundColor: Colors.transparent,
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 420),
+            child: Container(
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(14),
+                boxShadow: const [
+                  BoxShadow(
+                    color: Color.fromRGBO(0, 0, 0, 0.2),
+                    blurRadius: 60,
+                    offset: Offset(0, 20),
+                  ),
+                ],
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
+                    decoration: const BoxDecoration(
+                      color: Color(0xFFFAFBFC),
+                      border: Border(bottom: BorderSide(color: Color(0xFFE8EAED))),
+                      borderRadius: BorderRadius.vertical(top: Radius.circular(14)),
+                    ),
+                    child: Row(
+                      children: [
+                        const Expanded(
+                          child: Text(
+                            'Update Customer',
+                            style: TextStyle(
+                              fontSize: 20,
+                              fontWeight: FontWeight.w700,
+                              color: Color(0xFF1A1D21),
+                            ),
+                          ),
+                        ),
+                        InkWell(
+                          onTap: () => Navigator.of(dialogContext).pop(),
+                          borderRadius: BorderRadius.circular(8),
+                          child: Container(
+                            width: 36,
+                            height: 36,
+                            alignment: Alignment.center,
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFF3F4F6),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: const Text(
+                              '×',
+                              style: TextStyle(
+                                color: Color(0xFF6B7280),
+                                fontSize: 22,
+                                fontWeight: FontWeight.w500,
+                                height: 1,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.all(20),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        const Text(
+                          'Phone',
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                            color: Color(0xFF374151),
+                          ),
+                        ),
+                        const SizedBox(height: 6),
+                        TextField(
+                          controller: phoneController,
+                          decoration: InputDecoration(
+                            hintText: 'e.g. 0901234567',
+                            contentPadding: const EdgeInsets.symmetric(
+                              horizontal: 12,
+                              vertical: 12,
+                            ),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(8),
+                              borderSide: const BorderSide(color: Color(0xFFD1D5DB)),
+                            ),
+                            enabledBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(8),
+                              borderSide: const BorderSide(color: Color(0xFFD1D5DB)),
+                            ),
+                            focusedBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(8),
+                              borderSide: const BorderSide(color: Color(0xFF667EEA)),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 14),
+                        const Text(
+                          'Amount',
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                            color: Color(0xFF374151),
+                          ),
+                        ),
+                        const SizedBox(height: 6),
+                        TextField(
+                          controller: amountController,
+                          decoration: InputDecoration(
+                            hintText: 'e.g. 1,000,000',
+                            contentPadding: const EdgeInsets.symmetric(
+                              horizontal: 12,
+                              vertical: 12,
+                            ),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(8),
+                              borderSide: const BorderSide(color: Color(0xFFD1D5DB)),
+                            ),
+                            enabledBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(8),
+                              borderSide: const BorderSide(color: Color(0xFFD1D5DB)),
+                            ),
+                            focusedBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(8),
+                              borderSide: const BorderSide(color: Color(0xFF667EEA)),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+                    decoration: const BoxDecoration(
+                      border: Border(top: BorderSide(color: Color(0xFFE8EAED))),
+                      borderRadius: BorderRadius.vertical(bottom: Radius.circular(14)),
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      children: [
+                        ElevatedButton(
+                          onPressed: () => Navigator.of(dialogContext).pop(),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFFDC2626),
+                            foregroundColor: Colors.white,
+                          ),
+                          child: const Text('Cancel'),
+                        ),
+                        const SizedBox(width: 10),
+                        ElevatedButton(
+                          onPressed: () async {
+                            final dialogNavigator = Navigator.of(dialogContext);
+                            final phone = phoneController.text.trim();
+                            final amount = amountController.text.trim();
+                            if (phone.isEmpty || amount.isEmpty) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text('Phone and Amount are required.'),
+                                ),
+                              );
+                              return;
+                            }
+
+                            final parsedAmount = _parseAmount(amount);
+                            if (parsedAmount == null || parsedAmount < 0) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text('Amount must be a valid positive number.'),
+                                ),
+                              );
+                              return;
+                            }
+
+                            try {
+                              final updated = await _customerApiService.updateCustomer(
+                                customerId: customer.id,
+                                phone: phone,
+                                totalAmount: parsedAmount,
+                              );
+                              if (!mounted) {
+                                return;
+                              }
+                              setState(() {
+                                _customers[index] = updated;
+                              });
+                              dialogNavigator.pop();
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(content: Text('Customer updated successfully.')),
+                              );
+                            } catch (error) {
+                              if (!mounted) {
+                                return;
+                              }
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text(
+                                    error.toString().replaceFirst('Exception: ', ''),
+                                  ),
+                                ),
+                              );
+                            }
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFF16A34A),
+                            foregroundColor: Colors.white,
+                          ),
+                          child: const Text('Update'),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
+    );
+
+    phoneController.dispose();
+    amountController.dispose();
+  }
+
+  double? _parseAmount(String value) {
+    final normalized = value.replaceAll('đ', '').replaceAll(',', '').trim();
+    return double.tryParse(normalized);
+  }
 }
 
 class _CashierMenuItem extends StatelessWidget {
