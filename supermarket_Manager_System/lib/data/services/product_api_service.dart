@@ -68,6 +68,27 @@ class ProductApiService {
     return ProductDetail.fromJson(decoded);
   }
 
+  Future<void> deleteProduct(int id) async {
+    final uri = Uri.parse('${ApiConstants.baseUrl}${ApiConstants.productsPath}/$id');
+    final response = await http.delete(uri);
+
+    if (response.statusCode == 404) {
+      throw Exception('Product not found');
+    }
+    if (response.statusCode < 200 || response.statusCode >= 300) {
+      String errorMessage = 'Failed to delete product';
+      try {
+        final errorBody = jsonDecode(response.body);
+        if (errorBody is Map && errorBody['message'] != null) {
+          errorMessage = errorBody['message'];
+        }
+      } catch (_) {
+        errorMessage = response.body.isNotEmpty ? response.body : errorMessage;
+      }
+      throw Exception(errorMessage);
+    }
+  }
+
   Future<List<SupplierOption>> getSupplierOptions() async {
     final uri = Uri.parse('${ApiConstants.baseUrl}${ApiConstants.suppliersPath}/options');
     final response = await http.get(uri);

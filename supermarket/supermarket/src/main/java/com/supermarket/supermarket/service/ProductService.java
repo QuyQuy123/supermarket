@@ -12,5 +12,7 @@ public interface ProductService {
     ProductDetailResponse getProductDetail(Integer id);
 
     ProductDetailResponse createProduct(CreateProductRequest request);
+
+    void deleteProduct(Integer id);
 }
 
