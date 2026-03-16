@@ -327,7 +327,7 @@ class _ProductImage extends StatelessWidget {
         width: 220,
         height: 220,
         fit: BoxFit.cover,
-        errorBuilder: (_, __, ___) => fallback,
+        errorBuilder: (context, error, stackTrace) => fallback,
       ),
     );
   }
