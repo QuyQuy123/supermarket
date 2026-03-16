@@ -15,6 +15,7 @@ class _LoginPageState extends State<LoginPage> {
   final _passwordController = TextEditingController();
   final _authApiService = AuthApiService();
   bool _isLoading = false;
+  bool _isPasswordVisible = false;
 
   @override
   void dispose() {
@@ -24,9 +25,12 @@ class _LoginPageState extends State<LoginPage> {
   }
 
   Future<void> _onLoginPressed() async {
-    if (_emailController.text.trim().isEmpty || _passwordController.text.isEmpty) {
+    if (_emailController.text.trim().isEmpty ||
+        _passwordController.text.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please enter email/username and password')),
+        const SnackBar(
+          content: Text('Please enter email/username and password'),
+        ),
       );
       return;
     }
@@ -63,7 +67,9 @@ class _LoginPageState extends State<LoginPage> {
         return;
       }
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(error.toString().replaceFirst('Exception: ', ''))),
+        SnackBar(
+          content: Text(error.toString().replaceFirst('Exception: ', '')),
+        ),
       );
     } finally {
       if (mounted) {
@@ -128,7 +134,19 @@ class _LoginPageState extends State<LoginPage> {
                     controller: _passwordController,
                     hintText: 'Enter your password',
                     keyboardType: TextInputType.text,
-                    obscureText: true,
+                    obscureText: !_isPasswordVisible,
+                    suffixIcon: IconButton(
+                      onPressed: () => setState(
+                        () => _isPasswordVisible = !_isPasswordVisible,
+                      ),
+                      icon: Icon(
+                        _isPasswordVisible
+                            ? Icons.visibility
+                            : Icons.visibility_off,
+                        color: const Color(0xFF8B95A1),
+                      ),
+                      splashRadius: 20,
+                    ),
                   ),
                   const SizedBox(height: 24),
                   SizedBox(
@@ -157,7 +175,9 @@ class _LoginPageState extends State<LoginPage> {
                                 height: 24,
                                 child: CircularProgressIndicator(
                                   strokeWidth: 2.5,
-                                  valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                                  valueColor: AlwaysStoppedAnimation<Color>(
+                                    Colors.white,
+                                  ),
                                 ),
                               )
                             : const Text(
@@ -221,12 +241,14 @@ class _AppTextField extends StatelessWidget {
     required this.hintText,
     required this.keyboardType,
     required this.obscureText,
+    this.suffixIcon,
   });
 
   final TextEditingController controller;
   final String hintText;
   final TextInputType keyboardType;
   final bool obscureText;
+  final Widget? suffixIcon;
 
   @override
   Widget build(BuildContext context) {
@@ -244,6 +266,7 @@ class _AppTextField extends StatelessWidget {
           horizontal: 16,
           vertical: 18,
         ),
+        suffixIcon: suffixIcon,
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(10),
           borderSide: const BorderSide(color: Color(0xFFE1E5E9), width: 2),

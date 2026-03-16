@@ -14,6 +14,8 @@ class _SetNewPasswordPageState extends State<SetNewPasswordPage> {
   final _passwordController = TextEditingController();
   final _confirmController = TextEditingController();
   bool _isLoading = false;
+  bool _isPasswordVisible = false;
+  bool _isConfirmVisible = false;
   final _authApiService = AuthApiService();
 
   @override
@@ -28,47 +30,53 @@ class _SetNewPasswordPageState extends State<SetNewPasswordPage> {
     final confirm = _confirmController.text;
 
     if (password.isEmpty || confirm.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please fill all fields')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Please fill all fields')));
       return;
     }
 
     if (password != confirm) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Passwords do not match')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Passwords do not match')));
       return;
     }
 
     // New complex password validation
     if (password.length < 8) {
-       ScaffoldMessenger.of(context).showSnackBar(
+      ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Password must be at least 8 characters')),
       );
       return;
     }
     if (!password.contains(RegExp(r'[A-Z]'))) {
-       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Must contain at least 1 uppercase letter')),
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Must contain at least 1 uppercase letter'),
+        ),
       );
       return;
     }
     if (!password.contains(RegExp(r'[a-z]'))) {
-       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Must contain at least 1 lowercase letter')),
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Must contain at least 1 lowercase letter'),
+        ),
       );
       return;
     }
     if (!password.contains(RegExp(r'[0-9]'))) {
-       ScaffoldMessenger.of(context).showSnackBar(
+      ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Must contain at least 1 number')),
       );
       return;
     }
     if (!password.contains(RegExp(r'[!@#$%^&*(),.?":{}|<>]'))) {
-       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Must contain at least 1 special character')),
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Must contain at least 1 special character'),
+        ),
       );
       return;
     }
@@ -81,14 +89,16 @@ class _SetNewPasswordPageState extends State<SetNewPasswordPage> {
       );
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Password reset successfully. Please login.')),
+        const SnackBar(
+          content: Text('Password reset successfully. Please login.'),
+        ),
       );
       context.go('/login');
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error: $e')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Error: $e')));
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
@@ -139,6 +149,9 @@ class _SetNewPasswordPageState extends State<SetNewPasswordPage> {
                 _buildPasswordField(
                   controller: _passwordController,
                   hint: 'Enter new password',
+                  obscureText: !_isPasswordVisible,
+                  onToggleVisibility: () =>
+                      setState(() => _isPasswordVisible = !_isPasswordVisible),
                 ),
                 const SizedBox(height: 24),
                 const Text(
@@ -153,6 +166,9 @@ class _SetNewPasswordPageState extends State<SetNewPasswordPage> {
                 _buildPasswordField(
                   controller: _confirmController,
                   hint: 'Confirm new password',
+                  obscureText: !_isConfirmVisible,
+                  onToggleVisibility: () =>
+                      setState(() => _isConfirmVisible = !_isConfirmVisible),
                 ),
                 const SizedBox(height: 24),
                 Container(
@@ -212,7 +228,9 @@ class _SetNewPasswordPageState extends State<SetNewPasswordPage> {
                               height: 24,
                               child: CircularProgressIndicator(
                                 strokeWidth: 2.5,
-                                valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                                valueColor: AlwaysStoppedAnimation<Color>(
+                                  Colors.white,
+                                ),
                               ),
                             )
                           : const Text(
@@ -257,17 +275,33 @@ class _SetNewPasswordPageState extends State<SetNewPasswordPage> {
     );
   }
 
-  Widget _buildPasswordField({required TextEditingController controller, required String hint}) {
+  Widget _buildPasswordField({
+    required TextEditingController controller,
+    required String hint,
+    required bool obscureText,
+    required VoidCallback onToggleVisibility,
+  }) {
     return TextField(
       controller: controller,
-      obscureText: true,
+      obscureText: obscureText,
       style: const TextStyle(fontSize: 16),
       decoration: InputDecoration(
         hintText: hint,
         hintStyle: const TextStyle(fontSize: 15, color: Color(0xFF999999)),
         filled: true,
         fillColor: const Color(0xFFF9FAFB),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 16,
+          vertical: 16,
+        ),
+        suffixIcon: IconButton(
+          onPressed: onToggleVisibility,
+          icon: Icon(
+            obscureText ? Icons.visibility_off : Icons.visibility,
+            color: const Color(0xFF8B95A1),
+          ),
+          splashRadius: 20,
+        ),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(8),
           borderSide: const BorderSide(color: Color(0xFFE5E7EB)),
