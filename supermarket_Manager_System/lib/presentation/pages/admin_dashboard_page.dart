@@ -9,9 +9,10 @@ import 'package:supermarket_manager_system/presentation/pages/orders_page.dart';
 import 'package:supermarket_manager_system/presentation/pages/profile_content_page.dart';
 import 'package:supermarket_manager_system/presentation/pages/users_page.dart';
 import 'package:supermarket_manager_system/presentation/pages/suppliers_page.dart';
+import 'package:supermarket_manager_system/presentation/pages/products_page.dart';
 import 'package:supermarket_manager_system/presentation/widgets/change_password_dialog.dart';
 
-enum _AdminTab { dashboard, users, orders, suppliers, profile, profileEdit }
+enum _AdminTab { dashboard, users, orders, suppliers, products, profile, profileEdit }
 
 class AdminDashboardPage extends StatefulWidget {
   const AdminDashboardPage({
@@ -44,6 +45,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
       'users' => _AdminTab.users,
       'orders' => _AdminTab.orders,
       'suppliers' => _AdminTab.suppliers,
+      'products' => _AdminTab.products,
       'profile' => _AdminTab.profile,
       'profile-edit' => _AdminTab.profileEdit,
       _ => _AdminTab.dashboard,
@@ -56,6 +58,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
       _AdminTab.users => '/admin/users',
       _AdminTab.orders => '/admin/orders',
       _AdminTab.suppliers => '/admin/suppliers',
+      _AdminTab.products => '/admin/products',
       _AdminTab.profile => '/admin/profile',
       _AdminTab.profileEdit => '/admin/profile/edit',
     };
@@ -219,6 +222,12 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                       onProfileTap: () => _selectTab(_AdminTab.profile),
                       basePath: 'admin',
                     ),
+                  _AdminTab.products => ProductsContent(
+                      fullName: widget.fullName,
+                      isCompact: isCompact,
+                      currentTimeText: _formatClock(_now),
+                      onProfileTap: () => _selectTab(_AdminTab.profile),
+                    ),
                   _AdminTab.profile => _ProfileContent(
                       fullName: widget.fullName,
                       userId: widget.userId,
@@ -313,7 +322,11 @@ class _SidebarMenu extends StatelessWidget {
                     const _SidebarItem(label: 'Customer'),
                     const _SidebarItem(label: 'Discount'),
                     const _SidebarItem(label: 'Category'),
-                    const _SidebarItem(label: 'Products'),
+                    _SidebarItem(
+                      label: 'Products',
+                      active: selectedTab == _AdminTab.products,
+                      onTap: () => onSelectTab(_AdminTab.products),
+                    ),
                     const _SidebarItem(label: 'Barcode Scanner'),
                     const _SidebarItem(label: 'Creditors'),
                     const _SidebarItem(label: 'Expired'),
