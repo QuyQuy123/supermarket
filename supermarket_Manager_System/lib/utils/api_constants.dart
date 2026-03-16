@@ -16,3 +16,4 @@ class ApiConstants {
   static const String customersPath = '/api/customers';
   static const String productsPath = '/api/products';
 
+}
