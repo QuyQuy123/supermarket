@@ -83,6 +83,8 @@ class _ProductsContentState extends State<ProductsContent> {
         builder: (context) => UpdateProductDialog(product: productDetail),
       );
 
+      if (!mounted) return;
+
       if (result == true) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
