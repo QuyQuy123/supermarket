@@ -3,6 +3,7 @@ package com.supermarket.supermarket.service.impl;
 import com.supermarket.supermarket.dto.request.CreateSupplierRequest;
 import com.supermarket.supermarket.dto.request.UpdateSupplierRequest;
 import com.supermarket.supermarket.dto.response.SupplierListItemResponse;
+import com.supermarket.supermarket.dto.response.SupplierOptionResponse;
 import com.supermarket.supermarket.entity.Supplier;
 import com.supermarket.supermarket.repository.SupplierRepository;
 import com.supermarket.supermarket.service.SupplierService;
@@ -11,6 +12,7 @@ import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 @Service
@@ -98,5 +100,16 @@ public class SupplierServiceImpl implements SupplierService {
             .status(s.getStatus())
             .createdAt(s.getCreatedAt())
             .build();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<SupplierOptionResponse> getAllSupplierOptions() {
+        return supplierRepository.findAll().stream()
+            .map(s -> SupplierOptionResponse.builder()
+                .id(s.getId())
+                .supplierName(s.getSupplierName())
+                .build())
+            .toList();
     }
 }
