@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:supermarket_manager_system/data/services/product_api_service.dart';
 import 'package:supermarket_manager_system/domain/models/product_list_item.dart';
+import 'package:supermarket_manager_system/presentation/widgets/update_product_dialog.dart';
 
 class ProductsContent extends StatefulWidget {
   const ProductsContent({
@@ -65,6 +66,37 @@ class _ProductsContentState extends State<ProductsContent> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Failed to delete product: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
+  Future<void> _showUpdateDialog(int productId) async {
+    try {
+      final productDetail = await _productApiService.getProductById(productId);
+      if (!mounted) return;
+
+      final result = await showDialog<bool>(
+        context: context,
+        builder: (context) => UpdateProductDialog(product: productDetail),
+      );
+
+      if (result == true) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Product updated successfully'),
+            backgroundColor: Colors.green,
+          ),
+        );
+        _reloadProducts();
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to load product: $e'),
             backgroundColor: Colors.red,
           ),
         );
@@ -353,7 +385,7 @@ class _ProductsContentState extends State<ProductsContent> {
               mainAxisSize: MainAxisSize.min,
               children: [
                 OutlinedButton(
-                  onPressed: () {},
+                  onPressed: () => _showUpdateDialog(product.id),
                   style: OutlinedButton.styleFrom(
                     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
                     foregroundColor: const Color(0xFF667EEA),

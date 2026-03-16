@@ -1,6 +1,7 @@
 package com.supermarket.supermarket.service.impl;
 
 import com.supermarket.supermarket.dto.request.CreateProductRequest;
+import com.supermarket.supermarket.dto.request.UpdateProductRequest;
 import com.supermarket.supermarket.dto.response.ProductDetailResponse;
 import com.supermarket.supermarket.dto.response.ProductListItemResponse;
 import com.supermarket.supermarket.entity.Category;
@@ -148,6 +149,51 @@ public class ProductServiceImpl implements ProductService {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Product not found with id: " + id);
         }
         productRepository.deleteById(id);
+    }
+
+    @Override
+    @Transactional
+    public ProductDetailResponse updateProduct(Integer id, UpdateProductRequest request) {
+        Product product = productRepository.findById(id)
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Product not found with id: " + id));
+
+        Supplier supplier = null;
+        if (request.getSupplierId() != null) {
+            supplier = supplierRepository.findById(request.getSupplierId())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Supplier not found"));
+        }
+
+        Category category = null;
+        if (request.getCategoryId() != null) {
+            category = categoryRepository.findById(request.getCategoryId())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Category not found"));
+        }
+
+        // Update fields
+        product.setProductBatch(trimOrNull(request.getProductBatch()));
+        product.setProductName(request.getProductName().trim());
+        product.setDescription(trimOrNull(request.getDescription()));
+        product.setCostPrice(request.getCostPrice());
+        product.setSellingPrice(request.getSellingPrice());
+        product.setQtyCartons(request.getQtyCartons());
+        product.setSupplier(supplier);
+        product.setCategory(category);
+        product.setMftDate(request.getMftDate());
+        product.setExpiryDate(request.getExpiryDate());
+        product.setImageUrl(trimOrNull(request.getImageUrl()));
+
+        // Update stock if qtyCartons changed
+        if (request.getQtyCartons() != null) {
+            product.setInStock(request.getQtyCartons());
+        }
+
+        // Update status based on stock
+        Integer inStock = product.getInStock() != null ? product.getInStock() : 0;
+        product.setStatus(inStock > 0 ? "In Stock" : "Out of Stock");
+        product.setUpdatedAt(LocalDateTime.now());
+
+        product = productRepository.save(product);
+        return toDetail(product);
     }
 }
 
