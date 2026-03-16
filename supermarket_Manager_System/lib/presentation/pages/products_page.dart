@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:supermarket_manager_system/data/services/product_api_service.dart';
 import 'package:supermarket_manager_system/domain/models/product_list_item.dart';
 
@@ -232,13 +233,20 @@ class _ProductsContentState extends State<ProductsContent> {
         DataCell(
           SizedBox(
             width: 110,
-            child: Text(
-              product.barcode.isEmpty ? '-' : product.barcode,
-              style: const TextStyle(
-                color: Color(0xFF2563EB),
-                fontWeight: FontWeight.w600,
+            child: InkWell(
+              onTap: product.id <= 0
+                  ? null
+                  : () => context.push(
+                        '${_basePathFromLocation(context)}/product-detail/${product.id}',
+                      ),
+              child: Text(
+                product.barcode.isEmpty ? '-' : product.barcode,
+                style: const TextStyle(
+                  color: Color(0xFF2563EB),
+                  fontWeight: FontWeight.w600,
+                ),
+                overflow: TextOverflow.ellipsis,
               ),
-              overflow: TextOverflow.ellipsis,
             ),
           ),
         ),
@@ -328,6 +336,12 @@ class _ProductsContentState extends State<ProductsContent> {
       ],
     );
   }
+}
+
+String _basePathFromLocation(BuildContext context) {
+  final loc = GoRouterState.of(context).uri.path;
+  if (loc.startsWith('/manager')) return '/manager';
+  return '/admin';
 }
 
 class _ProductsHeader extends StatelessWidget {
