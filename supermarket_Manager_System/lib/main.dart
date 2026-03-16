@@ -3,6 +3,7 @@ import 'package:flutter_web_plugins/url_strategy.dart';
 import 'package:go_router/go_router.dart';
 import 'package:supermarket_manager_system/presentation/pages/admin_dashboard_page.dart';
 import 'package:supermarket_manager_system/presentation/pages/cashier_barcode_scanner_page.dart';
+import 'package:supermarket_manager_system/presentation/pages/cashier_customer_page.dart';
 import 'package:supermarket_manager_system/presentation/pages/cashier_open_shift_page.dart';
 import 'package:supermarket_manager_system/presentation/pages/login_page.dart';
 import 'package:supermarket_manager_system/presentation/pages/manager_dashboard_page.dart';
@@ -34,7 +35,11 @@ class SupermarketManagerApp extends StatelessWidget {
       }
 
       if (isLoggedIn && (path == '/login' || path == '/')) {
+        final roleId = AppSession.instance.roleId;
         final role = AppSession.instance.role.toLowerCase();
+        if (roleId == 3 || role.contains('cashier')) {
+          return '/cashier/open-shift';
+        }
         if (role.contains('admin')) {
           return '/admin/dashboard';
         }
@@ -130,6 +135,12 @@ class SupermarketManagerApp extends StatelessWidget {
       GoRoute(
         path: '/cashier/barcode-scanner',
         builder: (context, state) => CashierBarcodeScannerPage(
+          fullName: AppSession.instance.fullName,
+        ),
+      ),
+      GoRoute(
+        path: '/cashier/customers',
+        builder: (context, state) => CashierCustomerPage(
           fullName: AppSession.instance.fullName,
         ),
       ),

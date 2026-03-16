@@ -4,8 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:supermarket_manager_system/utils/app_session.dart';
 
-class CashierBarcodeScannerPage extends StatefulWidget {
-  const CashierBarcodeScannerPage({
+class CashierCustomerPage extends StatefulWidget {
+  const CashierCustomerPage({
     super.key,
     required this.fullName,
   });
@@ -13,10 +13,10 @@ class CashierBarcodeScannerPage extends StatefulWidget {
   final String fullName;
 
   @override
-  State<CashierBarcodeScannerPage> createState() => _CashierBarcodeScannerPageState();
+  State<CashierCustomerPage> createState() => _CashierCustomerPageState();
 }
 
-class _CashierBarcodeScannerPageState extends State<CashierBarcodeScannerPage> {
+class _CashierCustomerPageState extends State<CashierCustomerPage> {
   late DateTime _now;
   Timer? _clockTimer;
   final TextEditingController _totalCashEndController = TextEditingController();
@@ -207,7 +207,6 @@ class _CashierBarcodeScannerPageState extends State<CashierBarcodeScannerPage> {
                             );
                             return;
                           }
-
                           Navigator.of(dialogContext).pop();
                           AppSession.instance.clear();
                           context.go('/login');
@@ -238,6 +237,14 @@ class _CashierBarcodeScannerPageState extends State<CashierBarcodeScannerPage> {
   @override
   Widget build(BuildContext context) {
     final fullName = widget.fullName.isEmpty ? 'Cashier' : widget.fullName;
+    final customers = const [
+      _CustomerRow('1', 'Nguyen Van A', '0901234567', '1,250', '18', '2,450,000đ', '5%'),
+      _CustomerRow('2', 'Tran Thi B', '0912345678', '820', '12', '1,180,500đ', '3%'),
+      _CustomerRow('3', 'Le Van C', '0923456789', '450', '7', '685,200đ', '—'),
+      _CustomerRow('4', 'Pham Thi D', '0934567890', '2,100', '32', '4,920,000đ', '10%'),
+      _CustomerRow('5', 'Hoang Van E', '0945678901', '120', '3', '156,000đ', '—'),
+    ];
+
     return Scaffold(
       backgroundColor: const Color(0xFFF0F2F5),
       body: Row(
@@ -273,10 +280,7 @@ class _CashierBarcodeScannerPageState extends State<CashierBarcodeScannerPage> {
                       SizedBox(width: 10),
                       Text(
                         'SMS SYSTEM',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.w600,
-                        ),
+                        style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
                       ),
                     ],
                   ),
@@ -284,14 +288,10 @@ class _CashierBarcodeScannerPageState extends State<CashierBarcodeScannerPage> {
                 const SizedBox(height: 8),
                 _CashierMenuItem(
                   label: 'Barcode Scanner',
-                  active: true,
+                  active: false,
                   onTap: () => context.go('/cashier/barcode-scanner'),
                 ),
-                _CashierMenuItem(
-                  label: 'Customer',
-                  active: false,
-                  onTap: () => context.go('/cashier/customers'),
-                ),
+                const _CashierMenuItem(label: 'Customer', active: true),
                 const Spacer(),
                 _CashierMenuItem(
                   label: 'Logout',
@@ -318,13 +318,10 @@ class _CashierBarcodeScannerPageState extends State<CashierBarcodeScannerPage> {
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                         decoration: BoxDecoration(
-                          color: const Color(0xFF0D9488),
+                          color: const Color(0xFF667EEA),
                           borderRadius: BorderRadius.circular(8),
                         ),
-                        child: Text(
-                          _timeText(),
-                          style: const TextStyle(color: Colors.white),
-                        ),
+                        child: Text(_timeText(), style: const TextStyle(color: Colors.white)),
                       ),
                       const SizedBox(width: 14),
                       Column(
@@ -343,130 +340,94 @@ class _CashierBarcodeScannerPageState extends State<CashierBarcodeScannerPage> {
                         width: 40,
                         height: 40,
                         alignment: Alignment.center,
-                        decoration: const BoxDecoration(
-                          color: Color(0xFFD97706),
-                          shape: BoxShape.circle,
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF667EEA),
+                          borderRadius: BorderRadius.circular(10),
                         ),
                         child: Text(
                           fullName[0].toUpperCase(),
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.w700,
-                          ),
+                          style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700),
                         ),
                       ),
                     ],
                   ),
                 ),
                 Expanded(
-                  child: SingleChildScrollView(
+                  child: Padding(
                     padding: const EdgeInsets.all(24),
                     child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
-                        Wrap(
-                          spacing: 12,
-                          runSpacing: 12,
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            _inputBox(label: 'Customer Name', hint: 'Optional [Required for credit sales]'),
-                            _inputBox(label: 'Phone', hint: 'Optional [Required for credit sales]'),
-                            ElevatedButton(
-                              onPressed: () {},
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: const Color(0xFF0D9488),
-                                foregroundColor: Colors.white,
-                              ),
-                              child: const Text('Add customer for points'),
+                            const Text(
+                              'Customer List',
+                              style: TextStyle(fontSize: 30, fontWeight: FontWeight.w700),
                             ),
-                          ],
-                        ),
-                        const SizedBox(height: 16),
-                        Wrap(
-                          spacing: 12,
-                          runSpacing: 12,
-                          crossAxisAlignment: WrapCrossAlignment.center,
-                          children: [
-                            ElevatedButton(
-                              onPressed: () {},
+                            ElevatedButton.icon(
+                              onPressed: () => _openCustomerDialog(
+                                title: 'Add Customer',
+                                submitText: 'Submit',
+                              ),
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: const Color(0xFF16A34A),
                                 foregroundColor: Colors.white,
                               ),
-                              child: const Text('+ Add To Cart'),
-                            ),
-                            ElevatedButton(
-                              onPressed: () {},
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: const Color(0xFF0D9488),
-                                foregroundColor: Colors.white,
-                              ),
-                              child: const Text('Scan product barcode'),
-                            ),
-                            SizedBox(
-                              width: 220,
-                              child: TextField(
-                                decoration: const InputDecoration(
-                                  hintText: 'Scan or enter barcode...',
-                                  isDense: true,
-                                  border: OutlineInputBorder(),
-                                ),
-                              ),
-                            ),
-                            SizedBox(
-                              width: 260,
-                              child: TextField(
-                                decoration: const InputDecoration(
-                                  hintText: 'Search by name or code...',
-                                  isDense: true,
-                                  border: OutlineInputBorder(),
-                                ),
-                              ),
+                              icon: const Icon(Icons.add),
+                              label: const Text('Add Customer'),
                             ),
                           ],
                         ),
                         const SizedBox(height: 16),
-                        Container(
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(12),
-                            border: Border.all(color: const Color(0xFFE8EAED)),
-                          ),
-                          child: SingleChildScrollView(
-                            scrollDirection: Axis.horizontal,
-                            child: DataTable(
-                              headingRowColor: const WidgetStatePropertyAll(Color(0xFF7DD3FC)),
-                              columns: const [
-                                DataColumn(label: Text('Product Name')),
-                                DataColumn(label: Text('Stock Qty')),
-                                DataColumn(label: Text('Unit Price')),
-                                DataColumn(label: Text('Qty')),
-                                DataColumn(label: Text('Subtotal')),
-                                DataColumn(label: Text('')),
-                              ],
-                              rows: const [
-                                DataRow(
-                                  cells: [
-                                    DataCell(Text('No products. Scan barcode or search to add.')),
-                                    DataCell(Text('-')),
-                                    DataCell(Text('-')),
-                                    DataCell(Text('-')),
-                                    DataCell(Text('-')),
-                                    DataCell(Text('-')),
-                                  ],
-                                ),
-                              ],
+                        Expanded(
+                          child: Container(
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(color: const Color(0xFFE8EAED)),
+                            ),
+                            child: SingleChildScrollView(
+                              scrollDirection: Axis.horizontal,
+                              child: DataTable(
+                                headingRowColor: const WidgetStatePropertyAll(Color(0xFFF7F8FA)),
+                                columns: const [
+                                  DataColumn(label: Text('S/N')),
+                                  DataColumn(label: Text('CUSTOMER')),
+                                  DataColumn(label: Text('PHONE')),
+                                  DataColumn(label: Text('POINTS')),
+                                  DataColumn(label: Text('PURCHASES')),
+                                  DataColumn(label: Text('TOTAL AMOUNT')),
+                                  DataColumn(label: Text('DISCOUNT')),
+                                  DataColumn(label: Text('ACTIONS')),
+                                ],
+                                rows: customers
+                                    .map(
+                                      (c) => DataRow(
+                                        cells: [
+                                          DataCell(Text(c.sn)),
+                                          DataCell(Text(c.customer)),
+                                          DataCell(Text(c.phone)),
+                                          DataCell(Text(c.points)),
+                                          DataCell(Text(c.purchases)),
+                                          DataCell(Text(c.totalAmount)),
+                                          DataCell(Text(c.discount)),
+                                          DataCell(
+                                            TextButton(
+                                              onPressed: () => _openCustomerDialog(
+                                                title: 'Update Customer',
+                                                submitText: 'Update',
+                                              ),
+                                              child: const Text('Edit'),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    )
+                                    .toList(),
+                              ),
                             ),
                           ),
-                        ),
-                        const SizedBox(height: 14),
-                        const Row(
-                          children: [
-                            Text(
-                              'Grand Total: ',
-                              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
-                            ),
-                            Text('0đ', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
-                          ],
                         ),
                       ],
                     ),
@@ -480,19 +441,108 @@ class _CashierBarcodeScannerPageState extends State<CashierBarcodeScannerPage> {
     );
   }
 
-  Widget _inputBox({required String label, required String hint}) {
-    return SizedBox(
-      width: 280,
-      child: TextField(
-        decoration: InputDecoration(
-          labelText: label,
-          hintText: hint,
-          border: const OutlineInputBorder(),
-          isDense: true,
+  Future<void> _openCustomerDialog({
+    required String title,
+    required String submitText,
+  }) async {
+    final nameController = TextEditingController();
+    final phoneController = TextEditingController();
+    final amountController = TextEditingController();
+    await showDialog<void>(
+      context: context,
+      builder: (dialogContext) => Dialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 420),
+          child: Padding(
+            padding: const EdgeInsets.all(20),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        title,
+                        style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w700),
+                      ),
+                    ),
+                    IconButton(
+                      onPressed: () => Navigator.of(dialogContext).pop(),
+                      icon: const Icon(Icons.close),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                TextField(
+                  controller: nameController,
+                  decoration: const InputDecoration(
+                    labelText: 'Customer name',
+                    border: OutlineInputBorder(),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: phoneController,
+                  decoration: const InputDecoration(
+                    labelText: 'Phone',
+                    border: OutlineInputBorder(),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: amountController,
+                  decoration: const InputDecoration(
+                    labelText: 'Amount',
+                    border: OutlineInputBorder(),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    TextButton(
+                      onPressed: () => Navigator.of(dialogContext).pop(),
+                      child: const Text('Cancel'),
+                    ),
+                    const SizedBox(width: 8),
+                    ElevatedButton(
+                      onPressed: () => Navigator.of(dialogContext).pop(),
+                      child: Text(submitText),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
         ),
       ),
     );
+    nameController.dispose();
+    phoneController.dispose();
+    amountController.dispose();
   }
+}
+
+class _CustomerRow {
+  const _CustomerRow(
+    this.sn,
+    this.customer,
+    this.phone,
+    this.points,
+    this.purchases,
+    this.totalAmount,
+    this.discount,
+  );
+
+  final String sn;
+  final String customer;
+  final String phone;
+  final String points;
+  final String purchases;
+  final String totalAmount;
+  final String discount;
 }
 
 class _CashierMenuItem extends StatelessWidget {
