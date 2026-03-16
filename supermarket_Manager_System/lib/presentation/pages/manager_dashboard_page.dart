@@ -5,8 +5,9 @@ import 'package:supermarket_manager_system/domain/models/user_detail.dart';
 import 'package:supermarket_manager_system/presentation/pages/orders_page.dart';
 import 'package:supermarket_manager_system/presentation/pages/profile_content_page.dart';
 import 'package:supermarket_manager_system/presentation/pages/suppliers_page.dart';
+import 'package:supermarket_manager_system/presentation/pages/products_page.dart';
 
-enum _ManagerTab { dashboard, orders, suppliers, profile, profileEdit }
+enum _ManagerTab { dashboard, orders, suppliers, products, profile, profileEdit }
 
 class ManagerDashboardPage extends StatefulWidget {
   const ManagerDashboardPage({
@@ -39,6 +40,7 @@ class _ManagerDashboardPageState extends State<ManagerDashboardPage> {
       'profile' => _ManagerTab.profile,
       'orders' => _ManagerTab.orders,
       'suppliers' => _ManagerTab.suppliers,
+      'products' => _ManagerTab.products,
       'profile-edit' => _ManagerTab.profileEdit,
       _ => _ManagerTab.dashboard,
     };
@@ -49,6 +51,7 @@ class _ManagerDashboardPageState extends State<ManagerDashboardPage> {
       _ManagerTab.dashboard => '/manager/dashboard',
       _ManagerTab.orders => '/manager/orders',
       _ManagerTab.suppliers => '/manager/suppliers',
+      _ManagerTab.products => '/manager/products',
       _ManagerTab.profile => '/manager/profile',
       _ManagerTab.profileEdit => '/manager/profile/edit',
     };
@@ -158,6 +161,7 @@ class _ManagerDashboardPageState extends State<ManagerDashboardPage> {
                     onDashboardTap: () => _selectTab(_ManagerTab.dashboard),
                     onOrdersTap: () => _selectTab(_ManagerTab.orders),
                     onSuppliersTap: () => _selectTab(_ManagerTab.suppliers),
+                    onProductsTap: () => _selectTab(_ManagerTab.products),
                   ),
                 )
               : null,
@@ -172,6 +176,7 @@ class _ManagerDashboardPageState extends State<ManagerDashboardPage> {
                     onDashboardTap: () => _selectTab(_ManagerTab.dashboard),
                     onOrdersTap: () => _selectTab(_ManagerTab.orders),
                     onSuppliersTap: () => _selectTab(_ManagerTab.suppliers),
+                    onProductsTap: () => _selectTab(_ManagerTab.products),
                   ),
                 ),
               Expanded(
@@ -217,6 +222,12 @@ class _ManagerDashboardPageState extends State<ManagerDashboardPage> {
                       onProfileTap: () => _selectTab(_ManagerTab.profile),
                       basePath: 'manager',
                     ),
+                  _ManagerTab.products => ProductsContent(
+                      fullName: widget.fullName,
+                      isCompact: isCompact,
+                      currentTimeText: _formatClock(_now),
+                      onProfileTap: () => _selectTab(_ManagerTab.profile),
+                    ),
                   _ManagerTab.profile => ProfileViewContent(
                       fullName: widget.fullName,
                       userId: widget.userId,
@@ -249,6 +260,7 @@ class _ManagerSidebar extends StatelessWidget {
     required this.onDashboardTap,
     required this.onOrdersTap,
     required this.onSuppliersTap,
+    required this.onProductsTap,
   });
 
   final VoidCallback onLogout;
@@ -256,6 +268,7 @@ class _ManagerSidebar extends StatelessWidget {
   final VoidCallback onDashboardTap;
   final VoidCallback onOrdersTap;
   final VoidCallback onSuppliersTap;
+  final VoidCallback onProductsTap;
 
   @override
   Widget build(BuildContext context) {
@@ -305,7 +318,11 @@ class _ManagerSidebar extends StatelessWidget {
                       onTap: onSuppliersTap,
                     ),
                     const _ManagerSidebarItem(label: 'Category'),
-                    const _ManagerSidebarItem(label: 'Products'),
+                    _ManagerSidebarItem(
+                      label: 'Products',
+                      active: selectedTab == _ManagerTab.products,
+                      onTap: onProductsTap,
+                    ),
                     const _ManagerSidebarItem(label: 'Creditors'),
                     const _ManagerSidebarItem(label: 'Expired'),
                     const _ManagerSidebarItem(label: 'Reports'),
