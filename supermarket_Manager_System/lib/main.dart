@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_web_plugins/url_strategy.dart';
 import 'package:go_router/go_router.dart';
+import 'package:supermarket_manager_system/presentation/pages/add_product_page.dart';
 import 'package:supermarket_manager_system/presentation/pages/admin_dashboard_page.dart';
 import 'package:supermarket_manager_system/presentation/pages/cashier_dashboard_page.dart';
 import 'package:supermarket_manager_system/presentation/pages/cashier_open_shift_page.dart';
@@ -81,6 +82,18 @@ class SupermarketManagerApp extends StatelessWidget {
           return null;
         },
         routes: [
+          GoRoute(
+            path: 'add-product',
+            pageBuilder: (context, state) {
+              return MaterialPage(
+                key: const ValueKey('admin-add-product'),
+                child: AddProductPage(
+                  basePath: 'admin',
+                  fullName: AppSession.instance.fullName,
+                ),
+              );
+            },
+          ),
           GoRoute(
             path: 'product-detail/:id',
             pageBuilder: (context, state) {
@@ -177,6 +190,18 @@ class SupermarketManagerApp extends StatelessWidget {
           return null;
         },
         routes: [
+          GoRoute(
+            path: 'add-product',
+            pageBuilder: (context, state) {
+              return MaterialPage(
+                key: const ValueKey('manager-add-product'),
+                child: AddProductPage(
+                  basePath: 'manager',
+                  fullName: AppSession.instance.fullName,
+                ),
+              );
+            },
+          ),
           GoRoute(
             path: 'product-detail/:id',
             pageBuilder: (context, state) {

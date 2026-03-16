@@ -90,7 +90,14 @@ class _ProductsContentState extends State<ProductsContent> {
                               color: const Color(0xFF93C5FD),
                             ),
                             child: TextButton(
-                              onPressed: () {},
+                              onPressed: () async {
+                                final result = await context.push(
+                                  '${_basePathFromLocation(context)}/add-product',
+                                );
+                                if (result == true) {
+                                  _reloadProducts();
+                                }
+                              },
                               child: const Text(
                                 '+ Add New Product',
                                 style: TextStyle(
