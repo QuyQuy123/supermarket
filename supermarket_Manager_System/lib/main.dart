@@ -12,6 +12,7 @@ import 'package:supermarket_manager_system/presentation/pages/supplier_detail_pa
 import 'package:supermarket_manager_system/presentation/pages/forgot_password_page.dart';
 import 'package:supermarket_manager_system/presentation/pages/verify_otp_page.dart';
 import 'package:supermarket_manager_system/presentation/pages/set_new_password_page.dart';
+import 'package:supermarket_manager_system/presentation/pages/product_detail_page.dart';
 import 'package:supermarket_manager_system/utils/app_session.dart';
 
 void main() {
@@ -82,6 +83,20 @@ class SupermarketManagerApp extends StatelessWidget {
         },
         routes: [
           GoRoute(
+            path: 'product-detail/:id',
+            pageBuilder: (context, state) {
+              final id = int.tryParse(state.pathParameters['id'] ?? '') ?? 0;
+              return MaterialPage(
+                key: ValueKey('admin-product-detail-$id'),
+                child: ProductDetailPage(
+                  productId: id,
+                  basePath: 'admin',
+                  fullName: AppSession.instance.fullName,
+                ),
+              );
+            },
+          ),
+          GoRoute(
             path: 'supplier-detail/:id',
             pageBuilder: (context, state) {
               final id = int.tryParse(state.pathParameters['id'] ?? '') ?? 0;
@@ -151,6 +166,20 @@ class SupermarketManagerApp extends StatelessWidget {
           return null;
         },
         routes: [
+          GoRoute(
+            path: 'product-detail/:id',
+            pageBuilder: (context, state) {
+              final id = int.tryParse(state.pathParameters['id'] ?? '') ?? 0;
+              return MaterialPage(
+                key: ValueKey('manager-product-detail-$id'),
+                child: ProductDetailPage(
+                  productId: id,
+                  basePath: 'manager',
+                  fullName: AppSession.instance.fullName,
+                ),
+              );
+            },
+          ),
           GoRoute(
             path: 'supplier-detail/:id',
             pageBuilder: (context, state) {
