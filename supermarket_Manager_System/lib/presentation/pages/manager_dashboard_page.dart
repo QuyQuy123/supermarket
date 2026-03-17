@@ -8,7 +8,6 @@ import 'package:supermarket_manager_system/presentation/pages/suppliers_page.dar
 import 'package:supermarket_manager_system/presentation/pages/products_page.dart';
 import 'package:supermarket_manager_system/presentation/pages/expiration_page.dart';
 import 'package:supermarket_manager_system/presentation/pages/product_detail_page.dart';
-import 'package:supermarket_manager_system/presentation/widgets/change_password_dialog.dart';
 
 enum _ManagerTab { dashboard, orders, suppliers, products, expired, profile, profileEdit, productDetail }
 

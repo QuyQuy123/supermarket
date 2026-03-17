@@ -489,7 +489,7 @@ class _StatCard extends StatelessWidget {
           boxShadow: isSelected
               ? [
                   BoxShadow(
-                    color: const Color(0xFF667EEA).withOpacity(0.2),
+                    color: const Color(0xFF667EEA).withValues(alpha: 0.2),
                     blurRadius: 8,
                     offset: const Offset(0, 2),
                   )
