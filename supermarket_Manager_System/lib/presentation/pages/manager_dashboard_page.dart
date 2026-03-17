@@ -1,11 +1,15 @@
-import 'dart:async';
+﻿import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:supermarket_manager_system/domain/models/user_detail.dart';
+import 'package:supermarket_manager_system/presentation/pages/customers_page.dart';
+import 'package:supermarket_manager_system/presentation/pages/dashboard_content.dart';
 import 'package:supermarket_manager_system/presentation/pages/orders_page.dart';
 import 'package:supermarket_manager_system/presentation/pages/profile_content_page.dart';
+import 'package:supermarket_manager_system/presentation/pages/revenue_report_page.dart';
+import 'package:supermarket_manager_system/presentation/pages/discount.dart';
 
-enum _ManagerTab { dashboard, orders, profile, profileEdit }
+enum _ManagerTab { dashboard, orders, customers, discount, profile, profileEdit, reports }
 
 class ManagerDashboardPage extends StatefulWidget {
   const ManagerDashboardPage({
@@ -37,7 +41,10 @@ class _ManagerDashboardPageState extends State<ManagerDashboardPage> {
     return switch (key) {
       'profile' => _ManagerTab.profile,
       'orders' => _ManagerTab.orders,
+      'customers' => _ManagerTab.customers,
+      'discount' => _ManagerTab.discount,
       'profile-edit' => _ManagerTab.profileEdit,
+      'reports' => _ManagerTab.reports,
       _ => _ManagerTab.dashboard,
     };
   }
@@ -46,8 +53,11 @@ class _ManagerDashboardPageState extends State<ManagerDashboardPage> {
     return switch (tab) {
       _ManagerTab.dashboard => '/manager/dashboard',
       _ManagerTab.orders => '/manager/orders',
+      _ManagerTab.customers => '/manager/customers',
+      _ManagerTab.discount => '/manager/discount',
       _ManagerTab.profile => '/manager/profile',
       _ManagerTab.profileEdit => '/manager/profile/edit',
+      _ManagerTab.reports => '/manager/reports',
     };
   }
 
@@ -154,72 +164,74 @@ class _ManagerDashboardPageState extends State<ManagerDashboardPage> {
                     selectedTab: _selectedTab,
                     onDashboardTap: () => _selectTab(_ManagerTab.dashboard),
                     onOrdersTap: () => _selectTab(_ManagerTab.orders),
+                    onCustomersTap: () => _selectTab(_ManagerTab.customers),
+                    onReportsTap: () => _selectTab(_ManagerTab.reports), onDiscountTap: () {  },
                   ),
                 )
               : null,
           body: Row(
             children: [
               if (!isCompact)
-                SizedBox(
+                  SizedBox(
                   width: 230,
                   child: _ManagerSidebar(
                     onLogout: _logout,
                     selectedTab: _selectedTab,
                     onDashboardTap: () => _selectTab(_ManagerTab.dashboard),
                     onOrdersTap: () => _selectTab(_ManagerTab.orders),
+                    onCustomersTap: () => _selectTab(_ManagerTab.customers),
+                    onReportsTap: () => _selectTab(_ManagerTab.reports), onDiscountTap: () {  },
                   ),
                 ),
               Expanded(
                 child: switch (_selectedTab) {
-                  _ManagerTab.dashboard => Container(
-                      color: const Color(0xFFF0F2F5),
-                      child: Column(
-                        children: [
-                          _ManagerHeader(
-                            fullName: widget.fullName,
-                            isCompact: isCompact,
-                            currentTimeText: _formatClock(_now),
-                            onAvatarTap: () => _selectTab(_ManagerTab.profile),
-                          ),
-                          Expanded(
-                            child: ListView(
-                              padding: const EdgeInsets.all(24),
-                              children: const [
-                                _ManagerTopCards(),
-                                SizedBox(height: 16),
-                                _ManagerStatsGrid(),
-                                SizedBox(height: 16),
-                                _ManagerChartRow(),
-                                SizedBox(height: 16),
-                                _ManagerTransactionsTable(),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
+                  _ManagerTab.dashboard => DashboardContent(
+                    fullName: widget.fullName,
+                    roleLabel: 'Manager',
+                    isCompact: isCompact,
+                    currentTimeText: _formatClock(_now),
+                    onProfileTap: () => _selectTab(_ManagerTab.profile),
+                  ),
                   _ManagerTab.orders => OrdersContent(
-                      fullName: widget.fullName,
-                      isCompact: isCompact,
-                      currentTimeText: _formatClock(_now),
-                      roleLabel: 'Manager',
-                      onProfileTap: () => _selectTab(_ManagerTab.profile),
-                    ),
+                    fullName: widget.fullName,
+                    isCompact: isCompact,
+                    currentTimeText: _formatClock(_now),
+                    roleLabel: 'Manager',
+                    onProfileTap: () => _selectTab(_ManagerTab.profile),
+                  ),
+                  _ManagerTab.customers => CustomersContent(
+                    fullName: widget.fullName,
+                    isCompact: isCompact,
+                    currentTimeText: _formatClock(_now),
+                    onProfileTap: () => _selectTab(_ManagerTab.profile),
+                  ),
+                  _ManagerTab.discount => DiscountsContent(
+                    fullName: widget.fullName,
+                    isCompact: isCompact,
+                    currentTimeText: _formatClock(_now),
+                    onProfileTap: () => _selectTab(_ManagerTab.profile),
+                  ),
                   _ManagerTab.profile => ProfileViewContent(
-                      fullName: widget.fullName,
-                      userId: widget.userId,
-                      isCompact: isCompact,
-                      currentTimeText: _formatClock(_now),
-                      onEditProfile: _openProfileEdit,
-                    ),
+                    fullName: widget.fullName,
+                    userId: widget.userId,
+                    isCompact: isCompact,
+                    currentTimeText: _formatClock(_now),
+                    onEditProfile: _openProfileEdit,
+                  ),
                   _ManagerTab.profileEdit => ProfileEditContent(
-                      userId: widget.userId,
-                      initialDetail: _editingProfile,
-                      isCompact: isCompact,
-                      currentTimeText: _formatClock(_now),
-                      onSaved: _onProfileUpdated,
-                      onCancel: () => _selectTab(_ManagerTab.profile),
-                    ),
+                    userId: widget.userId,
+                    initialDetail: _editingProfile,
+                    isCompact: isCompact,
+                    currentTimeText: _formatClock(_now),
+                    onSaved: _onProfileUpdated,
+                    onCancel: () => _selectTab(_ManagerTab.profile),
+                  ),
+                  _ManagerTab.reports => RevenueReportPage(
+                    fullName: widget.fullName,
+                    isCompact: isCompact,
+                    currentTimeText: _formatClock(_now),
+                    onProfileTap: () => _selectTab(_ManagerTab.profile),
+                  ),
                 },
               ),
             ],
@@ -236,12 +248,18 @@ class _ManagerSidebar extends StatelessWidget {
     required this.selectedTab,
     required this.onDashboardTap,
     required this.onOrdersTap,
+    required this.onCustomersTap,
+    required this.onDiscountTap,
+    this.onReportsTap,
   });
 
   final VoidCallback onLogout;
   final _ManagerTab selectedTab;
   final VoidCallback onDashboardTap;
   final VoidCallback onOrdersTap;
+  final VoidCallback onCustomersTap;
+  final VoidCallback onDiscountTap;
+  final VoidCallback? onReportsTap;
 
   @override
   Widget build(BuildContext context) {
@@ -264,7 +282,10 @@ class _ManagerSidebar extends StatelessWidget {
                 SizedBox(width: 10),
                 Text(
                   'SMS SYSTEM',
-                  style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
               ],
             ),
@@ -285,12 +306,26 @@ class _ManagerSidebar extends StatelessWidget {
                       active: selectedTab == _ManagerTab.orders,
                       onTap: onOrdersTap,
                     ),
+                    _ManagerSidebarItem(
+                      label: 'Customer',
+                      active: selectedTab == _ManagerTab.customers,
+                      onTap: onCustomersTap,
+                    ),
+                    _ManagerSidebarItem(
+                      label: 'Discount',
+                      active: selectedTab == _ManagerTab.discount,
+                      onTap: onDiscountTap,
+                    ),
                     const _ManagerSidebarItem(label: 'Suppliers'),
                     const _ManagerSidebarItem(label: 'Category'),
                     const _ManagerSidebarItem(label: 'Products'),
                     const _ManagerSidebarItem(label: 'Creditors'),
                     const _ManagerSidebarItem(label: 'Expired'),
-                    const _ManagerSidebarItem(label: 'Reports'),
+                    _ManagerSidebarItem(
+                      label: 'Reports',
+                      active: selectedTab == _ManagerTab.reports,
+                      onTap: onReportsTap,
+                    ),
                   ],
                 ),
               ),
@@ -342,7 +377,10 @@ class _ManagerHeader extends StatelessWidget {
           Row(
             children: [
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 8,
+                ),
                 decoration: BoxDecoration(
                   color: const Color(0xFF16A34A),
                   borderRadius: BorderRadius.circular(8),
@@ -378,7 +416,10 @@ class _ManagerHeader extends StatelessWidget {
                   ),
                   child: Text(
                     fullName.isNotEmpty ? fullName[0].toUpperCase() : 'M',
-                    style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700),
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w700,
+                    ),
                   ),
                 ),
               ),
@@ -426,9 +467,14 @@ class _ManagerSidebarItem extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        color: active ? const Color.fromRGBO(255, 255, 255, 0.18) : Colors.transparent,
+        color: active
+            ? const Color.fromRGBO(255, 255, 255, 0.18)
+            : Colors.transparent,
         border: Border(
-          left: BorderSide(color: active ? Colors.white : Colors.transparent, width: 3),
+          left: BorderSide(
+            color: active ? Colors.white : Colors.transparent,
+            width: 3,
+          ),
         ),
       ),
       child: ListTile(
@@ -453,10 +499,23 @@ class _ManagerTopCards extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     const cards = [
-      _ManagerCardData(color: Color(0xFF16A34A), title: 'Today Sales', value: '250,000đ'),
+      _ManagerCardData(
+        color: Color(0xFF16A34A),
+        title: 'Today Sales',
+        value: '250,000đ',
+      ),
       _ManagerCardData(color: Color(0xFFF472B6), title: 'Expired', value: '0'),
-      _ManagerCardData(color: Color(0xFFFACC15), title: 'Today Invoice', value: '3', darkText: true),
-      _ManagerCardData(color: Color(0xFF7DD3FC), title: 'New Products', value: '4'),
+      _ManagerCardData(
+        color: Color(0xFFFACC15),
+        title: 'Today Invoice',
+        value: '3',
+        darkText: true,
+      ),
+      _ManagerCardData(
+        color: Color(0xFF7DD3FC),
+        title: 'New Products',
+        value: '4',
+      ),
     ];
 
     return LayoutBuilder(
@@ -468,7 +527,12 @@ class _ManagerTopCards extends StatelessWidget {
           spacing: 12,
           runSpacing: 12,
           children: cards
-              .map((card) => SizedBox(width: cardWidth, child: _ManagerColorCard(data: card)))
+              .map(
+                (card) => SizedBox(
+                  width: cardWidth,
+                  child: _ManagerColorCard(data: card),
+                ),
+              )
               .toList(),
         );
       },
@@ -500,15 +564,25 @@ class _ManagerColorCard extends StatelessWidget {
     final fg = data.darkText ? const Color(0xFF1A1D21) : Colors.white;
     return Container(
       padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(color: data.color, borderRadius: BorderRadius.circular(12)),
+      decoration: BoxDecoration(
+        color: data.color,
+        borderRadius: BorderRadius.circular(12),
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(data.title, style: TextStyle(color: fg, fontWeight: FontWeight.w600)),
+          Text(
+            data.title,
+            style: TextStyle(color: fg, fontWeight: FontWeight.w600),
+          ),
           const SizedBox(height: 6),
           Text(
             data.value,
-            style: TextStyle(color: fg, fontWeight: FontWeight.w700, fontSize: 22),
+            style: TextStyle(
+              color: fg,
+              fontWeight: FontWeight.w700,
+              fontSize: 22,
+            ),
           ),
         ],
       ),
@@ -548,9 +622,21 @@ class _ManagerStatsGrid extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(item.$1, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
+                    Text(
+                      item.$1,
+                      style: const TextStyle(
+                        fontWeight: FontWeight.w600,
+                        fontSize: 13,
+                      ),
+                    ),
                     const SizedBox(height: 6),
-                    Text(item.$2, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 20)),
+                    Text(
+                      item.$2,
+                      style: const TextStyle(
+                        fontWeight: FontWeight.w700,
+                        fontSize: 20,
+                      ),
+                    ),
                   ],
                 ),
               ),
@@ -607,7 +693,10 @@ class _ManagerChartCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(title, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
+          Text(
+            title,
+            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
+          ),
           const SizedBox(height: 16),
           Expanded(
             child: Container(
@@ -617,7 +706,10 @@ class _ManagerChartCard extends StatelessWidget {
                 borderRadius: BorderRadius.circular(10),
               ),
               alignment: Alignment.center,
-              child: const Text('Chart Placeholder', style: TextStyle(color: Color(0xFF6B7280))),
+              child: const Text(
+                'Chart Placeholder',
+                style: TextStyle(color: Color(0xFF6B7280)),
+              ),
             ),
           ),
         ],
@@ -642,7 +734,10 @@ class _ManagerTransactionsTable extends StatelessWidget {
         children: [
           const Padding(
             padding: EdgeInsets.fromLTRB(16, 16, 16, 8),
-            child: Text("Today's Transactions", style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700)),
+            child: Text(
+              "Today's Transactions",
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
+            ),
           ),
           DataTable(
             columns: const [
@@ -653,27 +748,33 @@ class _ManagerTransactionsTable extends StatelessWidget {
               DataColumn(label: Text('Status')),
             ],
             rows: const [
-              DataRow(cells: [
-                DataCell(Text('ORD-201')),
-                DataCell(Text('Cash')),
-                DataCell(Text('125,000đ')),
-                DataCell(Text('John')),
-                DataCell(Text('Paid')),
-              ]),
-              DataRow(cells: [
-                DataCell(Text('ORD-202')),
-                DataCell(Text('Transfer')),
-                DataCell(Text('85,400đ')),
-                DataCell(Text('Jane')),
-                DataCell(Text('Paid')),
-              ]),
-              DataRow(cells: [
-                DataCell(Text('ORD-203')),
-                DataCell(Text('POS')),
-                DataCell(Text('39,600đ')),
-                DataCell(Text('John')),
-                DataCell(Text('Pending')),
-              ]),
+              DataRow(
+                cells: [
+                  DataCell(Text('ORD-201')),
+                  DataCell(Text('Cash')),
+                  DataCell(Text('125,000đ')),
+                  DataCell(Text('John')),
+                  DataCell(Text('Paid')),
+                ],
+              ),
+              DataRow(
+                cells: [
+                  DataCell(Text('ORD-202')),
+                  DataCell(Text('Transfer')),
+                  DataCell(Text('85,400đ')),
+                  DataCell(Text('Jane')),
+                  DataCell(Text('Paid')),
+                ],
+              ),
+              DataRow(
+                cells: [
+                  DataCell(Text('ORD-203')),
+                  DataCell(Text('POS')),
+                  DataCell(Text('39,600đ')),
+                  DataCell(Text('John')),
+                  DataCell(Text('Pending')),
+                ],
+              ),
             ],
           ),
         ],
@@ -681,4 +782,3 @@ class _ManagerTransactionsTable extends StatelessWidget {
     );
   }
 }
-

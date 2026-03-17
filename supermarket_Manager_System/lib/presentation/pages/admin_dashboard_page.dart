@@ -5,12 +5,16 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:supermarket_manager_system/domain/models/user_detail.dart';
 import 'package:supermarket_manager_system/presentation/pages/login_page.dart';
+import 'package:supermarket_manager_system/presentation/pages/customers_page.dart';
+import 'package:supermarket_manager_system/presentation/pages/dashboard_content.dart';
 import 'package:supermarket_manager_system/presentation/pages/orders_page.dart';
 import 'package:supermarket_manager_system/presentation/pages/profile_content_page.dart';
+import 'package:supermarket_manager_system/presentation/pages/revenue_report_page.dart';
 import 'package:supermarket_manager_system/presentation/pages/users_page.dart';
+import 'package:supermarket_manager_system/presentation/pages/discount.dart';
 import 'package:supermarket_manager_system/presentation/widgets/change_password_dialog.dart';
 
-enum _AdminTab { dashboard, users, orders, profile, profileEdit }
+enum _AdminTab { dashboard, users, orders, customers, discount, profile, profileEdit, reports }
 
 class AdminDashboardPage extends StatefulWidget {
   const AdminDashboardPage({
@@ -42,8 +46,11 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
     return switch (key) {
       'users' => _AdminTab.users,
       'orders' => _AdminTab.orders,
+      'customers' => _AdminTab.customers,
+      'discount' => _AdminTab.discount,
       'profile' => _AdminTab.profile,
       'profile-edit' => _AdminTab.profileEdit,
+      'reports' => _AdminTab.reports,
       _ => _AdminTab.dashboard,
     };
   }
@@ -53,8 +60,11 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
       _AdminTab.dashboard => '/admin/dashboard',
       _AdminTab.users => '/admin/users',
       _AdminTab.orders => '/admin/orders',
+      _AdminTab.customers => '/admin/customers',
+      _AdminTab.discount => '/admin/discount',
       _AdminTab.profile => '/admin/profile',
       _AdminTab.profileEdit => '/admin/profile/edit',
+      _AdminTab.reports => '/admin/reports',
     };
   }
 
@@ -190,40 +200,59 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                 ),
               Expanded(
                 child: switch (_selectedTab) {
-                  _AdminTab.dashboard => _DashboardContent(
-                      fullName: widget.fullName,
-                      isCompact: isCompact,
-                      currentTimeText: _formatClock(_now),
-                      onProfileTap: () => _selectTab(_AdminTab.profile),
-                    ),
+                  _AdminTab.dashboard => DashboardContent(
+                    fullName: widget.fullName,
+                    roleLabel: 'Administrator',
+                    isCompact: isCompact,
+                    currentTimeText: _formatClock(_now),
+                    onProfileTap: () => _selectTab(_AdminTab.profile),
+                  ),
                   _AdminTab.users => UsersContent(
-                      fullName: widget.fullName,
-                      isCompact: isCompact,
-                      currentTimeText: _formatClock(_now),
-                      onProfileTap: () => _selectTab(_AdminTab.profile),
-                    ),
+                    fullName: widget.fullName,
+                    isCompact: isCompact,
+                    currentTimeText: _formatClock(_now),
+                    onProfileTap: () => _selectTab(_AdminTab.profile),
+                  ),
                   _AdminTab.orders => OrdersContent(
-                      fullName: widget.fullName,
-                      isCompact: isCompact,
-                      currentTimeText: _formatClock(_now),
-                      roleLabel: 'Administrator',
-                      onProfileTap: () => _selectTab(_AdminTab.profile),
-                    ),
+                    fullName: widget.fullName,
+                    isCompact: isCompact,
+                    currentTimeText: _formatClock(_now),
+                    roleLabel: 'Administrator',
+                    onProfileTap: () => _selectTab(_AdminTab.profile),
+                  ),
+                  _AdminTab.customers => CustomersContent(
+                    fullName: widget.fullName,
+                    isCompact: isCompact,
+                    currentTimeText: _formatClock(_now),
+                    onProfileTap: () => _selectTab(_AdminTab.profile),
+                  ),
+                  _AdminTab.discount => DiscountsContent(
+                    fullName: widget.fullName,
+                    isCompact: isCompact,
+                    currentTimeText: _formatClock(_now),
+                    onProfileTap: () => _selectTab(_AdminTab.profile),
+                  ),
                   _AdminTab.profile => _ProfileContent(
-                      fullName: widget.fullName,
-                      userId: widget.userId,
-                      isCompact: isCompact,
-                      currentTimeText: _formatClock(_now),
-                      onEditProfile: _openProfileEdit,
-                    ),
+                    fullName: widget.fullName,
+                    userId: widget.userId,
+                    isCompact: isCompact,
+                    currentTimeText: _formatClock(_now),
+                    onEditProfile: _openProfileEdit,
+                  ),
                   _AdminTab.profileEdit => _ProfileEditContent(
-                      userId: widget.userId,
-                      initialDetail: _editingProfile,
-                      isCompact: isCompact,
-                      currentTimeText: _formatClock(_now),
-                      onSaved: _onProfileUpdated,
-                      onCancel: () => _selectTab(_AdminTab.profile),
-                    ),
+                    userId: widget.userId,
+                    initialDetail: _editingProfile,
+                    isCompact: isCompact,
+                    currentTimeText: _formatClock(_now),
+                    onSaved: _onProfileUpdated,
+                    onCancel: () => _selectTab(_AdminTab.profile),
+                  ),
+                  _AdminTab.reports => RevenueReportPage(
+                    fullName: widget.fullName,
+                    isCompact: isCompact,
+                    currentTimeText: _formatClock(_now),
+                    onProfileTap: () => _selectTab(_AdminTab.profile),
+                  ),
                 },
               ),
             ],
@@ -295,25 +324,34 @@ class _SidebarMenu extends StatelessWidget {
                       active: selectedTab == _AdminTab.orders,
                       onTap: () => onSelectTab(_AdminTab.orders),
                     ),
-                    const _SidebarItem(label: 'Customer'),
-                    const _SidebarItem(label: 'Discount'),
+                    _SidebarItem(
+                      label: 'Customer',
+                      active: selectedTab == _AdminTab.customers,
+                      onTap: () => onSelectTab(_AdminTab.customers),
+                    ),
+                    _SidebarItem(
+                      label: 'Discount',
+                      active: selectedTab == _AdminTab.discount,
+                      onTap: () => onSelectTab(_AdminTab.discount),
+                    ),
                     const _SidebarItem(label: 'Suppliers'),
                     const _SidebarItem(label: 'Category'),
                     const _SidebarItem(label: 'Products'),
                     const _SidebarItem(label: 'Barcode Scanner'),
                     const _SidebarItem(label: 'Creditors'),
                     const _SidebarItem(label: 'Expired'),
-                    const _SidebarItem(label: 'Reports'),
+                    _SidebarItem(
+                      label: 'Reports',
+                      active: selectedTab == _AdminTab.reports,
+                      onTap: () => onSelectTab(_AdminTab.reports),
+                    ),
                   ],
                 ),
               ),
             ),
           ),
           const Divider(color: Color.fromRGBO(255, 255, 255, 0.25), height: 1),
-          _SidebarItem(
-            label: 'Logout',
-            onTap: onLogout,
-          ),
+          _SidebarItem(label: 'Logout', onTap: onLogout),
           const SizedBox(height: 12),
         ],
       ),
@@ -345,9 +383,7 @@ class _DashboardContent extends StatelessWidget {
             padding: const EdgeInsets.symmetric(horizontal: 24),
             decoration: const BoxDecoration(
               color: Colors.white,
-              border: Border(
-                bottom: BorderSide(color: Color(0xFFE8EAED)),
-              ),
+              border: Border(bottom: BorderSide(color: Color(0xFFE8EAED))),
             ),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -364,7 +400,10 @@ class _DashboardContent extends StatelessWidget {
                 Row(
                   children: [
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 8,
+                      ),
                       decoration: BoxDecoration(
                         color: const Color(0xFF16A34A),
                         borderRadius: BorderRadius.circular(8),
@@ -385,7 +424,10 @@ class _DashboardContent extends StatelessWidget {
                         ),
                         const Text(
                           'Administrator',
-                          style: TextStyle(color: Color(0xFF6B7280), fontSize: 12),
+                          style: TextStyle(
+                            color: Color(0xFF6B7280),
+                            fontSize: 12,
+                          ),
                         ),
                       ],
                     ),
@@ -505,7 +547,10 @@ class _ProfileHeader extends StatelessWidget {
           Row(
             children: [
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 8,
+                ),
                 decoration: BoxDecoration(
                   color: const Color(0xFF4ECDC4),
                   borderRadius: BorderRadius.circular(8),
@@ -538,7 +583,10 @@ class _ProfileHeader extends StatelessWidget {
                 ),
                 child: Text(
                   fullName.isNotEmpty ? fullName[0].toUpperCase() : 'A',
-                  style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700),
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w700,
+                  ),
                 ),
               ),
             ],
@@ -578,7 +626,9 @@ class _ProfileInfoCard extends StatelessWidget {
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Text(
-                    detail.fullname.isNotEmpty ? detail.fullname[0].toUpperCase() : 'A',
+                    detail.fullname.isNotEmpty
+                        ? detail.fullname[0].toUpperCase()
+                        : 'A',
                     style: const TextStyle(
                       color: Colors.white,
                       fontWeight: FontWeight.w700,
@@ -594,29 +644,48 @@ class _ProfileInfoCard extends StatelessWidget {
                 const SizedBox(height: 6),
                 Text(
                   detail.fullname.isEmpty ? 'Administrator' : detail.fullname,
-                  style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700),
+                  style: const TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.w700,
+                  ),
                 ),
                 const SizedBox(height: 8),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 5,
+                  ),
                   decoration: BoxDecoration(
                     color: const Color(0xFFFEF3C7),
                     borderRadius: BorderRadius.circular(14),
                   ),
                   child: Text(
                     detail.status.isEmpty ? 'Unknown' : detail.status,
-                    style: TextStyle(color: Color(0xFF92400E), fontWeight: FontWeight.w700),
+                    style: TextStyle(
+                      color: Color(0xFF92400E),
+                      fontWeight: FontWeight.w700,
+                    ),
                   ),
                 ),
               ],
             ),
           ),
           const SizedBox(height: 22),
-          _ProfileBullet(text: detail.phone.isEmpty ? 'Phone: N/A' : detail.phone),
-          _ProfileBullet(text: detail.email.isEmpty ? 'Email: N/A' : detail.email),
-          _ProfileBullet(text: detail.idCard.isEmpty ? 'ID Card: N/A' : detail.idCard),
-          _ProfileBullet(text: detail.dob.isEmpty ? 'DOB: N/A' : 'DOB: ${detail.dob}'),
-          _ProfileBullet(text: detail.address.isEmpty ? 'Address: N/A' : detail.address),
+          _ProfileBullet(
+            text: detail.phone.isEmpty ? 'Phone: N/A' : detail.phone,
+          ),
+          _ProfileBullet(
+            text: detail.email.isEmpty ? 'Email: N/A' : detail.email,
+          ),
+          _ProfileBullet(
+            text: detail.idCard.isEmpty ? 'ID Card: N/A' : detail.idCard,
+          ),
+          _ProfileBullet(
+            text: detail.dob.isEmpty ? 'DOB: N/A' : 'DOB: ${detail.dob}',
+          ),
+          _ProfileBullet(
+            text: detail.address.isEmpty ? 'Address: N/A' : detail.address,
+          ),
           _ProfileBullet(text: detail.role.isEmpty ? 'Role: N/A' : detail.role),
           const SizedBox(height: 20),
           const Text(
@@ -626,10 +695,7 @@ class _ProfileInfoCard extends StatelessWidget {
           const SizedBox(height: 6),
           const Divider(color: Color(0xFFE2E8F0)),
           _AuthDetailRow(label: 'User Name :', value: detail.username),
-          _AuthDetailRow(
-            label: 'Last Login:',
-            value: detail.lastLogin,
-          ),
+          _AuthDetailRow(label: 'Last Login:', value: detail.lastLogin),
           const _AuthDetailRow(label: 'Registered:', value: '—'),
         ],
       ),
@@ -684,14 +750,20 @@ class _AuthDetailRow extends StatelessWidget {
             flex: 3,
             child: Text(
               label,
-              style: const TextStyle(color: Color(0xFF64748B), fontWeight: FontWeight.w600),
+              style: const TextStyle(
+                color: Color(0xFF64748B),
+                fontWeight: FontWeight.w600,
+              ),
             ),
           ),
           Expanded(
             flex: 6,
             child: Text(
               value,
-              style: const TextStyle(color: Color(0xFF0F172A), fontWeight: FontWeight.w500),
+              style: const TextStyle(
+                color: Color(0xFF0F172A),
+                fontWeight: FontWeight.w500,
+              ),
             ),
           ),
         ],
@@ -732,15 +804,27 @@ class _ProfileSettingsCard extends StatelessWidget {
           const SizedBox(height: 14),
           const _ProfileInputLabel('Phone *'),
           const SizedBox(height: 6),
-          _ProfileTextField(initialValue: detail.phone, hintText: 'Enter phone', readOnly: true),
+          _ProfileTextField(
+            initialValue: detail.phone,
+            hintText: 'Enter phone',
+            readOnly: true,
+          ),
           const SizedBox(height: 14),
           const _ProfileInputLabel('ID Card Number'),
           const SizedBox(height: 6),
-          _ProfileTextField(initialValue: detail.idCard, hintText: 'Enter ID card number', readOnly: true),
+          _ProfileTextField(
+            initialValue: detail.idCard,
+            hintText: 'Enter ID card number',
+            readOnly: true,
+          ),
           const SizedBox(height: 14),
           const _ProfileInputLabel('Date Of Birth'),
           const SizedBox(height: 6),
-          _ProfileTextField(initialValue: detail.dob, hintText: 'yyyy-MM-dd', readOnly: true),
+          _ProfileTextField(
+            initialValue: detail.dob,
+            hintText: 'yyyy-MM-dd',
+            readOnly: true,
+          ),
           const SizedBox(height: 14),
           const _ProfileInputLabel('Address'),
           const SizedBox(height: 6),
@@ -768,7 +852,10 @@ class _ProfileSettingsCard extends StatelessWidget {
                     child: const Center(
                       child: Text(
                         'Update Profile',
-                        style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700),
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.w700,
+                        ),
                       ),
                     ),
                   ),
@@ -793,7 +880,10 @@ class _ProfileSettingsCard extends StatelessWidget {
                     child: const Center(
                       child: Text(
                         'Change Password',
-                        style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700),
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.w700,
+                        ),
                       ),
                     ),
                   ),
@@ -882,7 +972,10 @@ class _ProfileEditableField extends StatelessWidget {
       decoration: InputDecoration(
         filled: true,
         fillColor: const Color(0xFFF8FAFC),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 12,
+          vertical: 12,
+        ),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(10),
           borderSide: const BorderSide(color: Color(0xFFD5DCE5)),
@@ -923,7 +1016,10 @@ class _ProfileTextField extends StatelessWidget {
         hintText: hintText,
         filled: true,
         fillColor: const Color(0xFFF8FAFC),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 12,
+          vertical: 12,
+        ),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(10),
           borderSide: const BorderSide(color: Color(0xFFD5DCE5)),
@@ -956,21 +1052,14 @@ class _LogoBox extends StatelessWidget {
       ),
       child: const Text(
         'P',
-        style: TextStyle(
-          color: Color(0xFF667EEA),
-          fontWeight: FontWeight.w700,
-        ),
+        style: TextStyle(color: Color(0xFF667EEA), fontWeight: FontWeight.w700),
       ),
     );
   }
 }
 
 class _SidebarItem extends StatelessWidget {
-  const _SidebarItem({
-    required this.label,
-    this.active = false,
-    this.onTap,
-  });
+  const _SidebarItem({required this.label, this.active = false, this.onTap});
 
   final String label;
   final bool active;
@@ -980,7 +1069,9 @@ class _SidebarItem extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        color: active ? const Color.fromRGBO(255, 255, 255, 0.18) : Colors.transparent,
+        color: active
+            ? const Color.fromRGBO(255, 255, 255, 0.18)
+            : Colors.transparent,
         border: Border(
           left: BorderSide(
             color: active ? Colors.white : Colors.transparent,
@@ -1010,9 +1101,18 @@ class _TopCards extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     const cards = [
-      _CardData(color: Color(0xFF16A34A), title: 'Today Sales', value: '250,000đ'),
+      _CardData(
+        color: Color(0xFF16A34A),
+        title: 'Today Sales',
+        value: '250,000đ',
+      ),
       _CardData(color: Color(0xFFF472B6), title: 'Expired', value: '0'),
-      _CardData(color: Color(0xFFFACC15), title: 'Today Invoice', value: '3', darkText: true),
+      _CardData(
+        color: Color(0xFFFACC15),
+        title: 'Today Invoice',
+        value: '3',
+        darkText: true,
+      ),
       _CardData(color: Color(0xFF7DD3FC), title: 'New Products', value: '4'),
     ];
 
@@ -1083,7 +1183,10 @@ class _ColorCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(title, style: TextStyle(color: fg, fontWeight: FontWeight.w600)),
+          Text(
+            title,
+            style: TextStyle(color: fg, fontWeight: FontWeight.w600),
+          ),
           const SizedBox(height: 6),
           Text(
             value,
@@ -1132,9 +1235,21 @@ class _StatsGrid extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(item.$1, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
+                    Text(
+                      item.$1,
+                      style: const TextStyle(
+                        fontWeight: FontWeight.w600,
+                        fontSize: 13,
+                      ),
+                    ),
                     const SizedBox(height: 6),
-                    Text(item.$2, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 20)),
+                    Text(
+                      item.$2,
+                      style: const TextStyle(
+                        fontWeight: FontWeight.w700,
+                        fontSize: 20,
+                      ),
+                    ),
                   ],
                 ),
               ),
@@ -1247,27 +1362,33 @@ class _TransactionTable extends StatelessWidget {
               DataColumn(label: Text('Status')),
             ],
             rows: const [
-              DataRow(cells: [
-                DataCell(Text('ORD-201')),
-                DataCell(Text('Cash')),
-                DataCell(Text('125,000đ')),
-                DataCell(Text('John')),
-                DataCell(Text('Paid')),
-              ]),
-              DataRow(cells: [
-                DataCell(Text('ORD-202')),
-                DataCell(Text('Transfer')),
-                DataCell(Text('85,400đ')),
-                DataCell(Text('Jane')),
-                DataCell(Text('Paid')),
-              ]),
-              DataRow(cells: [
-                DataCell(Text('ORD-203')),
-                DataCell(Text('POS')),
-                DataCell(Text('39,600đ')),
-                DataCell(Text('John')),
-                DataCell(Text('Pending')),
-              ]),
+              DataRow(
+                cells: [
+                  DataCell(Text('ORD-201')),
+                  DataCell(Text('Cash')),
+                  DataCell(Text('125,000đ')),
+                  DataCell(Text('John')),
+                  DataCell(Text('Paid')),
+                ],
+              ),
+              DataRow(
+                cells: [
+                  DataCell(Text('ORD-202')),
+                  DataCell(Text('Transfer')),
+                  DataCell(Text('85,400đ')),
+                  DataCell(Text('Jane')),
+                  DataCell(Text('Paid')),
+                ],
+              ),
+              DataRow(
+                cells: [
+                  DataCell(Text('ORD-203')),
+                  DataCell(Text('POS')),
+                  DataCell(Text('39,600đ')),
+                  DataCell(Text('John')),
+                  DataCell(Text('Pending')),
+                ],
+              ),
             ],
           ),
         ],

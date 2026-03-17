@@ -1,5 +1,7 @@
 package com.supermarket.supermarket.controller;
 
+import com.supermarket.supermarket.dto.response.DashboardSummaryResponse;
+import com.supermarket.supermarket.dto.response.DashboardTransactionResponse;
 import com.supermarket.supermarket.dto.response.OrderDetailResponse;
 import com.supermarket.supermarket.dto.response.OrderListItemResponse;
 import com.supermarket.supermarket.service.OrderService;
@@ -27,5 +29,16 @@ public class OrderController {
     public ResponseEntity<OrderDetailResponse> getOrderDetail(@PathVariable("id") Integer id) {
         return ResponseEntity.ok(orderService.getOrderDetail(id));
     }
+
+    @GetMapping("/dashboard")
+    public ResponseEntity<DashboardSummaryResponse> getDashboardSummary() {
+        return ResponseEntity.ok(orderService.getDashboardSummary());
+    }
+
+    @GetMapping("/today-transactions")
+    public ResponseEntity<List<DashboardTransactionResponse>> getTodayTransactions() {
+        return ResponseEntity.ok(orderService.getTodayTransactions());
+    }
 }
+
 

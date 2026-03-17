@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:supermarket_manager_system/presentation/pages/admin_dashboard_page.dart';
 import 'package:supermarket_manager_system/presentation/pages/cashier_barcode_scanner_page.dart';
 import 'package:supermarket_manager_system/presentation/pages/cashier_open_shift_page.dart';
+import 'package:supermarket_manager_system/presentation/pages/customers_page.dart';
 import 'package:supermarket_manager_system/presentation/pages/login_page.dart';
 import 'package:supermarket_manager_system/presentation/pages/manager_dashboard_page.dart';
 import 'package:supermarket_manager_system/presentation/pages/role_home_page.dart';
@@ -26,7 +27,12 @@ class SupermarketManagerApp extends StatelessWidget {
     redirect: (context, state) {
       final path = state.uri.path;
       final isLoggedIn = AppSession.instance.isLoggedIn;
-      final isPublicRoute = path == '/login' || path == '/' || path == '/forgot-password' || path == '/verify-otp' || path == '/set-new-password';
+      final isPublicRoute =
+          path == '/login' ||
+          path == '/' ||
+          path == '/forgot-password' ||
+          path == '/verify-otp' ||
+          path == '/set-new-password';
 
       if (!isLoggedIn && !isPublicRoute) {
         return '/login';
@@ -45,14 +51,8 @@ class SupermarketManagerApp extends StatelessWidget {
       return null;
     },
     routes: [
-      GoRoute(
-        path: '/',
-        redirect: (context, state) => '/login',
-      ),
-      GoRoute(
-        path: '/login',
-        builder: (context, state) => const LoginPage(),
-      ),
+      GoRoute(path: '/', redirect: (context, state) => '/login'),
+      GoRoute(path: '/login', builder: (context, state) => const LoginPage()),
       GoRoute(
         path: '/forgot-password',
         builder: (context, state) => const ForgotPasswordPage(),
@@ -68,10 +68,7 @@ class SupermarketManagerApp extends StatelessWidget {
           return SetNewPasswordPage(otp: otp);
         },
       ),
-      GoRoute(
-        path: '/admin',
-        redirect: (context, state) => '/admin/dashboard',
-      ),
+      GoRoute(path: '/admin', redirect: (context, state) => '/admin/dashboard'),
       GoRoute(
         path: '/admin/:section',
         pageBuilder: (context, state) => NoTransitionPage(
@@ -107,15 +104,18 @@ class SupermarketManagerApp extends StatelessWidget {
       ),
       GoRoute(
         path: '/cashier/open-shift',
-        builder: (context, state) => CashierOpenShiftPage(
-          fullName: AppSession.instance.fullName,
-        ),
+        builder: (context, state) =>
+            CashierOpenShiftPage(fullName: AppSession.instance.fullName),
       ),
       GoRoute(
         path: '/cashier/barcode-scanner',
-        builder: (context, state) => CashierBarcodeScannerPage(
-          fullName: AppSession.instance.fullName,
-        ),
+        builder: (context, state) =>
+            CashierBarcodeScannerPage(fullName: AppSession.instance.fullName),
+      ),
+      GoRoute(
+        path: '/cashier/customers',
+        builder: (context, state) =>
+            CashierCustomersPage(fullName: AppSession.instance.fullName),
       ),
       GoRoute(
         path: '/manager',
@@ -178,6 +178,9 @@ class SupermarketManagerApp extends StatelessWidget {
     if (section == 'orders') {
       return 'orders';
     }
+    if (section == 'customers') {
+      return 'customers';
+    }
     if (section == 'profile' && subSection == 'edit') {
       return 'profile-edit';
     }
@@ -216,6 +219,9 @@ class SupermarketManagerApp extends StatelessWidget {
     }
     if (section == 'orders') {
       return 'orders';
+    }
+    if (section == 'customers') {
+      return 'customers';
     }
     if (section == 'profile') {
       return 'profile';

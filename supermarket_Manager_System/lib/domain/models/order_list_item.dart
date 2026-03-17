@@ -11,6 +11,7 @@ class OrderListItem {
     required this.paymentMethod,
     required this.status,
     required this.cashierName,
+    required this.createdAt,
   });
 
   final int id;
@@ -24,6 +25,7 @@ class OrderListItem {
   final String paymentMethod;
   final String status;
   final String cashierName;
+  final DateTime createdAt;
 
   factory OrderListItem.fromJson(Map<String, dynamic> json) {
     return OrderListItem(
@@ -38,6 +40,9 @@ class OrderListItem {
       paymentMethod: json['paymentMethod'] as String? ?? '—',
       status: json['status'] as String? ?? '—',
       cashierName: json['cashierName'] as String? ?? '—',
+      createdAt: json['createdAt'] != null
+          ? DateTime.parse(json['createdAt'] as String)
+          : DateTime.now(),
     );
   }
 }

@@ -1,0 +1,612 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Discount - POS System</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: #f0f2f5;
+            display: flex;
+            height: 100vh;
+            color: #1a1d21;
+        }
+        .sidebar {
+            width: 260px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 0;
+            position: fixed;
+            height: 100vh;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 4px 0 20px rgba(0, 0, 0, 0.08);
+        }
+        .sidebar-header {
+            padding: 1.5rem 1.5rem 1.25rem;
+            background: rgba(0, 0, 0, 1);
+            display: flex;
+            align-items: center;
+            gap: 0.65rem;
+            flex-shrink: 0;
+        }
+        .sidebar-header .logo {
+            width: 36px; height: 36px;
+            background: white;
+            border-radius: 8px;
+            display: flex; align-items: center; justify-content: center;
+            color: #667eea; font-weight: 700; font-size: 0.95rem;
+        }
+        .sidebar-title { font-size: 0.95rem; font-weight: 600; letter-spacing: 0.02em; }
+        .sidebar-content { flex: 1; display: flex; flex-direction: column; }
+        .sidebar-menu { list-style: none; padding: 0.75rem 0; flex: 1; }
+        .sidebar-menu li { margin-bottom: 0; }
+        .sidebar-menu a {
+            display: block;
+            padding: 0.95rem 1.5rem;
+            color: rgba(255, 255, 255, 0.92);
+            text-decoration: none;
+            transition: all 0.25s ease;
+            font-size: 0.95rem;
+            border-left: 3px solid transparent;
+        }
+        .sidebar-menu a:hover {
+            background: rgba(255, 255, 255, 0.12);
+            color: white;
+            border-left: 3px solid rgba(255, 255, 255, 0.9);
+        }
+        .sidebar-menu a.active {
+            background: rgba(255, 255, 255, 0.18);
+            color: white;
+            border-left: 3px solid white;
+            font-weight: 600;
+        }
+        .sidebar-footer {
+            padding: 0.5rem 0 1rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.12);
+            flex-shrink: 0;
+        }
+        .logout-btn {
+            display: block;
+            padding: 0.95rem 1.5rem;
+            color: rgba(255, 255, 255, 0.92);
+            text-decoration: none;
+            transition: all 0.25s ease;
+            font-size: 0.95rem;
+            border-left: 3px solid transparent;
+            width: 100%; background: none; border: none; cursor: pointer; text-align: left;
+        }
+        .logout-btn:hover { background: rgba(255, 255, 255, 0.1); color: white; }
+
+        .main-content {
+            margin-left: 260px;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            min-width: 0;
+        }
+        .header {
+            background: #fff;
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+            border-bottom: 1px solid #e8eaed;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+        }
+        .header-right { display: flex; align-items: center; gap: 1.25rem; }
+        .time-badge {
+            background: #667eea;
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+        .user-info { display: flex; align-items: center; gap: 0.75rem; }
+        .user-avatar {
+            width: 40px; height: 40px;
+            background: #667eea;
+            border-radius: 10px;
+            display: flex; align-items: center; justify-content: center;
+            color: white; font-weight: 600; font-size: 0.9rem;
+        }
+        .user-details { font-size: 0.9rem; }
+        .user-details .name { font-weight: 600; color: #1a1d21; }
+        .user-details .role { color: #6b7280; font-size: 0.8rem; margin-top: 1px; }
+
+        .content { padding: 2rem; flex: 1; overflow-y: auto; }
+        .content-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.75rem;
+        }
+        .page-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #1a1d21;
+            letter-spacing: -0.02em;
+        }
+        .add-discount-btn {
+            background: #16a34a;
+            color: white;
+            padding: 0.7rem 1.35rem;
+            border: none;
+            border-radius: 10px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.25s ease;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .add-discount-btn:hover {
+            background: #15803d;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 14px rgba(22, 163, 74, 0.4);
+        }
+        .table-container {
+            background: #fff;
+            border-radius: 12px;
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+            overflow: hidden;
+            border: 1px solid #e8eaed;
+        }
+        .table {
+            width: 100%;
+            border-collapse: collapse;
+            table-layout: fixed;
+        }
+        .table th,
+        .table td {
+            padding: 0.875rem 1rem;
+            vertical-align: middle;
+            font-size: 0.9rem;
+        }
+        .table th {
+            background: #f7f8fa;
+            font-weight: 600;
+            color: #4a5568;
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+        }
+        .table td { color: #374151; }
+        .table tbody tr:hover { background: #f7f8fa; }
+        .table th:nth-child(1), .table td:nth-child(1) { width: 4rem; text-align: center; }
+        .table th:nth-child(2), .table td:nth-child(2) { width: auto; text-align: left; }
+        .table th:nth-child(3), .table td:nth-child(3) { width: 7rem; text-align: right; }
+        .table th:nth-child(4), .table td:nth-child(4) { width: 11rem; text-align: right; }
+        .table th:nth-child(5), .table td:nth-child(5) { width: 9rem; text-align: center; }
+        .table th:nth-child(6), .table td:nth-child(6) { width: 9rem; text-align: center; }
+        .table th:nth-child(7), .table td:nth-child(7) { width: 8rem; text-align: center; }
+
+        .btn-edit {
+            padding: 0.4rem 0.75rem;
+            border: none;
+            border-radius: 8px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        .btn-edit:hover { opacity: 0.9; }
+        .btn-delete {
+            padding: 0.4rem 0.75rem;
+            border: none;
+            border-radius: 8px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            cursor: pointer;
+            background: #dc2626;
+            color: white;
+        }
+        .btn-delete:hover { background: #b91c1c; }
+        .action-buttons { display: flex; gap: 0.5rem; justify-content: center; flex-wrap: wrap; }
+
+        /* Modal */
+        .discount-modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+            padding: 1.5rem;
+        }
+        .discount-modal-overlay.is-open { display: flex; }
+        .discount-modal-card {
+            background: #fff;
+            border-radius: 12px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+            width: 100%;
+            max-width: 440px;
+            position: relative;
+        }
+        .discount-modal-header {
+            padding: 1.25rem 1.5rem;
+            border-bottom: 1px solid #e8eaed;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .discount-modal-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: #1a1d21;
+        }
+        .discount-modal-close {
+            width: 36px; height: 36px;
+            border: none;
+            background: #f3f4f6;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1.25rem;
+            color: #6b7280;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+        }
+        .discount-modal-close:hover {
+            background: #e5e7eb;
+            color: #1a1d21;
+        }
+        .discount-modal-body { padding: 1.5rem; }
+        .discount-form .form-group { margin-bottom: 1.25rem; }
+        .discount-form label {
+            display: block;
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: #374151;
+            margin-bottom: 0.4rem;
+        }
+        .discount-form input {
+            width: 100%;
+            padding: 0.7rem 1rem;
+            border: 1px solid #d1d5db;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            color: #1a1d21;
+            font-family: inherit;
+        }
+        .discount-form input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.15);
+        }
+        .discount-modal-footer {
+            padding: 1rem 1.5rem;
+            border-top: 1px solid #e8eaed;
+            display: flex;
+            justify-content: flex-end;
+            gap: 0.75rem;
+        }
+        .btn-modal-cancel {
+            padding: 0.65rem 1.25rem;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            cursor: pointer;
+            background: #dc2626;
+            color: white;
+            transition: all 0.2s ease;
+        }
+        .btn-modal-cancel:hover { background: #b91c1c; }
+        .btn-modal-submit {
+            padding: 0.65rem 1.25rem;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            cursor: pointer;
+            background: #16a34a;
+            color: white;
+            transition: all 0.2s ease;
+        }
+        .btn-modal-submit:hover { background: #15803d; }
+
+        @media (max-width: 768px) {
+            .sidebar { width: 240px; }
+            .main-content { margin-left: 0; }
+            .header { padding: 1rem; }
+            .content { padding: 1rem; }
+            .table-container { overflow-x: auto; }
+        }
+    </style>
+</head>
+<body>
+    <div class="sidebar">
+        <div class="sidebar-header">
+            <div class="logo">P</div>
+            <div class="sidebar-title">SMS SYSTEM</div>
+        </div>
+        <div class="sidebar-content">
+            <ul class="sidebar-menu">
+                <li><a href="../dashboard/dashboard.html">Dashboard</a></li>
+                <li><a href="../user/users.html">Users</a></li>
+                <li><a href="../customer/ListCustomer.html">Customer</a></li>
+                <li><a href="Discount.html" class="active">Discount</a></li>
+                <li><a href="../supplier/ListSupplier.html">Suppliers</a></li>
+                <li><a href="../category/ListCategory.html">Category</a></li>
+                <li><a href="../product/ListProduct.html">Products</a></li>
+                <li><a href="../barcodeScanner/BarcodeScanner.html">Barcode Scanner</a></li>
+                <li><a href="../orders/ViewAllOrder.html">Orders</a></li>
+                <li><a href="../creditors/Creditors.html">Creditors</a></li>
+                <li><a href="../expired/Expired.html">Expired</a></li>
+                <li><a href="../report/report.html">Reports</a></li>
+            </ul>
+            <div class="sidebar-footer">
+                <a href="../../systemAccessSecurity/login.html" class="logout-btn">Logout</a>
+            </div>
+        </div>
+    </div>
+
+    <div class="main-content">
+        <div class="header">
+            <div class="header-right">
+                <div class="time-badge">11:20:00 AM</div>
+                <div class="user-info">
+                    <div class="user-details">
+                        <div class="name">kodemade</div>
+                        <div class="role">Administrator</div>
+                    </div>
+                    <div class="user-avatar">K</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="content">
+            <div class="content-header">
+                <h1 class="page-title">Discount</h1>
+                <button type="button" class="add-discount-btn" id="openAddDiscountModal">+ Add Discount</button>
+            </div>
+
+            <div class="table-container">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>S/N</th>
+                            <th>Discount Name</th>
+                            <th>Discount %</th>
+                            <th>Min Order Amount</th>
+                            <th>Start Date</th>
+                            <th>End Date</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="discountTableBody">
+                        <tr data-id="1">
+                            <td>1</td>
+                            <td>Holiday Special</td>
+                            <td>5%</td>
+                            <td>500,000đ</td>
+                            <td>01/01/2025</td>
+                            <td>01/01/2025</td>
+                            <td>
+                                <div class="action-buttons">
+                                    <a href="#" class="btn-edit openEditDiscountModal" data-id="1">Edit</a>
+                                    <button type="button" class="btn-delete btnDeleteDiscount" data-id="1">Delete</button>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr data-id="2">
+                            <td>2</td>
+                            <td>Year-End Sale</td>
+                            <td>10%</td>
+                            <td>1,000,000đ</td>
+                            <td>25/12/2025</td>
+                            <td>31/12/2025</td>
+                            <td>
+                                <div class="action-buttons">
+                                    <a href="#" class="btn-edit openEditDiscountModal" data-id="2">Edit</a>
+                                    <button type="button" class="btn-delete btnDeleteDiscount" data-id="2">Delete</button>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr data-id="3">
+                            <td>3</td>
+                            <td>Loyal Customer</td>
+                            <td>3%</td>
+                            <td>200,000đ</td>
+                            <td>01/01/2025</td>
+                            <td>31/12/2025</td>
+                            <td>
+                                <div class="action-buttons">
+                                    <a href="#" class="btn-edit openEditDiscountModal" data-id="3">Edit</a>
+                                    <button type="button" class="btn-delete btnDeleteDiscount" data-id="3">Delete</button>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr data-id="4">
+                            <td>4</td>
+                            <td>Flash Sale 8/3</td>
+                            <td>15%</td>
+                            <td>300,000đ</td>
+                            <td>08/03/2025</td>
+                            <td>08/03/2025</td>
+                            <td>
+                                <div class="action-buttons">
+                                    <a href="#" class="btn-edit openEditDiscountModal" data-id="4">Edit</a>
+                                    <button type="button" class="btn-delete btnDeleteDiscount" data-id="4">Delete</button>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Discount Modal -->
+    <div class="discount-modal-overlay" id="addDiscountModal" role="dialog" aria-labelledby="addDiscountModalTitle">
+        <div class="discount-modal-card">
+            <div class="discount-modal-header">
+                <h2 class="discount-modal-title" id="addDiscountModalTitle">Add Discount</h2>
+                <button type="button" class="discount-modal-close" id="closeAddDiscountModal" aria-label="Close">&times;</button>
+            </div>
+            <div class="discount-modal-body">
+                <form class="discount-form" id="addDiscountForm">
+                    <div class="form-group">
+                        <label for="addName">Discount Name</label>
+                        <input type="text" id="addName" name="name" placeholder="e.g. Holiday Special">
+                    </div>
+                    <div class="form-group">
+                        <label for="addPercent">Discount %</label>
+                        <input type="text" id="addPercent" name="percent" placeholder="e.g. 5">
+                    </div>
+                    <div class="form-group">
+                        <label for="addMinOrder">Min Order Amount (đ)</label>
+                        <input type="text" id="addMinOrder" name="minOrder" placeholder="e.g. 500000">
+                    </div>
+                    <div class="form-group">
+                        <label for="addStartDate">Start Date</label>
+                        <input type="text" id="addStartDate" name="startDate" placeholder="DD/MM/YYYY">
+                    </div>
+                    <div class="form-group">
+                        <label for="addEndDate">End Date</label>
+                        <input type="text" id="addEndDate" name="endDate" placeholder="DD/MM/YYYY">
+                    </div>
+                </form>
+            </div>
+            <div class="discount-modal-footer">
+                <button type="button" class="btn-modal-cancel" id="cancelAddDiscount">Cancel</button>
+                <button type="button" class="btn-modal-submit" id="submitAddDiscount">Submit</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Discount Modal -->
+    <div class="discount-modal-overlay" id="editDiscountModal" role="dialog" aria-labelledby="editDiscountModalTitle">
+        <div class="discount-modal-card">
+            <div class="discount-modal-header">
+                <h2 class="discount-modal-title" id="editDiscountModalTitle">Edit Discount</h2>
+                <button type="button" class="discount-modal-close" id="closeEditDiscountModal" aria-label="Close">&times;</button>
+            </div>
+            <div class="discount-modal-body">
+                <form class="discount-form" id="editDiscountForm">
+                    <input type="hidden" id="editId" name="id">
+                    <div class="form-group">
+                        <label for="editName">Discount Name</label>
+                        <input type="text" id="editName" name="name" placeholder="e.g. Holiday Special">
+                    </div>
+                    <div class="form-group">
+                        <label for="editPercent">Discount %</label>
+                        <input type="text" id="editPercent" name="percent" placeholder="e.g. 5">
+                    </div>
+                    <div class="form-group">
+                        <label for="editMinOrder">Min Order Amount (đ)</label>
+                        <input type="text" id="editMinOrder" name="minOrder" placeholder="e.g. 500000">
+                    </div>
+                    <div class="form-group">
+                        <label for="editStartDate">Start Date</label>
+                        <input type="text" id="editStartDate" name="startDate" placeholder="DD/MM/YYYY">
+                    </div>
+                    <div class="form-group">
+                        <label for="editEndDate">End Date</label>
+                        <input type="text" id="editEndDate" name="endDate" placeholder="DD/MM/YYYY">
+                    </div>
+                </form>
+            </div>
+            <div class="discount-modal-footer">
+                <button type="button" class="btn-modal-cancel" id="cancelEditDiscount">Cancel</button>
+                <button type="button" class="btn-modal-submit" id="submitEditDiscount">Update</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        (function () {
+            var discountsData = {
+                1: { name: 'Holiday Special', percent: '5', minOrder: '500,000', startDate: '01/01/2025', endDate: '01/01/2025' },
+                2: { name: 'Year-End Sale', percent: '10', minOrder: '1,000,000', startDate: '25/12/2025', endDate: '31/12/2025' },
+                3: { name: 'Loyal Customer', percent: '3', minOrder: '200,000', startDate: '01/01/2025', endDate: '31/12/2025' },
+                4: { name: 'Flash Sale 8/3', percent: '15', minOrder: '300,000', startDate: '08/03/2025', endDate: '08/03/2025' }
+            };
+
+            // Add modal
+            var addModal = document.getElementById('addDiscountModal');
+            var openAddBtn = document.getElementById('openAddDiscountModal');
+            var closeAddBtn = document.getElementById('closeAddDiscountModal');
+            var cancelAddBtn = document.getElementById('cancelAddDiscount');
+            var submitAddBtn = document.getElementById('submitAddDiscount');
+
+            function openAddModal() {
+                addModal.classList.add('is-open');
+            }
+            function closeAddModal() {
+                addModal.classList.remove('is-open');
+            }
+
+            if (openAddBtn) openAddBtn.addEventListener('click', openAddModal);
+            if (closeAddBtn) closeAddBtn.addEventListener('click', closeAddModal);
+            if (cancelAddBtn) cancelAddBtn.addEventListener('click', closeAddModal);
+            if (submitAddBtn) submitAddBtn.addEventListener('click', function () {
+                closeAddModal();
+            });
+            addModal.addEventListener('click', function (e) {
+                if (e.target === addModal) closeAddModal();
+            });
+
+            // Edit modal
+            var editModal = document.getElementById('editDiscountModal');
+            var closeEditBtn = document.getElementById('closeEditDiscountModal');
+            var cancelEditBtn = document.getElementById('cancelEditDiscount');
+            var submitEditBtn = document.getElementById('submitEditDiscount');
+
+            function openEditModal(id) {
+                var d = discountsData[id] || {};
+                document.getElementById('editId').value = id || '';
+                document.getElementById('editName').value = d.name || '';
+                document.getElementById('editPercent').value = d.percent || '';
+                document.getElementById('editMinOrder').value = (d.minOrder || '').replace(/,/g, '');
+                document.getElementById('editStartDate').value = d.startDate || '';
+                document.getElementById('editEndDate').value = d.endDate || '';
+                editModal.classList.add('is-open');
+            }
+            function closeEditModal() {
+                editModal.classList.remove('is-open');
+            }
+
+            document.querySelectorAll('.openEditDiscountModal').forEach(function (btn) {
+                btn.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    var id = this.getAttribute('data-id') || '';
+                    openEditModal(id);
+                });
+            });
+            if (closeEditBtn) closeEditBtn.addEventListener('click', closeEditModal);
+            if (cancelEditBtn) cancelEditBtn.addEventListener('click', closeEditModal);
+            if (submitEditBtn) submitEditBtn.addEventListener('click', function () {
+                closeEditModal();
+            });
+            editModal.addEventListener('click', function (e) {
+                if (e.target === editModal) closeEditModal();
+            });
+
+            // Delete
+            document.querySelectorAll('.btnDeleteDiscount').forEach(function (btn) {
+                btn.addEventListener('click', function () {
+                    var id = this.getAttribute('data-id');
+                    if (id && confirm('Delete this discount?')) {
+                        var row = document.querySelector('#discountTableBody tr[data-id="' + id + '"]');
+                        if (row) row.remove();
+                    }
+                });
+            });
+        })();
+    </script>
+</body>
+</html>
