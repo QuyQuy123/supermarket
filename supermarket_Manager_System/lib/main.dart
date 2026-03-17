@@ -291,6 +291,9 @@ class SupermarketManagerApp extends StatelessWidget {
     if (section == 'products') {
       return 'products';
     }
+    if (section == 'expired') {
+      return 'expired';
+    }
     if (section == 'profile' && subSection == 'edit') {
       return 'profile-edit';
     }
@@ -389,6 +392,9 @@ class SupermarketManagerApp extends StatelessWidget {
     }
     if (section == 'products') {
       return 'products';
+    }
+    if (section == 'expired') {
+      return 'expired';
     }
     if (section == 'profile') {
       return 'profile';
