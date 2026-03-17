@@ -10,9 +10,11 @@ import 'package:supermarket_manager_system/presentation/pages/profile_content_pa
 import 'package:supermarket_manager_system/presentation/pages/users_page.dart';
 import 'package:supermarket_manager_system/presentation/pages/suppliers_page.dart';
 import 'package:supermarket_manager_system/presentation/pages/products_page.dart';
+import 'package:supermarket_manager_system/presentation/pages/expiration_page.dart';
+import 'package:supermarket_manager_system/presentation/pages/product_detail_page.dart';
 import 'package:supermarket_manager_system/presentation/widgets/change_password_dialog.dart';
 
-enum _AdminTab { dashboard, users, orders, suppliers, products, profile, profileEdit }
+enum _AdminTab { dashboard, users, orders, suppliers, products, expired, profile, profileEdit, productDetail }
 
 class AdminDashboardPage extends StatefulWidget {
   const AdminDashboardPage({
@@ -37,6 +39,7 @@ class AdminDashboardPage extends StatefulWidget {
 class _AdminDashboardPageState extends State<AdminDashboardPage> {
   _AdminTab _selectedTab = _AdminTab.dashboard;
   UserDetail? _editingProfile;
+  int? _selectedProductId;
   late DateTime _now;
   Timer? _clockTimer;
 
@@ -46,6 +49,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
       'orders' => _AdminTab.orders,
       'suppliers' => _AdminTab.suppliers,
       'products' => _AdminTab.products,
+      'expired' => _AdminTab.expired,
       'profile' => _AdminTab.profile,
       'profile-edit' => _AdminTab.profileEdit,
       _ => _AdminTab.dashboard,
@@ -53,12 +57,14 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
   }
 
   String _pathForTab(_AdminTab tab) {
-    return switch (tab) {
+      return switch (tab) {
       _AdminTab.dashboard => '/admin/dashboard',
       _AdminTab.users => '/admin/users',
       _AdminTab.orders => '/admin/orders',
       _AdminTab.suppliers => '/admin/suppliers',
       _AdminTab.products => '/admin/products',
+      _AdminTab.expired => '/admin/expired',
+      _AdminTab.productDetail => '/admin/expired', // Stay on expired path
       _AdminTab.profile => '/admin/profile',
       _AdminTab.profileEdit => '/admin/profile/edit',
     };
@@ -114,6 +120,18 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
     }
   }
 
+  void _openProductDetail(int productId) {
+    setState(() {
+      _selectedProductId = productId;
+      _selectedTab = _AdminTab.productDetail;
+    });
+  }
+
+  void _closeProductDetail() {
+    setState(() {
+      _selectedTab = _AdminTab.expired; // Go back to expired tab
+    });
+  }
   void _onProfileUpdated(UserDetail detail) {
     setState(() {
       _editingProfile = detail;
@@ -228,6 +246,19 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                       currentTimeText: _formatClock(_now),
                       onProfileTap: () => _selectTab(_AdminTab.profile),
                     ),
+                  _AdminTab.expired => ExpirationContent(
+                      fullName: widget.fullName,
+                      isCompact: isCompact,
+                      currentTimeText: _formatClock(_now),
+                      onProfileTap: () => _selectTab(_AdminTab.profile),
+                      onProductDetailTap: _openProductDetail,
+                    ),
+                  _AdminTab.productDetail => _selectedProductId != null
+                      ? ProductDetailContent(
+                          productId: _selectedProductId!,
+                          onBack: _closeProductDetail,
+                        )
+                      : Container(),
                   _AdminTab.profile => _ProfileContent(
                       fullName: widget.fullName,
                       userId: widget.userId,
@@ -329,7 +360,11 @@ class _SidebarMenu extends StatelessWidget {
                     ),
                     const _SidebarItem(label: 'Barcode Scanner'),
                     const _SidebarItem(label: 'Creditors'),
-                    const _SidebarItem(label: 'Expired'),
+                    _SidebarItem(
+                      label: 'Expired',
+                      active: selectedTab == _AdminTab.expired,
+                      onTap: () => onSelectTab(_AdminTab.expired),
+                    ),
                     const _SidebarItem(label: 'Reports'),
                   ],
                 ),

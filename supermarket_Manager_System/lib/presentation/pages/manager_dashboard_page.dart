@@ -6,8 +6,11 @@ import 'package:supermarket_manager_system/presentation/pages/orders_page.dart';
 import 'package:supermarket_manager_system/presentation/pages/profile_content_page.dart';
 import 'package:supermarket_manager_system/presentation/pages/suppliers_page.dart';
 import 'package:supermarket_manager_system/presentation/pages/products_page.dart';
+import 'package:supermarket_manager_system/presentation/pages/expiration_page.dart';
+import 'package:supermarket_manager_system/presentation/pages/product_detail_page.dart';
+import 'package:supermarket_manager_system/presentation/widgets/change_password_dialog.dart';
 
-enum _ManagerTab { dashboard, orders, suppliers, products, profile, profileEdit }
+enum _ManagerTab { dashboard, orders, suppliers, products, expired, profile, profileEdit, productDetail }
 
 class ManagerDashboardPage extends StatefulWidget {
   const ManagerDashboardPage({
@@ -32,6 +35,7 @@ class ManagerDashboardPage extends StatefulWidget {
 class _ManagerDashboardPageState extends State<ManagerDashboardPage> {
   _ManagerTab _selectedTab = _ManagerTab.dashboard;
   UserDetail? _editingProfile;
+  int? _selectedProductId;
   late DateTime _now;
   Timer? _clockTimer;
 
@@ -41,6 +45,7 @@ class _ManagerDashboardPageState extends State<ManagerDashboardPage> {
       'orders' => _ManagerTab.orders,
       'suppliers' => _ManagerTab.suppliers,
       'products' => _ManagerTab.products,
+      'expired' => _ManagerTab.expired,
       'profile-edit' => _ManagerTab.profileEdit,
       _ => _ManagerTab.dashboard,
     };
@@ -52,6 +57,8 @@ class _ManagerDashboardPageState extends State<ManagerDashboardPage> {
       _ManagerTab.orders => '/manager/orders',
       _ManagerTab.suppliers => '/manager/suppliers',
       _ManagerTab.products => '/manager/products',
+      _ManagerTab.expired => '/manager/expired',
+      _ManagerTab.productDetail => '/manager/expired', // Stay on expired path
       _ManagerTab.profile => '/manager/profile',
       _ManagerTab.profileEdit => '/manager/profile/edit',
     };
@@ -101,6 +108,19 @@ class _ManagerDashboardPageState extends State<ManagerDashboardPage> {
     if (isCompact) {
       Navigator.of(context).maybePop();
     }
+  }
+
+  void _openProductDetail(int productId) {
+    setState(() {
+      _selectedProductId = productId;
+      _selectedTab = _ManagerTab.productDetail;
+    });
+  }
+
+  void _closeProductDetail() {
+    setState(() {
+      _selectedTab = _ManagerTab.expired; // Go back to expired tab
+    });
   }
 
   void _openProfileEdit(UserDetail detail) {
@@ -162,6 +182,7 @@ class _ManagerDashboardPageState extends State<ManagerDashboardPage> {
                     onOrdersTap: () => _selectTab(_ManagerTab.orders),
                     onSuppliersTap: () => _selectTab(_ManagerTab.suppliers),
                     onProductsTap: () => _selectTab(_ManagerTab.products),
+                    onExpiredTap: () => _selectTab(_ManagerTab.expired),
                   ),
                 )
               : null,
@@ -177,6 +198,7 @@ class _ManagerDashboardPageState extends State<ManagerDashboardPage> {
                     onOrdersTap: () => _selectTab(_ManagerTab.orders),
                     onSuppliersTap: () => _selectTab(_ManagerTab.suppliers),
                     onProductsTap: () => _selectTab(_ManagerTab.products),
+                    onExpiredTap: () => _selectTab(_ManagerTab.expired),
                   ),
                 ),
               Expanded(
@@ -228,6 +250,19 @@ class _ManagerDashboardPageState extends State<ManagerDashboardPage> {
                       currentTimeText: _formatClock(_now),
                       onProfileTap: () => _selectTab(_ManagerTab.profile),
                     ),
+                  _ManagerTab.expired => ExpirationContent(
+                      fullName: widget.fullName,
+                      isCompact: isCompact,
+                      currentTimeText: _formatClock(_now),
+                      onProfileTap: () => _selectTab(_ManagerTab.profile),
+                      onProductDetailTap: _openProductDetail,
+                    ),
+                  _ManagerTab.productDetail => _selectedProductId != null
+                      ? ProductDetailContent(
+                          productId: _selectedProductId!,
+                          onBack: _closeProductDetail,
+                        )
+                      : Container(),
                   _ManagerTab.profile => ProfileViewContent(
                       fullName: widget.fullName,
                       userId: widget.userId,
@@ -261,6 +296,7 @@ class _ManagerSidebar extends StatelessWidget {
     required this.onOrdersTap,
     required this.onSuppliersTap,
     required this.onProductsTap,
+    required this.onExpiredTap,
   });
 
   final VoidCallback onLogout;
@@ -269,6 +305,7 @@ class _ManagerSidebar extends StatelessWidget {
   final VoidCallback onOrdersTap;
   final VoidCallback onSuppliersTap;
   final VoidCallback onProductsTap;
+  final VoidCallback onExpiredTap;
 
   @override
   Widget build(BuildContext context) {
@@ -324,7 +361,11 @@ class _ManagerSidebar extends StatelessWidget {
                       onTap: onProductsTap,
                     ),
                     const _ManagerSidebarItem(label: 'Creditors'),
-                    const _ManagerSidebarItem(label: 'Expired'),
+                    _ManagerSidebarItem(
+                      label: 'Expired',
+                      active: selectedTab == _ManagerTab.expired,
+                      onTap: onExpiredTap,
+                    ),
                     const _ManagerSidebarItem(label: 'Reports'),
                   ],
                 ),

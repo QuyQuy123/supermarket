@@ -4,6 +4,98 @@ import 'package:flutter/material.dart';
 import 'package:supermarket_manager_system/data/services/product_api_service.dart';
 import 'package:supermarket_manager_system/domain/models/product_detail.dart';
 
+class ProductDetailContent extends StatefulWidget {
+  const ProductDetailContent({
+    super.key,
+    required this.productId,
+    required this.onBack,
+  });
+
+  final int productId;
+  final VoidCallback onBack;
+
+  @override
+  State<ProductDetailContent> createState() => _ProductDetailContentState();
+}
+
+class _ProductDetailContentState extends State<ProductDetailContent> {
+  final _productApiService = ProductApiService();
+  late Future<ProductDetail> _future;
+
+  @override
+  void initState() {
+    super.initState();
+    _future = _productApiService.getProductById(widget.productId);
+  }
+
+  void _reload() {
+    setState(() {
+      _future = _productApiService.getProductById(widget.productId);
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return FutureBuilder<ProductDetail>(
+      future: _future,
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(child: CircularProgressIndicator());
+        }
+        if (snapshot.hasError) {
+          return Center(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  'Cannot load product detail: ${snapshot.error}',
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 12),
+                ElevatedButton(
+                  onPressed: _reload,
+                  child: const Text('Retry'),
+                ),
+              ],
+            ),
+          );
+        }
+
+        final detail = snapshot.data;
+        if (detail == null) {
+          return const Center(child: Text('No data'));
+        }
+
+        return ListView(
+          padding: const EdgeInsets.all(24),
+          children: [
+            TextButton.icon(
+              style: TextButton.styleFrom(
+                alignment: Alignment.centerLeft,
+                foregroundColor: const Color(0xFF3B82F6),
+                padding: EdgeInsets.zero,
+              ),
+              onPressed: widget.onBack,
+              icon: const Icon(Icons.arrow_back, size: 20),
+              label: const Text(
+                'Back to Stock Inventory',
+                style: TextStyle(fontWeight: FontWeight.w600),
+              ),
+            ),
+            const SizedBox(height: 16),
+            const Text(
+              'Product Detail',
+              style: TextStyle(fontSize: 24, fontWeight: FontWeight.w700),
+            ),
+            const SizedBox(height: 16),
+            _DetailCard(detail: detail),
+          ],
+        );
+      },
+    );
+  }
+}
+
 class ProductDetailPage extends StatefulWidget {
   const ProductDetailPage({
     super.key,
@@ -21,15 +113,12 @@ class ProductDetailPage extends StatefulWidget {
 }
 
 class _ProductDetailPageState extends State<ProductDetailPage> {
-  final _productApiService = ProductApiService();
-  late Future<ProductDetail> _future;
   late DateTime _now;
   Timer? _clockTimer;
 
   @override
   void initState() {
     super.initState();
-    _future = _productApiService.getProductById(widget.productId);
     _now = DateTime.now();
     _clockTimer = Timer.periodic(const Duration(seconds: 1), (_) {
       if (!mounted) return;
@@ -41,12 +130,6 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
   void dispose() {
     _clockTimer?.cancel();
     super.dispose();
-  }
-
-  void _reload() {
-    setState(() {
-      _future = _productApiService.getProductById(widget.productId);
-    });
   }
 
   String _formatClock(DateTime dateTime) {
@@ -69,68 +152,9 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
             roleLabel: widget.basePath == 'manager' ? 'Manager' : 'Administrator',
           ),
           Expanded(
-            child: Padding(
-              padding: const EdgeInsets.all(24),
-              child: FutureBuilder<ProductDetail>(
-                future: _future,
-                builder: (context, snapshot) {
-                  if (snapshot.connectionState == ConnectionState.waiting) {
-                    return const Center(child: CircularProgressIndicator());
-                  }
-                  if (snapshot.hasError) {
-                    return Center(
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Text(
-                            'Cannot load product detail: ${snapshot.error}',
-                            textAlign: TextAlign.center,
-                          ),
-                          const SizedBox(height: 12),
-                          ElevatedButton(
-                            onPressed: _reload,
-                            child: const Text('Retry'),
-                          ),
-                        ],
-                      ),
-                    );
-                  }
-
-                  final detail = snapshot.data;
-                  if (detail == null) {
-                    return const Center(child: Text('No data'));
-                  }
-
-                  return ListView(
-                    children: [
-                      InkWell(
-                        onTap: () => Navigator.of(context).pop(),
-                        child: const Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(Icons.arrow_back, color: Color(0xFF3B82F6)),
-                            SizedBox(width: 6),
-                            Text(
-                              'Back to Stock Inventory',
-                              style: TextStyle(
-                                color: Color(0xFF3B82F6),
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-                      const Text(
-                        'Product Detail',
-                        style: TextStyle(fontSize: 24, fontWeight: FontWeight.w700),
-                      ),
-                      const SizedBox(height: 16),
-                      _DetailCard(detail: detail),
-                    ],
-                  );
-                },
-              ),
+            child: ProductDetailContent(
+              productId: widget.productId,
+              onBack: () => Navigator.of(context).pop(),
             ),
           ),
         ],
