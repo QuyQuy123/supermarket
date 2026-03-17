@@ -6,6 +6,8 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.List;
+
 @Data
 @Builder
 @NoArgsConstructor
@@ -23,4 +25,14 @@ public class DashboardSummaryResponse {
     private long userCount;
     private long availableProductsCount;
     private BigDecimal currentYearRevenue;
+    private List<TopProductResponse> topProducts;
+
+    @Data
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class TopProductResponse {
+        private String name;
+        private long totalQty;
+    }
 }

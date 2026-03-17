@@ -430,6 +430,15 @@ class _AddEditDiscountDialogState extends State<_AddEditDiscountDialog> {
         endDate: _parseDate(_endDateController.text),
       );
 
+      if (newDiscount.startDate.isAfter(newDiscount.endDate)) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Start date must be before or equal to End date')),
+          );
+        }
+        return;
+      }
+
       if (widget.discount == null) {
         await widget.discountApiService.createDiscount(newDiscount);
       } else {
@@ -527,7 +536,21 @@ class _AddEditDiscountDialogState extends State<_AddEditDiscountDialog> {
             border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
             contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
           ),
-          validator: (value) => value == null || value.isEmpty ? 'This field is required' : null,
+          autovalidateMode: AutovalidateMode.onUserInteraction,
+          validator: (value) {
+            if (value == null || value.isEmpty) return 'This field is required';
+            if (label.contains('%')) {
+              final val = double.tryParse(value);
+              if (val == null) return 'Invalid number';
+              if (val < 0 || val > 100) return 'Percent must be between 0 and 100';
+            }
+            if (label.contains('Amount')) {
+              final val = double.tryParse(value);
+              if (val == null) return 'Invalid number';
+              if (val < 0) return 'Amount cannot be negative';
+            }
+            return null;
+          },
         ),
       ],
     );
@@ -549,6 +572,7 @@ class _AddEditDiscountDialogState extends State<_AddEditDiscountDialog> {
             border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
             contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
           ),
+          autovalidateMode: AutovalidateMode.onUserInteraction,
           validator: (value) => value == null || value.isEmpty ? 'This field is required' : null,
         ),
       ],

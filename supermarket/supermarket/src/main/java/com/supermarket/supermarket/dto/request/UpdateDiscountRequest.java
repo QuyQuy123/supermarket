@@ -1,8 +1,10 @@
 package com.supermarket.supermarket.dto.request;
 
+import jakarta.validation.constraints.DecimalMax;
+import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Positive;
+import jakarta.validation.constraints.PositiveOrZero;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import lombok.AllArgsConstructor;
@@ -19,11 +21,12 @@ public class UpdateDiscountRequest {
     private String name;
 
     @NotNull(message = "Discount percent is required")
-    @Positive(message = "Discount percent must be positive")
+    @DecimalMin(value = "0", message = "Discount percent must be at least 0")
+    @DecimalMax(value = "100", message = "Discount percent cannot exceed 100")
     private BigDecimal percent;
 
     @NotNull(message = "Min order amount is required")
-    @Positive(message = "Min order amount must be positive")
+    @PositiveOrZero(message = "Min order amount must be zero or positive")
     private BigDecimal minOrderAmount;
 
     @NotNull(message = "Start date is required")

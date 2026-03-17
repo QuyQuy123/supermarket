@@ -8,14 +8,18 @@ import com.supermarket.supermarket.dto.response.OrderListItemResponse;
 import com.supermarket.supermarket.entity.OrderItem;
 import com.supermarket.supermarket.entity.SalesOrder;
 import com.supermarket.supermarket.repository.OrderItemRepository;
+import com.supermarket.supermarket.repository.ProductRepository;
 import com.supermarket.supermarket.repository.SalesOrderRepository;
+import com.supermarket.supermarket.repository.SupplierRepository;
 import com.supermarket.supermarket.repository.UserRepository;
 import com.supermarket.supermarket.service.OrderService;
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Objects;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
@@ -27,6 +31,8 @@ public class OrderServiceImpl implements OrderService {
     private final SalesOrderRepository salesOrderRepository;
     private final OrderItemRepository orderItemRepository;
     private final UserRepository userRepository;
+    private final ProductRepository productRepository;
+    private final SupplierRepository supplierRepository;
 
     @Override
     public List<OrderListItemResponse> getAllOrders() {
@@ -84,19 +90,36 @@ public class OrderServiceImpl implements OrderService {
         long invoiceCount = salesOrderRepository.countByYear(today.getYear());
         long userCount = userRepository.count();
 
+        // New data from repositories
+        long supplierCount = supplierRepository.count();
+        long availableProductsCount = productRepository.countByInStockGreaterThan(0);
+        long expiredProducts = productRepository.countByExpiryDateBefore(today);
+        long newProductsCount = productRepository.countByCreatedAtAfter(today.minusDays(7).atStartOfDay());
+
+        // Top Selling Products
+        List<DashboardSummaryResponse.TopProductResponse> topProducts = orderItemRepository
+            .findTopSellingProducts(PageRequest.of(0, 5))
+            .stream()
+            .map(obj -> DashboardSummaryResponse.TopProductResponse.builder()
+                .name((String) obj[0])
+                .totalQty(((Number) obj[1]).longValue())
+                .build())
+            .toList();
+
         return DashboardSummaryResponse.builder()
             .todaySales(orZero(todaySales))
-            .expiredProducts(0L)
+            .expiredProducts(expiredProducts)
             .todayInvoiceCount(todayInvoiceCount)
-            .newProductsCount(0L)
-            .supplierCount(0L)
+            .newProductsCount(newProductsCount)
+            .supplierCount(supplierCount)
             .invoiceCount(invoiceCount)
             .currentMonthSales(orZero(currentMonthSales))
             .last3MonthSales(orZero(last3MonthSales))
             .last6MonthSales(orZero(last6MonthSales))
             .userCount(userCount)
-            .availableProductsCount(0L)
+            .availableProductsCount(availableProductsCount)
             .currentYearRevenue(orZero(currentYearRevenue))
+            .topProducts(topProducts)
             .build();
     }
 

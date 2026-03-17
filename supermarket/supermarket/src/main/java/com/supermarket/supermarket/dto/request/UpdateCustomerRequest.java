@@ -1,21 +1,26 @@
 package com.supermarket.supermarket.dto.request;
 
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.PositiveOrZero;
 import jakarta.validation.constraints.Size;
 import lombok.Getter;
 import lombok.Setter;
+
+import java.math.BigDecimal;
 
 @Getter
 @Setter
 public class UpdateCustomerRequest {
 
     @NotBlank(message = "Customer name is required")
-    @Size(max = 100, message = "Name must be <= 100 characters")
+    @Size(min = 2, max = 100, message = "Name must be between 2 and 100 characters")
     private String name;
 
     @NotBlank(message = "Phone is required")
-    @Size(max = 20, message = "Phone must be <= 20 characters")
+    @Pattern(regexp = "^(0|84)(3|5|7|8|9)([0-9]{8})$", message = "Invalid Vietnamese phone number format")
     private String phone;
 
-    private java.math.BigDecimal totalAmount;
+    @PositiveOrZero(message = "Total amount must be zero or positive")
+    private BigDecimal totalAmount;
 }

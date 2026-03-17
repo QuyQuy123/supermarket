@@ -584,8 +584,12 @@ class _AddCustomerDialogState extends State<_AddCustomerDialog> {
                   border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
                   contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
                 ),
-                validator: (v) =>
-                    v == null || v.trim().isEmpty ? 'Name is required' : null,
+                autovalidateMode: AutovalidateMode.onUserInteraction,
+                validator: (v) {
+                  if (v == null || v.trim().isEmpty) return 'Name is required';
+                  if (v.trim().length < 2) return 'Name must be at least 2 characters';
+                  return null;
+                },
               ),
               const SizedBox(height: 16),
               _buildFieldLabel('Phone'),
@@ -596,9 +600,15 @@ class _AddCustomerDialogState extends State<_AddCustomerDialog> {
                   border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
                   contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
                 ),
+                autovalidateMode: AutovalidateMode.onUserInteraction,
                 keyboardType: TextInputType.phone,
-                validator: (v) =>
-                    v == null || v.trim().isEmpty ? 'Phone is required' : null,
+                validator: (v) {
+                  if (v == null || v.trim().isEmpty) return 'Phone is required';
+                  if (!RegExp(r'^(0|84)(3|5|7|8|9)([0-9]{8})$').hasMatch(v.trim())) {
+                    return 'Invalid Vietnamese phone number format';
+                  }
+                  return null;
+                },
               ),
               const SizedBox(height: 16),
               _buildFieldLabel('Amount'),
@@ -609,7 +619,17 @@ class _AddCustomerDialogState extends State<_AddCustomerDialog> {
                   border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
                   contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
                 ),
+                autovalidateMode: AutovalidateMode.onUserInteraction,
                 keyboardType: TextInputType.number,
+                validator: (v) {
+                  if (v != null && v.isNotEmpty) {
+                    final cleanV = v.replaceAll(',', '');
+                    final amount = double.tryParse(cleanV);
+                    if (amount == null) return 'Invalid amount';
+                    if (amount < 0) return 'Amount cannot be negative';
+                  }
+                  return null;
+                },
               ),
               if (_errorText != null) ...[
                 const SizedBox(height: 12),
@@ -756,8 +776,12 @@ class _EditCustomerDialogState extends State<_EditCustomerDialog> {
                   border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
                   contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
                 ),
-                validator: (v) =>
-                    v == null || v.trim().isEmpty ? 'Name is required' : null,
+                autovalidateMode: AutovalidateMode.onUserInteraction,
+                validator: (v) {
+                  if (v == null || v.trim().isEmpty) return 'Name is required';
+                  if (v.trim().length < 2) return 'Name must be at least 2 characters';
+                  return null;
+                },
               ),
               const SizedBox(height: 16),
               _buildFieldLabel('Phone'),
@@ -767,9 +791,15 @@ class _EditCustomerDialogState extends State<_EditCustomerDialog> {
                   border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
                   contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
                 ),
+                autovalidateMode: AutovalidateMode.onUserInteraction,
                 keyboardType: TextInputType.phone,
-                validator: (v) =>
-                    v == null || v.trim().isEmpty ? 'Phone is required' : null,
+                validator: (v) {
+                  if (v == null || v.trim().isEmpty) return 'Phone is required';
+                  if (!RegExp(r'^(0|84)(3|5|7|8|9)([0-9]{8})$').hasMatch(v.trim())) {
+                    return 'Invalid Vietnamese phone number format';
+                  }
+                  return null;
+                },
               ),
               const SizedBox(height: 16),
               _buildFieldLabel('Amount'),
@@ -780,7 +810,17 @@ class _EditCustomerDialogState extends State<_EditCustomerDialog> {
                   border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
                   contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
                 ),
+                autovalidateMode: AutovalidateMode.onUserInteraction,
                 keyboardType: TextInputType.number,
+                validator: (v) {
+                  if (v != null && v.isNotEmpty) {
+                    final cleanV = v.replaceAll(',', '');
+                    final amount = double.tryParse(cleanV);
+                    if (amount == null) return 'Invalid amount';
+                    if (amount < 0) return 'Amount cannot be negative';
+                  }
+                  return null;
+                },
               ),
               if (_errorText != null) ...[
                 const SizedBox(height: 12),

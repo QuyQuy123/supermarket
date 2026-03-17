@@ -289,13 +289,13 @@ class _DashboardContentState extends State<DashboardContent> {
         return Column(children: [
           _SalesLineChartCard(transactions: _transactions),
           const SizedBox(height: 16),
-          const _TopProductsPieChart(),
+          _TopProductsPieChart(topProducts: _summary?.topProducts ?? []),
         ]);
       }
       return Row(children: [
         Expanded(child: _SalesLineChartCard(transactions: _transactions)),
         const SizedBox(width: 16),
-        const Expanded(child: _TopProductsPieChart()),
+        Expanded(child: _TopProductsPieChart(topProducts: _summary?.topProducts ?? [])),
       ]);
     });
   }
@@ -663,16 +663,41 @@ class _LineChartPainter extends CustomPainter {
 // ─── Top Products Pie Chart ───────────────────────────────────────────────────
 
 class _TopProductsPieChart extends StatelessWidget {
-  const _TopProductsPieChart();
+  final List<TopProduct> topProducts;
+  const _TopProductsPieChart({required this.topProducts});
 
   @override
   Widget build(BuildContext context) {
-    // Static representative data — can be wired to real product API later
-    const items = [
-      _PieSlice('Anni Item1', Color(0xFFF472B6), 0.35),
-      _PieSlice('Wed Item1', Color(0xFFEAB308), 0.38),
-      _PieSlice('BD item1', Color(0xFF3B82F6), 0.27),
+    if (topProducts.isEmpty) {
+      return Container(
+        height: 200,
+        alignment: Alignment.center,
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: const Color(0xFFE8EAED)),
+        ),
+        child: const Text('No product data', style: TextStyle(color: Color(0xFF6B7280))),
+      );
+    }
+
+    final total = topProducts.fold<int>(0, (sum, p) => sum + p.totalQty);
+    final colors = [
+      const Color(0xFF3B82F6), // Blue
+      const Color(0xFF10B981), // Green
+      const Color(0xFFF59E0B), // Amber
+      const Color(0xFFEF4444), // Red
+      const Color(0xFF8B5CF6), // Violet
     ];
+
+    final items = List.generate(topProducts.length, (i) {
+      final p = topProducts[i];
+      return _PieSlice(
+        p.name,
+        colors[i % colors.length],
+        total > 0 ? p.totalQty / total : 0.0,
+      );
+    });
 
     return Container(
       padding: const EdgeInsets.all(16),
