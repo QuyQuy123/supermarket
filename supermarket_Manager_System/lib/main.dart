@@ -29,7 +29,12 @@ class SupermarketManagerApp extends StatelessWidget {
     redirect: (context, state) {
       final path = state.uri.path;
       final isLoggedIn = AppSession.instance.isLoggedIn;
-      final isPublicRoute = path == '/login' || path == '/' || path == '/forgot-password' || path == '/verify-otp' || path == '/set-new-password';
+      final isPublicRoute =
+          path == '/login' ||
+          path == '/' ||
+          path == '/forgot-password' ||
+          path == '/verify-otp' ||
+          path == '/set-new-password';
 
       if (!isLoggedIn && !isPublicRoute) {
         return '/login';
@@ -49,17 +54,34 @@ class SupermarketManagerApp extends StatelessWidget {
         }
         return '/role-home';
       }
+
+      // Role-based route guards for authenticated users
+      if (isLoggedIn) {
+        final roleId = AppSession.instance.roleId;
+        final role = AppSession.instance.role.toLowerCase();
+        final isCashier = roleId == 3 || role.contains('cashier');
+        final isAdmin = role.contains('admin');
+        final isManager = role.contains('manager');
+
+        // Cashier cannot access /admin or /manager routes
+        if (isCashier && (path.startsWith('/admin') || path.startsWith('/manager'))) {
+          return '/cashier/open-shift';
+        }
+        // Manager cannot access /admin routes
+        if (isManager && path.startsWith('/admin')) {
+          return '/manager/dashboard';
+        }
+        // Admin cannot access /cashier or /manager routes
+        if (isAdmin && (path.startsWith('/cashier') || path.startsWith('/manager'))) {
+          return '/admin/dashboard';
+        }
+      }
+
       return null;
     },
     routes: [
-      GoRoute(
-        path: '/',
-        redirect: (context, state) => '/login',
-      ),
-      GoRoute(
-        path: '/login',
-        builder: (context, state) => const LoginPage(),
-      ),
+      GoRoute(path: '/', redirect: (context, state) => '/login'),
+      GoRoute(path: '/login', builder: (context, state) => const LoginPage()),
       GoRoute(
         path: '/forgot-password',
         builder: (context, state) => const ForgotPasswordPage(),
@@ -155,9 +177,8 @@ class SupermarketManagerApp extends StatelessWidget {
       ),
       GoRoute(
         path: '/cashier/open-shift',
-        builder: (context, state) => CashierOpenShiftPage(
-          fullName: AppSession.instance.fullName,
-        ),
+        builder: (context, state) =>
+            CashierOpenShiftPage(fullName: AppSession.instance.fullName),
       ),
       GoRoute(
         path: '/cashier/:section',
@@ -279,27 +300,16 @@ class SupermarketManagerApp extends StatelessWidget {
     final section = state.pathParameters['section'] ?? 'dashboard';
     final subSection = state.pathParameters['subSection'];
 
-    if (section == 'users') {
-      return 'users';
-    }
-    if (section == 'orders') {
-      return 'orders';
-    }
-    if (section == 'suppliers') {
-      return 'suppliers';
-    }
-    if (section == 'products') {
-      return 'products';
-    }
-    if (section == 'expired') {
-      return 'expired';
-    }
-    if (section == 'profile' && subSection == 'edit') {
-      return 'profile-edit';
-    }
-    if (section == 'profile') {
-      return 'profile';
-    }
+    if (section == 'users') return 'users';
+    if (section == 'orders') return 'orders';
+    if (section == 'customers') return 'customers';
+    if (section == 'discount') return 'discount';
+    if (section == 'suppliers') return 'suppliers';
+    if (section == 'products') return 'products';
+    if (section == 'expired') return 'expired';
+    if (section == 'reports') return 'reports';
+    if (section == 'profile' && subSection == 'edit') return 'profile-edit';
+    if (section == 'profile') return 'profile';
     return 'dashboard';
   }
 
@@ -361,12 +371,8 @@ class SupermarketManagerApp extends StatelessWidget {
     if (section == 'profile' && subSection == 'edit') {
       return 'profile-edit';
     }
-    if (section == 'profile') {
-      return 'profile';
-    }
-    if (section == 'customers') {
-      return 'customers';
-    }
+    if (section == 'profile') return 'profile';
+    if (section == 'customers') return 'customers';
     return 'scanner';
   }
 
@@ -381,41 +387,17 @@ class SupermarketManagerApp extends StatelessWidget {
   static String _resolveManagerTabKey(GoRouterState state) {
     final section = state.pathParameters['section'] ?? 'dashboard';
     final subSection = state.pathParameters['subSection'];
-    if (section == 'profile' && subSection == 'edit') {
-      return 'profile-edit';
-    }
-    if (section == 'orders') {
-      return 'orders';
-    }
-    if (section == 'suppliers') {
-      return 'suppliers';
-    }
-    if (section == 'products') {
-      return 'products';
-    }
-    if (section == 'expired') {
-      return 'expired';
-    }
-    if (section == 'profile') {
-      return 'profile';
-    }
+    if (section == 'profile' && subSection == 'edit') return 'profile-edit';
+    if (section == 'orders') return 'orders';
+    if (section == 'customers') return 'customers';
+    if (section == 'discount') return 'discount';
+    if (section == 'suppliers') return 'suppliers';
+    if (section == 'products') return 'products';
+    if (section == 'expired') return 'expired';
+    if (section == 'reports') return 'reports';
+    if (section == 'profile') return 'profile';
     return 'dashboard';
   }
-
-  // static String _defaultPathForCurrentSession() {
-  //   final roleId = AppSession.instance.roleId;
-  //   final role = AppSession.instance.role.toLowerCase();
-  //   if (roleId == 3 || role.contains('cashier')) {
-  //     return '/cashier/open-shift';
-  //   }
-  //   if (role.contains('admin')) {
-  //     return '/admin/dashboard';
-  //   }
-  //   if (role.contains('manager')) {
-  //     return '/manager/dashboard';
-  //   }
-  //   return '/role-home';
-  // }
 
   @override
   Widget build(BuildContext context) {

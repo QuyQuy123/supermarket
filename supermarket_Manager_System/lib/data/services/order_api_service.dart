@@ -1,6 +1,8 @@
 import 'dart:convert';
 
 import 'package:http/http.dart' as http;
+import 'package:supermarket_manager_system/domain/models/dashboard_summary.dart';
+import 'package:supermarket_manager_system/domain/models/dashboard_transaction.dart';
 import 'package:supermarket_manager_system/domain/models/order_detail.dart';
 import 'package:supermarket_manager_system/domain/models/order_list_item.dart';
 import 'package:supermarket_manager_system/utils/api_constants.dart';
@@ -39,5 +41,30 @@ class OrderApiService {
     }
     return OrderDetail.fromJson(decoded);
   }
+
+  Future<DashboardSummary> getDashboardSummary() async {
+    final uri = Uri.parse('${ApiConstants.baseUrl}${ApiConstants.dashboardPath}');
+    final response = await http.get(uri);
+    if (response.statusCode < 200 || response.statusCode >= 300) {
+      throw Exception('Failed to load dashboard summary');
+    }
+    final decoded = jsonDecode(response.body);
+    return DashboardSummary.fromJson(decoded as Map<String, dynamic>);
+  }
+
+  Future<List<DashboardTransaction>> getTodayTransactions() async {
+    final uri = Uri.parse('${ApiConstants.baseUrl}${ApiConstants.dashboardTransactionsPath}');
+    final response = await http.get(uri);
+    if (response.statusCode < 200 || response.statusCode >= 300) {
+      throw Exception('Failed to load today transactions');
+    }
+    final decoded = jsonDecode(response.body);
+    if (decoded is! List) return [];
+    return decoded
+        .whereType<Map<String, dynamic>>()
+        .map(DashboardTransaction.fromJson)
+        .toList();
+  }
 }
+
 
