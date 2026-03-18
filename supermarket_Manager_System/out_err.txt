@@ -1,0 +1,9 @@
+Analyzing supermarket_Manager_System...                         
+
+  error - Expected to find ')' - lib\presentation\pages\customers_page.dart:336:22 - expected_token
+  error - Expected to find ')' - lib\presentation\pages\customers_page.dart:1101:6 - expected_token
+  error - Expected to find ')' - lib\presentation\pages\customers_page.dart:1290:10 - expected_token
+  error - Expected to find ')' - lib\presentation\pages\customers_page.dart:1527:6 - expected_token
+  error - Expected to find ')' - lib\presentation\pages\discount.dart:247:26 - expected_token
+  error - Expected to find ')' - lib\presentation\pages\revenue_report_page.dart:203:13 - expected_token
+

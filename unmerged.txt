@@ -1,0 +1,17 @@
+﻿supermarket/supermarket/src/main/java/com/supermarket/supermarket/controller/CustomerController.java
+supermarket/supermarket/src/main/java/com/supermarket/supermarket/dto/request/UpdateCustomerRequest.java
+supermarket/supermarket/src/main/java/com/supermarket/supermarket/dto/response/CustomerListItemResponse.java
+supermarket/supermarket/src/main/java/com/supermarket/supermarket/repository/CustomerRepository.java
+supermarket/supermarket/src/main/java/com/supermarket/supermarket/repository/ProductRepository.java
+supermarket/supermarket/src/main/java/com/supermarket/supermarket/service/CustomerService.java
+supermarket/supermarket/src/main/java/com/supermarket/supermarket/service/impl/CustomerServiceImpl.java
+supermarket/supermarket/src/main/java/com/supermarket/supermarket/service/impl/OrderServiceImpl.java
+supermarket_Manager_System/lib/data/services/customer_api_service.dart
+supermarket_Manager_System/lib/domain/models/customer_list_item.dart
+supermarket_Manager_System/lib/main.dart
+supermarket_Manager_System/lib/presentation/pages/admin_dashboard_page.dart
+supermarket_Manager_System/lib/presentation/pages/cashier_customer_page.dart
+supermarket_Manager_System/lib/presentation/pages/cashier_dashboard_page.dart
+supermarket_Manager_System/lib/presentation/pages/manager_dashboard_page.dart
+supermarket_Manager_System/lib/presentation/pages/products_page.dart
+supermarket_Manager_System/lib/utils/api_constants.dart

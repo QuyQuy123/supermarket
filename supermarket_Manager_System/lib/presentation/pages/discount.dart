@@ -25,6 +25,13 @@ class DiscountsContent extends StatefulWidget {
 class _DiscountsContentState extends State<DiscountsContent> {
   final _discountApiService = DiscountApiService();
   late Future<List<Discount>> _discountsFuture;
+  final _scrollController = ScrollController();
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
 
   @override
   void initState() {
@@ -180,10 +187,16 @@ class _DiscountsContentState extends State<DiscountsContent> {
                               ),
                             ],
                           ),
-                          child: SingleChildScrollView(
-                            scrollDirection: Axis.horizontal,
-                            child: DataTable(
-                              headingRowColor: const WidgetStatePropertyAll(Color(0xFFF7F8FA)),
+                          child: Scrollbar(
+                            controller: _scrollController,
+                            thumbVisibility: true,
+                            child: SingleChildScrollView(
+                              controller: _scrollController,
+                              scrollDirection: Axis.vertical,
+                              child: SingleChildScrollView(
+                                scrollDirection: Axis.horizontal,
+                                child: DataTable(
+                                  headingRowColor: const WidgetStatePropertyAll(Color(0xFFF7F8FA)),
                               headingTextStyle: const TextStyle(
                                 fontWeight: FontWeight.w600,
                                 color: Color(0xFF4A5568),
@@ -231,9 +244,11 @@ class _DiscountsContentState extends State<DiscountsContent> {
                               }).toList(),
                             ),
                           ),
-                        );
-                      },
-                    ),
+                        ),
+                      ),
+                    );
+                  },
+                ),
                   ),
                 ],
               ),

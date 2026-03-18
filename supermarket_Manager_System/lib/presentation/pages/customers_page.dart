@@ -37,6 +37,13 @@ class _CustomersContentState extends State<CustomersContent> {
   int? _selectedCustomerId;
   String _selectedCustomerPhone = '';
   _CustomerView _view = _CustomerView.list;
+  final _scrollController = ScrollController();
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
 
   @override
   void initState() {
@@ -81,7 +88,11 @@ class _CustomersContentState extends State<CustomersContent> {
   void _showDetail(int customerId) {
     setState(() {
       _selectedCustomerId = customerId;
-      _view = _CustomerView.detail;
+      if (widget.isCompact) {
+        _view = _CustomerView.detail;
+      } else {
+        _view = _CustomerView.list;
+      }
     });
   }
 
@@ -164,7 +175,7 @@ class _CustomersContentState extends State<CustomersContent> {
   }
 
   Widget _buildListContent() {
-    return Column(
+    final listWidget = Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Row(
@@ -232,10 +243,20 @@ class _CustomersContentState extends State<CustomersContent> {
                   borderRadius: BorderRadius.circular(12),
                   border: Border.all(color: const Color(0xFFE8EAED)),
                 ),
-                child: SingleChildScrollView(
-                  scrollDirection: Axis.horizontal,
-                  child: DataTable(
-                    horizontalMargin: 20,
+                child: LayoutBuilder(
+                  builder: (context, constraints) {
+                    return Scrollbar(
+                      controller: _scrollController,
+                      thumbVisibility: true,
+                      child: SingleChildScrollView(
+                        controller: _scrollController,
+                        scrollDirection: Axis.vertical,
+                        child: SingleChildScrollView(
+                          scrollDirection: Axis.horizontal,
+                          child: ConstrainedBox(
+                            constraints: BoxConstraints(minWidth: constraints.maxWidth),
+                            child: DataTable(
+                          horizontalMargin: 20,
                     columnSpacing: 24,
                     headingRowColor: const WidgetStatePropertyAll(
                       Color(0xFFF7F8FA),
@@ -267,7 +288,10 @@ class _CustomersContentState extends State<CustomersContent> {
                           ),
                           DataCell(
                             InkWell(
-                              onTap: () => _showDetail(c.id),
+                              onTap: () {
+                                _selectedCustomerPhone = c.phone;
+                                _showDetail(c.id);
+                              },
                               child: Text(
                                 c.name,
                                 style: const TextStyle(
@@ -307,14 +331,54 @@ class _CustomersContentState extends State<CustomersContent> {
                         ],
                       );
                     }).toList(),
+                        ),
+                      ),
+                    ),
                   ),
-                ),
-              );
-            },
+                );
+              },
+            ),
+          );
+        },
+      ),
+    ),
+  ],
+);
+
+    if (!widget.isCompact && _selectedCustomerId != null) {
+      return Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Expanded(
+            flex: 2,
+            child: listWidget,
           ),
-        ),
-      ],
-    );
+          const SizedBox(width: 24),
+          Expanded(
+            flex: 1,
+            child: CustomerDetailContent(
+              customerId: _selectedCustomerId!,
+              customerApiService: _customerApiService,
+              isSidePanel: true,
+              onClose: () {
+                setState(() {
+                  _selectedCustomerId = null;
+                });
+              },
+              onBack: () {},
+              onEdit: () {
+                _showList();
+              },
+              onViewHistory: () => _showHistory(
+                _selectedCustomerId!,
+                phone: _selectedCustomerPhone,
+              ),
+            ),
+          ),
+        ],
+      );
+    }
+    return listWidget;
   }
 
   static String _formatMoney(double v) {
@@ -902,6 +966,7 @@ class _AddCustomerScreenState extends State<AddCustomerScreen> {
   final _nameController = TextEditingController();
   final _phoneController = TextEditingController();
   final _amountController = TextEditingController();
+  final _scrollController = ScrollController();
   bool _isSubmitting = false;
   String? _errorText;
 
@@ -910,6 +975,7 @@ class _AddCustomerScreenState extends State<AddCustomerScreen> {
     _nameController.dispose();
     _phoneController.dispose();
     _amountController.dispose();
+    _scrollController.dispose();
     super.dispose();
   }
 
@@ -937,9 +1003,13 @@ class _AddCustomerScreenState extends State<AddCustomerScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return ListView(
-      padding: const EdgeInsets.only(top: 8),
-      children: [
+    return Scrollbar(
+      controller: _scrollController,
+      thumbVisibility: true,
+      child: ListView(
+        controller: _scrollController,
+        padding: const EdgeInsets.only(top: 8),
+        children: [
         TextButton.icon(
           style: TextButton.styleFrom(
             alignment: Alignment.centerLeft,
@@ -1030,8 +1100,9 @@ class _AddCustomerScreenState extends State<AddCustomerScreen> {
           ),
         ),
       ],
-    );
-  }
+    ),
+  );
+}
 }
 
 /// CustomerDetailContent: view one customer with Edit and View History.
@@ -1040,23 +1111,27 @@ class CustomerDetailContent extends StatefulWidget {
     super.key,
     required this.customerId,
     required this.customerApiService,
-    required this.onBack,
+    this.onBack,
+    this.onClose,
     required this.onEdit,
     required this.onViewHistory,
+    this.isSidePanel = false,
   });
 
   final int customerId;
   final CustomerApiService customerApiService;
-  final VoidCallback onBack;
+  final VoidCallback? onBack;
+  final VoidCallback? onClose;
   final VoidCallback onEdit;
   final VoidCallback onViewHistory;
+  final bool isSidePanel;
 
   static String _formatMoney(double v) {
     final fmt = v.toStringAsFixed(0).replaceAllMapped(
           RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
           (m) => '${m[1]},',
         );
-    return '${fmt}đ';
+    return '$fmtđ';
   }
 
   @override
@@ -1065,6 +1140,13 @@ class CustomerDetailContent extends StatefulWidget {
 
 class _CustomerDetailContentState extends State<CustomerDetailContent> {
   late Future<CustomerDetail> _future;
+  final _scrollController = ScrollController();
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
 
   @override
   void initState() {
@@ -1087,46 +1169,73 @@ class _CustomerDetailContentState extends State<CustomerDetailContent> {
               children: [
                 Text('Cannot load customer: ${snapshot.error}'),
                 const SizedBox(height: 12),
-                TextButton(
-                  onPressed: widget.onBack,
-                  child: const Text('Back'),
-                ),
+                if (widget.onBack != null || widget.onClose != null)
+                  TextButton(
+                    onPressed: widget.onBack ?? widget.onClose,
+                    child: const Text('Back'),
+                  ),
               ],
             ),
           );
         }
         final c = snapshot.data!;
-        return ListView(
-          padding: const EdgeInsets.only(top: 8),
-          children: [
-            TextButton.icon(
-              style: TextButton.styleFrom(
-                alignment: Alignment.centerLeft,
-                foregroundColor: const Color(0xFF667EEA),
+        return Scrollbar(
+          controller: _scrollController,
+          thumbVisibility: true,
+          child: ListView(
+            controller: _scrollController,
+            padding: widget.isSidePanel ? EdgeInsets.zero : const EdgeInsets.only(top: 8),
+            children: [
+            if (!widget.isSidePanel && widget.onBack != null) ...[
+              TextButton.icon(
+                style: TextButton.styleFrom(
+                  alignment: Alignment.centerLeft,
+                  foregroundColor: const Color(0xFF667EEA),
+                ),
+                onPressed: widget.onBack,
+                icon: const Icon(Icons.arrow_back, size: 20),
+                label: const Text(
+                  'Back to Customer list',
+                  style: TextStyle(fontWeight: FontWeight.w600),
+                ),
               ),
-              onPressed: widget.onBack,
-              icon: const Icon(Icons.arrow_back, size: 20),
-              label: const Text(
-                'Back to Customer list',
-                style: TextStyle(fontWeight: FontWeight.w600),
-              ),
-            ),
-            const SizedBox(height: 16),
-            const Text(
-              'Customer Detail',
-              style: TextStyle(fontSize: 24, fontWeight: FontWeight.w700),
-            ),
-            const SizedBox(height: 20),
+              const SizedBox(height: 16),
+            ],
             Container(
               padding: const EdgeInsets.all(24),
               decoration: BoxDecoration(
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(12),
                 border: Border.all(color: const Color(0xFFE8EAED)),
+                boxShadow: const [
+                  BoxShadow(
+                    color: Color(0x14000000),
+                    blurRadius: 12,
+                    offset: Offset(0, 2),
+                  ),
+                ],
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text(
+                        'Customer Detail',
+                        style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700),
+                      ),
+                      if (widget.isSidePanel && widget.onClose != null)
+                        IconButton(
+                          icon: const Icon(Icons.close),
+                          onPressed: widget.onClose,
+                          tooltip: 'Close',
+                        ),
+                    ],
+                  ),
+                  const SizedBox(height: 20),
+                  const Divider(color: Color(0xFFE8EAED), height: 1),
+                  const SizedBox(height: 20),
                   _DetailRow(label: 'ID', value: c.id.toString()),
                   _DetailRow(label: 'Name', value: c.name),
                   _DetailRow(label: 'Phone', value: c.phone),
@@ -1141,32 +1250,51 @@ class _CustomerDetailContentState extends State<CustomerDetailContent> {
                   ),
                   if (c.discountName.isNotEmpty && c.discountName != '—')
                     _DetailRow(label: 'Discount', value: c.discountName),
+                  const SizedBox(height: 24),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: ElevatedButton.icon(
+                          onPressed: widget.onEdit,
+                          icon: const Icon(Icons.edit, size: 18),
+                          label: const Text('Edit'),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFF667EEA),
+                            foregroundColor: Colors.white,
+                            padding: const EdgeInsets.symmetric(vertical: 12),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: OutlinedButton.icon(
+                          onPressed: widget.onViewHistory,
+                          icon: const Icon(Icons.history, size: 18),
+                          label: const Text('History', overflow: TextOverflow.ellipsis),
+                          style: OutlinedButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(vertical: 12),
+                            side: const BorderSide(color: Color(0xFFD1D5DB)),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            foregroundColor: const Color(0xFF374151),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
                 ],
               ),
             ),
-            const SizedBox(height: 24),
-            Row(
-              children: [
-                ElevatedButton(
-                  onPressed: widget.onEdit,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF667EEA),
-                    foregroundColor: Colors.white,
-                  ),
-                  child: const Text('Edit'),
-                ),
-                const SizedBox(width: 12),
-                OutlinedButton(
-                  onPressed: widget.onViewHistory,
-                  child: const Text('View Order History'),
-                ),
-              ],
-            ),
           ],
-        );
-      },
-    );
-  }
+        ),
+      );
+    },
+  );
+}
 }
 
 class _DetailRow extends StatelessWidget {
@@ -1220,6 +1348,7 @@ class _UpdateCustomerScreenState extends State<UpdateCustomerScreen> {
   final _nameController = TextEditingController();
   final _phoneController = TextEditingController();
   final _amountController = TextEditingController();
+  final _scrollController = ScrollController();
   bool _isLoading = true;
   bool _isSubmitting = false;
   String? _errorText;
@@ -1236,6 +1365,7 @@ class _UpdateCustomerScreenState extends State<UpdateCustomerScreen> {
     _nameController.dispose();
     _phoneController.dispose();
     _amountController.dispose();
+    _scrollController.dispose();
     super.dispose();
   }
 
@@ -1301,9 +1431,13 @@ class _UpdateCustomerScreenState extends State<UpdateCustomerScreen> {
         ),
       );
     }
-    return ListView(
-      padding: const EdgeInsets.only(top: 8),
-      children: [
+    return Scrollbar(
+      controller: _scrollController,
+      thumbVisibility: true,
+      child: ListView(
+        controller: _scrollController,
+        padding: const EdgeInsets.only(top: 8),
+        children: [
         TextButton.icon(
           style: TextButton.styleFrom(
             alignment: Alignment.centerLeft,
@@ -1394,8 +1528,9 @@ class _UpdateCustomerScreenState extends State<UpdateCustomerScreen> {
           ),
         ),
       ],
-    );
-  }
+    ),
+  );
+}
 }
 
 /// ViewCustomerHistoryScreen: list orders for a customer.
@@ -1439,6 +1574,13 @@ class ViewCustomerHistoryScreen extends StatefulWidget {
 
 class _ViewCustomerHistoryScreenState extends State<ViewCustomerHistoryScreen> {
   late Future<List<OrderListItem>> _future;
+  final _scrollController = ScrollController();
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
 
   @override
   void initState() {
@@ -1533,68 +1675,76 @@ class _ViewCustomerHistoryScreenState extends State<ViewCustomerHistoryScreen> {
                         ),
                       ),
                     )
-                  : SingleChildScrollView(
-                      scrollDirection: Axis.horizontal,
-                      child: DataTable(
-                        horizontalMargin: 20,
-                        columnSpacing: 40,
-                        headingRowColor: const WidgetStatePropertyAll(
-                          Color(0xFFF7F8FA),
-                        ),
-                        headingTextStyle: const TextStyle(
-                          fontWeight: FontWeight.w600,
-                          color: Color(0xFF4A5568),
-                          fontSize: 12,
-                          letterSpacing: 0.5,
-                        ),
-                        columns: const [
-                          DataColumn(label: Text('ORDER ID')),
-                          DataColumn(label: Text('DATE/TIME')),
-                          DataColumn(label: Text('TOTAL')),
-                          DataColumn(label: Text('DISCOUNT (%)')),
-                          DataColumn(label: Text('PAYABLE')),
-                          DataColumn(label: Text('PAYMENT')),
-                          DataColumn(label: Text('STATUS')),
-                          DataColumn(label: Text('ACTION')),
-                        ],
-                        rows: orders
-                            .map(
-                              (o) => DataRow(
-                                cells: [
-                                  DataCell(Text(o.orderNo)),
-                                  DataCell(Text(
-                                      ViewCustomerHistoryScreen._formatDateTime(
-                                          o.createdAt))),
-                                  DataCell(Text(
-                                      ViewCustomerHistoryScreen._formatMoney(
-                                          o.total))),
-                                  DataCell(
-                                    Center(
-                                      child: Text(
-                                        o.discountPercent == 0
-                                            ? '—'
-                                            : '${o.discountPercent.toStringAsFixed(0)}%',
+                  : Scrollbar(
+                      controller: _scrollController,
+                      thumbVisibility: true,
+                      child: SingleChildScrollView(
+                        controller: _scrollController,
+                        scrollDirection: Axis.vertical,
+                        child: SingleChildScrollView(
+                          scrollDirection: Axis.horizontal,
+                          child: DataTable(
+                            horizontalMargin: 20,
+                            columnSpacing: 40,
+                            headingRowColor: const WidgetStatePropertyAll(
+                              Color(0xFFF7F8FA),
+                            ),
+                            headingTextStyle: const TextStyle(
+                              fontWeight: FontWeight.w600,
+                              color: Color(0xFF4A5568),
+                              fontSize: 12,
+                              letterSpacing: 0.5,
+                            ),
+                            columns: const [
+                              DataColumn(label: Text('ORDER ID')),
+                              DataColumn(label: Text('DATE/TIME')),
+                              DataColumn(label: Text('TOTAL')),
+                              DataColumn(label: Text('DISCOUNT (%)')),
+                              DataColumn(label: Text('PAYABLE')),
+                              DataColumn(label: Text('PAYMENT')),
+                              DataColumn(label: Text('STATUS')),
+                              DataColumn(label: Text('ACTION')),
+                            ],
+                            rows: orders
+                                .map(
+                                  (o) => DataRow(
+                                    cells: [
+                                      DataCell(Text(o.orderNo)),
+                                      DataCell(Text(
+                                          ViewCustomerHistoryScreen._formatDateTime(
+                                              o.createdAt))),
+                                      DataCell(Text(
+                                          ViewCustomerHistoryScreen._formatMoney(
+                                              o.total))),
+                                      DataCell(
+                                        Center(
+                                          child: Text(
+                                            o.discountPercent == 0
+                                                ? '—'
+                                                : '${o.discountPercent.toStringAsFixed(0)}%',
+                                          ),
+                                        ),
                                       ),
-                                    ),
+                                      DataCell(Text(
+                                          ViewCustomerHistoryScreen._formatMoney(
+                                              o.payable))),
+                                      DataCell(Text(o.paymentMethod)),
+                                      DataCell(
+                                        _StatusBadge(status: o.status),
+                                      ),
+                                      DataCell(
+                                        _ViewOrderActionBtn(
+                                          onTap: () {
+                                            // TODO: Navigate to Order details
+                                          },
+                                        ),
+                                      ),
+                                    ],
                                   ),
-                                  DataCell(Text(
-                                      ViewCustomerHistoryScreen._formatMoney(
-                                          o.payable))),
-                                  DataCell(Text(o.paymentMethod)),
-                                  DataCell(
-                                    _StatusBadge(status: o.status),
-                                  ),
-                                  DataCell(
-                                    _ViewOrderActionBtn(
-                                      onTap: () {
-                                        // TODO: Navigate to Order details
-                                      },
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            )
-                            .toList(),
+                                )
+                                .toList(),
+                          ),
+                        ),
                       ),
                     ),
             ),
