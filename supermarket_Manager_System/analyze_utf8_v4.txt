@@ -1,0 +1,27 @@
+﻿Analyzing supermarket_Manager_System...                         
+
+   info - Unnecessary braces in a string interpolation - lib\presentation\pages\customers_page.dart:324:13 - unnecessary_brace_in_string_interps
+   info - Unnecessary braces in a string interpolation - lib\presentation\pages\customers_page.dart:1032:13 - unnecessary_brace_in_string_interps
+   info - Unnecessary braces in a string interpolation - lib\presentation\pages\customers_page.dart:1405:13 - unnecessary_brace_in_string_interps
+
+flutter : 3 issues 
+found. (ran in 2.2s)
+At line:1 char:1
++ flutter analyze 
+--no-pub > 
+analyze_final_v4.txt 
+2>&1; Get-Content ana 
+...
++ ~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~
+    + CategoryInfo     
+         : NotSpecifi  
+  ed: (3 issues foun   
+ d. (ran in 2.2s):S    
+tring) [], RemoteE    
+xception
+    + FullyQualifiedEr 
+   rorId : NativeComm  
+  andError
+ 

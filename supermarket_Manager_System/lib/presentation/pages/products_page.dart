@@ -628,5 +628,3 @@ class _DeleteConfirmDialog extends StatelessWidget {
     );
   }
 }
-
-

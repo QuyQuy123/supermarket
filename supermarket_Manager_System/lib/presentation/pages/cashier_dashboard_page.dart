@@ -8,6 +8,7 @@ import 'package:supermarket_manager_system/domain/models/order_detail.dart';
 import 'package:supermarket_manager_system/domain/models/order_list_item.dart';
 import 'package:supermarket_manager_system/domain/models/user_detail.dart';
 import 'package:supermarket_manager_system/presentation/pages/profile_content_page.dart';
+import 'package:supermarket_manager_system/presentation/widgets/order_detail_card.dart';
 
 enum _CashierTab {
   scanner,
@@ -53,7 +54,7 @@ class _CashierDashboardPageState extends State<CashierDashboardPage> {
   String _selectedPhone = '';
   int? _selectedOrderId;
 
-  List<CustomerListItem> _customers = const [];
+  List<CustomerListItem> _customers = [];
   bool _isLoadingCustomers = true;
   String? _customersError;
 
@@ -367,6 +368,7 @@ class _CashierDashboardPageState extends State<CashierDashboardPage> {
   Future<void> _openUpdateCustomerDialog(CustomerListItem customer) async {
     final index = _customers.indexWhere((c) => c.id == customer.id);
     if (index < 0) return;
+    final nameController = TextEditingController(text: customer.name);
     final phoneController = TextEditingController(text: customer.phone);
     final amountController = TextEditingController(text: customer.totalAmount.toStringAsFixed(0));
 
@@ -392,6 +394,8 @@ class _CashierDashboardPageState extends State<CashierDashboardPage> {
                     IconButton(onPressed: () => Navigator.of(dialogContext).pop(), icon: const Icon(Icons.close)),
                   ],
                 ),
+                TextField(controller: nameController, decoration: const InputDecoration(labelText: 'Name')),
+                const SizedBox(height: 10),
                 TextField(controller: phoneController, decoration: const InputDecoration(labelText: 'Phone')),
                 const SizedBox(height: 10),
                 TextField(controller: amountController, decoration: const InputDecoration(labelText: 'Amount')),
@@ -404,17 +408,19 @@ class _CashierDashboardPageState extends State<CashierDashboardPage> {
                     ElevatedButton(
                       onPressed: () async {
                         final dialogNavigator = Navigator.of(dialogContext);
+                        final name = nameController.text.trim();
                         final phone = phoneController.text.trim();
                         final amount = double.tryParse(amountController.text.trim().replaceAll(',', '').replaceAll('đ', ''));
-                        if (phone.isEmpty || amount == null || amount < 0) {
+                        if (name.isEmpty || phone.isEmpty || amount == null || amount < 0) {
                           ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text('Phone and Amount are required.')),
+                            const SnackBar(content: Text('Name, Phone, and Amount are required.')),
                           );
                           return;
                         }
                         try {
                           final updated = await _customerApiService.updateCustomer(
                             customerId: customer.id,
+                            name: name,
                             phone: phone,
                             totalAmount: amount,
                           );
@@ -442,6 +448,7 @@ class _CashierDashboardPageState extends State<CashierDashboardPage> {
         ),
       ),
     );
+    nameController.dispose();
     phoneController.dispose();
     amountController.dispose();
   }
@@ -759,7 +766,7 @@ class _CashierDashboardPageState extends State<CashierDashboardPage> {
               else
                 Expanded(
                   child: SingleChildScrollView(
-                    child: _OrderDetailCard(
+                    child: OrderDetailCard(
                       detail: _orderDetail!,
                       moneyFormatter: _money,
                     ),
@@ -949,130 +956,3 @@ class _MenuItem extends StatelessWidget {
     );
   }
 }
-
-class _OrderDetailCard extends StatelessWidget {
-  const _OrderDetailCard({
-    required this.detail,
-    required this.moneyFormatter,
-  });
-
-  final OrderDetail detail;
-  final String Function(double value) moneyFormatter;
-
-  String _discountText() {
-    if (detail.discountPercent <= 0 || detail.discountAmount <= 0) {
-      return '0đ';
-    }
-    return '${detail.discountPercent.toStringAsFixed(0)}% (${moneyFormatter(detail.discountAmount)})';
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Align(
-      alignment: Alignment.topLeft,
-      child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 640),
-        child: Container(
-          padding: const EdgeInsets.all(24),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: const Color(0xFFE8EAED)),
-            boxShadow: const [
-              BoxShadow(
-                color: Color(0x14000000),
-                blurRadius: 12,
-                offset: Offset(0, 2),
-              ),
-            ],
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'Order Detail - ${detail.orderNo}',
-                style: const TextStyle(fontSize: 28, fontWeight: FontWeight.w700),
-              ),
-              const SizedBox(height: 16),
-              Text(
-                'Số điện thoại khách hàng (nếu có): ${detail.customerPhone}',
-                style: const TextStyle(fontSize: 16, color: Color(0xFF374151)),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                'Nhân viên bán hàng: ${detail.cashierName}',
-                style: const TextStyle(fontSize: 16, color: Color(0xFF374151)),
-              ),
-              const SizedBox(height: 20),
-              SingleChildScrollView(
-                scrollDirection: Axis.horizontal,
-                child: DataTable(
-                  headingRowColor: const WidgetStatePropertyAll(Color(0xFFF7F8FA)),
-                  columns: const [
-                    DataColumn(label: Text('ĐƠN GIÁ')),
-                    DataColumn(label: Text('SỐ LƯỢNG')),
-                    DataColumn(label: Text('THÀNH TIỀN')),
-                  ],
-                  rows: detail.items
-                      .map(
-                        (item) => DataRow(
-                          cells: [
-                            DataCell(
-                              Text('(${item.productName} - ${moneyFormatter(item.unitPrice)})'),
-                            ),
-                            DataCell(Text(item.qty.toString())),
-                            DataCell(Text(moneyFormatter(item.amount))),
-                          ],
-                        ),
-                      )
-                      .toList(),
-                ),
-              ),
-              const SizedBox(height: 12),
-              const Divider(color: Color(0xFFE8EAED), thickness: 1.5),
-              const SizedBox(height: 8),
-              _SummaryRow(label: 'Tổng tiền hàng', value: moneyFormatter(detail.subtotal)),
-              _SummaryRow(label: 'Giảm giá', value: _discountText()),
-              const Divider(color: Color(0xFFE8EAED)),
-              _SummaryRow(
-                label: 'Tổng thanh toán',
-                value: moneyFormatter(detail.totalPayment),
-                isTotal: true,
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _SummaryRow extends StatelessWidget {
-  const _SummaryRow({
-    required this.label,
-    required this.value,
-    this.isTotal = false,
-  });
-
-  final String label;
-  final String value;
-  final bool isTotal;
-
-  @override
-  Widget build(BuildContext context) {
-    final style = isTotal
-        ? const TextStyle(fontSize: 19, fontWeight: FontWeight.w700, color: Color(0xFF1A1D21))
-        : const TextStyle(fontSize: 16, color: Color(0xFF374151));
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Text(label, style: style),
-          Text(value, style: style),
-        ],
-      ),
-    );
-  }
-}
-

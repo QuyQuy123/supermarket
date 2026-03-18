@@ -1,0 +1,44 @@
+﻿Analyzing supermarket_Manager_System...                         
+
+warning - Unused import: 'package:supermarket_manager_system/presentation/pages/customers_page.dart' - lib\main.dart:8:8 - unused_import
+  error - The named parameter 'label' is required, but there's no corresponding argument - lib\presentation\pages\admin_dashboard_page.dart:390:21 - missing_required_argument
+  error - Too many positional arguments: 0 expected, but 9 found - lib\presentation\pages\admin_dashboard_page.dart:391:21 - extra_positional_arguments_could_be_named
+  error - Expected to find ')' - lib\presentation\pages\admin_dashboard_page.dart:424:19 - expected_token
+  error - The named parameter 'name' is required, but there's no corresponding argument - lib\presentation\pages\cashier_customer_page.dart:797:73 - missing_required_argument
+  error - The named parameter 'name' is required, but there's no corresponding argument - lib\presentation\pages\cashier_dashboard_page.dart:416:69 - missing_required_argument
+   info - Unnecessary braces in a string interpolation - lib\presentation\pages\customers_page.dart:324:13 - unnecessary_brace_in_string_interps
+warning - The declaration '_ActionBtn' isn't referenced - lib\presentation\pages\customers_page.dart:447:7 - unused_element
+   info - Unnecessary braces in a string interpolation - lib\presentation\pages\customers_page.dart:1064:13 - unnecessary_brace_in_string_interps
+   info - Unnecessary braces in a string interpolation - lib\presentation\pages\customers_page.dart:1437:13 - unnecessary_brace_in_string_interps
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\presentation\pages\customers_page.dart:1524:41 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\presentation\pages\discount.dart:175:53 - deprecated_member_use
+  error - The named parameter 'label' is required, but there's no corresponding argument - lib\presentation\pages\manager_dashboard_page.dart:386:21 - missing_required_argument
+  error - Too many positional arguments: 0 expected, but 8 found - lib\presentation\pages\manager_dashboard_page.dart:387:21 - extra_positional_arguments_could_be_named
+  error - Expected to find ')' - lib\presentation\pages\manager_dashboard_page.dart:419:19 - expected_token
+warning - The declaration '_ManagerHeader' isn't referenced - lib\presentation\pages\manager_dashboard_page.dart:433:7 - unused_element
+warning - The declaration '_ManagerTopCards' isn't referenced - lib\presentation\pages\manager_dashboard_page.dart:586:7 - unused_element
+warning - The declaration '_ManagerStatsGrid' isn't referenced - lib\presentation\pages\manager_dashboard_page.dart:683:7 - unused_element
+warning - The declaration '_ManagerChartRow' isn't referenced - lib\presentation\pages\manager_dashboard_page.dart:740:7 - unused_element
+warning - The declaration '_ManagerTransactionsTable' isn't referenced - lib\presentation\pages\manager_dashboard_page.dart:811:7 - unused_element
+
+flutter : 20 issues 
+found. (ran in 1.4s)
+At line:1 char:1
++ flutter analyze 
+--no-pub > 
+analyze_clean.txt 
+2>&1; type 
+analyze_clean ...
++ ~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~
+    + CategoryInfo     
+         : NotSpecifi  
+  ed: (20 issues fou   
+ nd. (ran in 1.4s):    
+String) [], Remote    
+Exception
+    + FullyQualifiedEr 
+   rorId : NativeComm  
+  andError
+ 
