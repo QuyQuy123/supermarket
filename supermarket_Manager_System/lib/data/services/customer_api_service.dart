@@ -6,7 +6,9 @@ import 'package:supermarket_manager_system/utils/api_constants.dart';
 
 class CustomerApiService {
   Future<List<CustomerListItem>> getCustomers() async {
-    final uri = Uri.parse('${ApiConstants.baseUrl}${ApiConstants.customersPath}');
+    final uri = Uri.parse(
+      '${ApiConstants.baseUrl}${ApiConstants.customersPath}',
+    );
     final response = await http.get(uri);
 
     if (response.statusCode < 200 || response.statusCode >= 300) {
@@ -29,14 +31,13 @@ class CustomerApiService {
     required String phone,
     required double totalAmount,
   }) async {
-    final uri = Uri.parse('${ApiConstants.baseUrl}${ApiConstants.customersPath}/$customerId');
+    final uri = Uri.parse(
+      '${ApiConstants.baseUrl}${ApiConstants.customersPath}/$customerId',
+    );
     final response = await http.put(
       uri,
       headers: {'Content-Type': 'application/json'},
-      body: jsonEncode({
-        'phone': phone,
-        'totalAmount': totalAmount,
-      }),
+      body: jsonEncode({'phone': phone, 'totalAmount': totalAmount}),
     );
 
     if (response.statusCode < 200 || response.statusCode >= 300) {
@@ -52,5 +53,36 @@ class CustomerApiService {
     }
     return CustomerListItem.fromJson(decoded);
   }
-}
 
+  Future<CustomerListItem> createCustomer({
+    required String name,
+    required String phone,
+    required double totalAmount,
+  }) async {
+    final uri = Uri.parse(
+      '${ApiConstants.baseUrl}${ApiConstants.customersPath}',
+    );
+    final response = await http.post(
+      uri,
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({
+        'name': name,
+        'phone': phone,
+        'totalAmount': totalAmount,
+      }),
+    );
+
+    if (response.statusCode < 200 || response.statusCode >= 300) {
+      if (response.body.isNotEmpty) {
+        throw Exception(response.body);
+      }
+      throw Exception('Failed to create customer');
+    }
+
+    final decoded = jsonDecode(response.body);
+    if (decoded is! Map<String, dynamic>) {
+      throw Exception('Invalid create customer response format');
+    }
+    return CustomerListItem.fromJson(decoded);
+  }
+}

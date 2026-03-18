@@ -7,6 +7,8 @@ import org.springframework.data.jpa.repository.JpaRepository;
 public interface CustomerRepository extends JpaRepository<Customer, Integer> {
     List<Customer> findAllByOrderByIdAsc();
 
+    boolean existsByPhone(String phone);
+
     boolean existsByPhoneAndIdNot(String phone, Integer id);
 }
 

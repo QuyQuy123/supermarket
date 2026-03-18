@@ -78,7 +78,8 @@ class _CashierDashboardPageState extends State<CashierDashboardPage> {
       }
     });
     _loadCustomers();
-    if (_selectedTab == _CashierTab.customerHistory && _selectedPhone.isNotEmpty) {
+    if (_selectedTab == _CashierTab.customerHistory &&
+        _selectedPhone.isNotEmpty) {
       _loadHistory();
     }
     if (_selectedTab == _CashierTab.orderDetail && _selectedOrderId != null) {
@@ -98,7 +99,8 @@ class _CashierDashboardPageState extends State<CashierDashboardPage> {
         _selectedPhone = widget.initialPhone;
         _selectedOrderId = widget.initialOrderId;
       });
-      if (newTab == _CashierTab.customerHistory && widget.initialPhone.isNotEmpty) {
+      if (newTab == _CashierTab.customerHistory &&
+          widget.initialPhone.isNotEmpty) {
         _loadHistory();
       }
       if (newTab == _CashierTab.orderDetail && widget.initialOrderId != null) {
@@ -151,7 +153,9 @@ class _CashierDashboardPageState extends State<CashierDashboardPage> {
     }
     if (tab == _CashierTab.customerHistory) {
       final targetPhone = (phone ?? _selectedPhone).trim();
-      widget.onNavigatePath('/cashier/customers/history?phone=${Uri.encodeComponent(targetPhone)}');
+      widget.onNavigatePath(
+        '/cashier/customers/history?phone=${Uri.encodeComponent(targetPhone)}',
+      );
       return;
     }
     final orderId = _selectedOrderId;
@@ -203,7 +207,9 @@ class _CashierDashboardPageState extends State<CashierDashboardPage> {
     });
     try {
       final allOrders = await _orderApiService.getOrders();
-      final filtered = allOrders.where((o) => o.customerPhone.trim() == _selectedPhone.trim()).toList();
+      final filtered = allOrders
+          .where((o) => o.customerPhone.trim() == _selectedPhone.trim())
+          .toList();
       if (!mounted) {
         return;
       }
@@ -264,7 +270,8 @@ class _CashierDashboardPageState extends State<CashierDashboardPage> {
   }
 
   String _two(int n) => n.toString().padLeft(2, '0');
-  String _timeText() => '${_two(_now.hour)}:${_two(_now.minute)}:${_two(_now.second)}';
+  String _timeText() =>
+      '${_two(_now.hour)}:${_two(_now.minute)}:${_two(_now.second)}';
   String _money(double amount) => '${amount.toStringAsFixed(0)}đ';
   String _discountText(double p) => p <= 0 ? '—' : '${p.toStringAsFixed(0)}%';
 
@@ -290,17 +297,28 @@ class _CashierDashboardPageState extends State<CashierDashboardPage> {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 18),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 24,
+                    vertical: 18,
+                  ),
                   decoration: const BoxDecoration(
-                    borderRadius: BorderRadius.vertical(top: Radius.circular(12)),
-                    gradient: LinearGradient(colors: [Color(0xFF0D9488), Color(0xFF0F766E)]),
+                    borderRadius: BorderRadius.vertical(
+                      top: Radius.circular(12),
+                    ),
+                    gradient: LinearGradient(
+                      colors: [Color(0xFF0D9488), Color(0xFF0F766E)],
+                    ),
                   ),
                   child: Row(
                     children: [
                       const Expanded(
                         child: Text(
                           'Close Shift',
-                          style: TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.w700),
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 24,
+                            fontWeight: FontWeight.w700,
+                          ),
                         ),
                       ),
                       InkWell(
@@ -318,7 +336,10 @@ class _CashierDashboardPageState extends State<CashierDashboardPage> {
                       const Text('Employee name'),
                       const SizedBox(height: 8),
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 14,
+                          vertical: 12,
+                        ),
                         decoration: BoxDecoration(
                           color: const Color(0xFFF9FAFB),
                           borderRadius: BorderRadius.circular(8),
@@ -342,18 +363,29 @@ class _CashierDashboardPageState extends State<CashierDashboardPage> {
                   padding: const EdgeInsets.all(24),
                   child: ElevatedButton(
                     onPressed: () {
-                      final amount = double.tryParse(_totalCashEndController.text.trim().replaceAll(',', ''));
+                      final amount = double.tryParse(
+                        _totalCashEndController.text.trim().replaceAll(',', ''),
+                      );
                       if (amount == null || amount < 0) {
                         ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('Please enter a valid total cash amount.')),
+                          const SnackBar(
+                            content: Text(
+                              'Please enter a valid total cash amount.',
+                            ),
+                          ),
                         );
                         return;
                       }
                       Navigator.of(dialogContext).pop();
                       widget.onLogoutRequested();
                     },
-                    style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF0D9488)),
-                    child: const Text('Confirm & close shift', style: TextStyle(color: Colors.white)),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF0D9488),
+                    ),
+                    child: const Text(
+                      'Confirm & close shift',
+                      style: TextStyle(color: Colors.white),
+                    ),
                   ),
                 ),
               ],
@@ -368,7 +400,9 @@ class _CashierDashboardPageState extends State<CashierDashboardPage> {
     final index = _customers.indexWhere((c) => c.id == customer.id);
     if (index < 0) return;
     final phoneController = TextEditingController(text: customer.phone);
-    final amountController = TextEditingController(text: customer.totalAmount.toStringAsFixed(0));
+    final amountController = TextEditingController(
+      text: customer.totalAmount.toStringAsFixed(0),
+    );
 
     await showDialog<void>(
       context: context,
@@ -387,52 +421,92 @@ class _CashierDashboardPageState extends State<CashierDashboardPage> {
                 Row(
                   children: [
                     const Expanded(
-                      child: Text('Update Customer', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700)),
+                      child: Text(
+                        'Update Customer',
+                        style: TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
                     ),
-                    IconButton(onPressed: () => Navigator.of(dialogContext).pop(), icon: const Icon(Icons.close)),
+                    IconButton(
+                      onPressed: () => Navigator.of(dialogContext).pop(),
+                      icon: const Icon(Icons.close),
+                    ),
                   ],
                 ),
-                TextField(controller: phoneController, decoration: const InputDecoration(labelText: 'Phone')),
+                TextField(
+                  controller: phoneController,
+                  decoration: const InputDecoration(labelText: 'Phone'),
+                ),
                 const SizedBox(height: 10),
-                TextField(controller: amountController, decoration: const InputDecoration(labelText: 'Amount')),
+                TextField(
+                  controller: amountController,
+                  decoration: const InputDecoration(labelText: 'Amount'),
+                ),
                 const SizedBox(height: 14),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.end,
                   children: [
-                    TextButton(onPressed: () => Navigator.of(dialogContext).pop(), child: const Text('Cancel')),
+                    TextButton(
+                      onPressed: () => Navigator.of(dialogContext).pop(),
+                      child: const Text('Cancel'),
+                    ),
                     const SizedBox(width: 8),
                     ElevatedButton(
                       onPressed: () async {
                         final dialogNavigator = Navigator.of(dialogContext);
                         final phone = phoneController.text.trim();
-                        final amount = double.tryParse(amountController.text.trim().replaceAll(',', '').replaceAll('đ', ''));
+                        final amount = double.tryParse(
+                          amountController.text
+                              .trim()
+                              .replaceAll(',', '')
+                              .replaceAll('đ', ''),
+                        );
                         if (phone.isEmpty || amount == null || amount < 0) {
                           ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text('Phone and Amount are required.')),
+                            const SnackBar(
+                              content: Text('Phone and Amount are required.'),
+                            ),
                           );
                           return;
                         }
                         try {
-                          final updated = await _customerApiService.updateCustomer(
-                            customerId: customer.id,
-                            phone: phone,
-                            totalAmount: amount,
-                          );
+                          final updated = await _customerApiService
+                              .updateCustomer(
+                                customerId: customer.id,
+                                phone: phone,
+                                totalAmount: amount,
+                              );
                           if (!mounted) return;
                           setState(() => _customers[index] = updated);
                           dialogNavigator.pop();
                           ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text('Customer updated successfully.')),
+                            const SnackBar(
+                              content: Text('Customer updated successfully.'),
+                            ),
                           );
                         } catch (error) {
                           if (!mounted) return;
                           ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(content: Text(error.toString().replaceFirst('Exception: ', ''))),
+                            SnackBar(
+                              content: Text(
+                                error.toString().replaceFirst(
+                                  'Exception: ',
+                                  '',
+                                ),
+                              ),
+                            ),
                           );
                         }
                       },
-                      style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF16A34A)),
-                      child: const Text('Update', style: TextStyle(color: Colors.white)),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF16A34A),
+                      ),
+                      child: const Text(
+                        'Update',
+                        style: TextStyle(color: Colors.white),
+                      ),
                     ),
                   ],
                 ),
@@ -442,6 +516,159 @@ class _CashierDashboardPageState extends State<CashierDashboardPage> {
         ),
       ),
     );
+    phoneController.dispose();
+    amountController.dispose();
+  }
+
+  Future<void> _openAddCustomerDialog() async {
+    final nameController = TextEditingController();
+    final phoneController = TextEditingController();
+    final amountController = TextEditingController();
+
+    await showDialog<void>(
+      context: context,
+      barrierDismissible: true,
+      builder: (dialogContext) => Dialog(
+        insetPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 420),
+          child: Padding(
+            padding: const EdgeInsets.all(18),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Row(
+                  children: [
+                    const Expanded(
+                      child: Text(
+                        'Add Customer',
+                        style: TextStyle(
+                          fontSize: 28,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ),
+                    IconButton(
+                      onPressed: () => Navigator.of(dialogContext).pop(),
+                      icon: const Icon(Icons.close),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 6),
+                const Text('Customer name'),
+                const SizedBox(height: 6),
+                TextField(
+                  controller: nameController,
+                  decoration: const InputDecoration(
+                    hintText: 'e.g. Nguyen Van A',
+                  ),
+                ),
+                const SizedBox(height: 10),
+                const Text('Phone'),
+                const SizedBox(height: 6),
+                TextField(
+                  controller: phoneController,
+                  keyboardType: TextInputType.phone,
+                  decoration: const InputDecoration(
+                    hintText: 'e.g. 0901234567',
+                  ),
+                ),
+                const SizedBox(height: 10),
+                const Text('Amount'),
+                const SizedBox(height: 6),
+                TextField(
+                  controller: amountController,
+                  keyboardType: TextInputType.number,
+                  decoration: const InputDecoration(hintText: 'e.g. 1,000,000'),
+                ),
+                const SizedBox(height: 18),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    ElevatedButton(
+                      onPressed: () => Navigator.of(dialogContext).pop(),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFFDC2626),
+                      ),
+                      child: const Text(
+                        'Cancel',
+                        style: TextStyle(color: Colors.white),
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    ElevatedButton(
+                      onPressed: () async {
+                        final dialogNavigator = Navigator.of(dialogContext);
+                        final messenger = ScaffoldMessenger.of(context);
+                        final name = nameController.text.trim();
+                        final phone = phoneController.text.trim();
+                        final amount = double.tryParse(
+                          amountController.text
+                              .trim()
+                              .replaceAll(',', '')
+                              .replaceAll('đ', ''),
+                        );
+                        if (name.isEmpty ||
+                            phone.isEmpty ||
+                            amount == null ||
+                            amount < 0) {
+                          messenger.showSnackBar(
+                            const SnackBar(
+                              content: Text(
+                                'Name, Phone and Amount are required.',
+                              ),
+                            ),
+                          );
+                          return;
+                        }
+                        try {
+                          await _customerApiService.createCustomer(
+                            name: name,
+                            phone: phone,
+                            totalAmount: amount,
+                          );
+                          if (!mounted) return;
+                          dialogNavigator.pop();
+                          await _loadCustomers();
+                          if (!mounted) return;
+                          messenger.showSnackBar(
+                            const SnackBar(
+                              content: Text('Customer added successfully.'),
+                            ),
+                          );
+                        } catch (error) {
+                          if (!mounted) return;
+                          messenger.showSnackBar(
+                            SnackBar(
+                              content: Text(
+                                error.toString().replaceFirst(
+                                  'Exception: ',
+                                  '',
+                                ),
+                              ),
+                            ),
+                          );
+                        }
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF16A34A),
+                      ),
+                      child: const Text(
+                        'Submit',
+                        style: TextStyle(color: Colors.white),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+    nameController.dispose();
     phoneController.dispose();
     amountController.dispose();
   }
@@ -530,7 +757,9 @@ class _CashierDashboardPageState extends State<CashierDashboardPage> {
                 child: SingleChildScrollView(
                   scrollDirection: Axis.horizontal,
                   child: DataTable(
-                    headingRowColor: const WidgetStatePropertyAll(Color(0xFF7DD3FC)),
+                    headingRowColor: const WidgetStatePropertyAll(
+                      Color(0xFF7DD3FC),
+                    ),
                     columns: const [
                       DataColumn(label: Text('Product Name')),
                       DataColumn(label: Text('Stock Qty')),
@@ -542,7 +771,9 @@ class _CashierDashboardPageState extends State<CashierDashboardPage> {
                     rows: const [
                       DataRow(
                         cells: [
-                          DataCell(Text('No products. Scan barcode or search to add.')),
+                          DataCell(
+                            Text('No products. Scan barcode or search to add.'),
+                          ),
                           DataCell(Text('-')),
                           DataCell(Text('-')),
                           DataCell(Text('-')),
@@ -561,7 +792,10 @@ class _CashierDashboardPageState extends State<CashierDashboardPage> {
                     'Grand Total: ',
                     style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
                   ),
-                  Text('0đ', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+                  Text(
+                    '0đ',
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                  ),
                 ],
               ),
             ],
@@ -573,69 +807,101 @@ class _CashierDashboardPageState extends State<CashierDashboardPage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              const Text('Customer List', style: TextStyle(fontSize: 30, fontWeight: FontWeight.w700)),
+              Row(
+                children: [
+                  const Expanded(
+                    child: Text(
+                      'Customer List',
+                      style: TextStyle(
+                        fontSize: 30,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ),
+                  ElevatedButton(
+                    onPressed: _openAddCustomerDialog,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF16A34A),
+                    ),
+                    child: const Text(
+                      '+ Add Customer',
+                      style: TextStyle(color: Colors.white),
+                    ),
+                  ),
+                ],
+              ),
               const SizedBox(height: 16),
               Expanded(
                 child: _isLoadingCustomers
                     ? const Center(child: CircularProgressIndicator())
                     : _customersError != null
-                        ? Center(child: Text('Cannot load customers: $_customersError'))
-                        : Container(
-                            decoration: BoxDecoration(
-                              color: Colors.white,
-                              borderRadius: BorderRadius.circular(12),
-                              border: Border.all(color: const Color(0xFFE8EAED)),
-                            ),
-                            child: SingleChildScrollView(
-                              scrollDirection: Axis.horizontal,
-                              child: DataTable(
-                                columns: const [
-                                  DataColumn(label: Text('S/N')),
-                                  DataColumn(label: Text('CUSTOMER')),
-                                  DataColumn(label: Text('PHONE')),
-                                  DataColumn(label: Text('POINTS')),
-                                  DataColumn(label: Text('PURCHASES')),
-                                  DataColumn(label: Text('TOTAL AMOUNT')),
-                                  DataColumn(label: Text('DISCOUNT')),
-                                  DataColumn(label: Text('ACTIONS')),
+                    ? Center(
+                        child: Text('Cannot load customers: $_customersError'),
+                      )
+                    : Container(
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: const Color(0xFFE8EAED)),
+                        ),
+                        child: SingleChildScrollView(
+                          scrollDirection: Axis.horizontal,
+                          child: DataTable(
+                            columns: const [
+                              DataColumn(label: Text('S/N')),
+                              DataColumn(label: Text('CUSTOMER')),
+                              DataColumn(label: Text('PHONE')),
+                              DataColumn(label: Text('POINTS')),
+                              DataColumn(label: Text('PURCHASES')),
+                              DataColumn(label: Text('TOTAL AMOUNT')),
+                              DataColumn(label: Text('DISCOUNT')),
+                              DataColumn(label: Text('ACTIONS')),
+                            ],
+                            rows: _customers.asMap().entries.map((entry) {
+                              final c = entry.value;
+                              return DataRow(
+                                cells: [
+                                  DataCell(Text('${entry.key + 1}')),
+                                  DataCell(Text(c.name)),
+                                  DataCell(
+                                    InkWell(
+                                      onTap: () {
+                                        setState(
+                                          () => _selectedPhone = c.phone,
+                                        );
+                                        _navigateToTab(
+                                          _CashierTab.customerHistory,
+                                          phone: c.phone,
+                                        );
+                                      },
+                                      child: Text(
+                                        c.phone,
+                                        style: const TextStyle(
+                                          color: Color(0xFF3B82F6),
+                                          fontWeight: FontWeight.w600,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                  DataCell(Text('${c.points}')),
+                                  DataCell(Text('${c.totalPurchases}')),
+                                  DataCell(Text(_money(c.totalAmount))),
+                                  DataCell(
+                                    Text(_discountText(c.discountPercent)),
+                                  ),
+                                  DataCell(
+                                    TextButton(
+                                      onPressed: () =>
+                                          _openUpdateCustomerDialog(c),
+                                      child: const Text('Edit'),
+                                    ),
+                                  ),
                                 ],
-                                rows: _customers.asMap().entries.map((entry) {
-                                  final c = entry.value;
-                                  return DataRow(
-                                    cells: [
-                                      DataCell(Text('${entry.key + 1}')),
-                                      DataCell(Text(c.name)),
-                                      DataCell(
-                                        InkWell(
-                                          onTap: () {
-                                            setState(() => _selectedPhone = c.phone);
-                                            _navigateToTab(_CashierTab.customerHistory, phone: c.phone);
-                                          },
-                                          child: Text(
-                                            c.phone,
-                                            style: const TextStyle(
-                                              color: Color(0xFF3B82F6),
-                                              fontWeight: FontWeight.w600,
-                                            ),
-                                          ),
-                                        ),
-                                      ),
-                                      DataCell(Text('${c.points}')),
-                                      DataCell(Text('${c.totalPurchases}')),
-                                      DataCell(Text(_money(c.totalAmount))),
-                                      DataCell(Text(_discountText(c.discountPercent))),
-                                      DataCell(
-                                        TextButton(
-                                          onPressed: () => _openUpdateCustomerDialog(c),
-                                          child: const Text('Edit'),
-                                        ),
-                                      ),
-                                    ],
-                                  );
-                                }).toList(),
-                              ),
-                            ),
+                              );
+                            }).toList(),
                           ),
+                        ),
+                      ),
               ),
             ],
           ),
@@ -654,67 +920,79 @@ class _CashierDashboardPageState extends State<CashierDashboardPage> {
               ),
               Text(
                 'Customer Order History - ${_selectedPhone.isEmpty ? '—' : _selectedPhone}',
-                style: const TextStyle(fontSize: 28, fontWeight: FontWeight.w700),
+                style: const TextStyle(
+                  fontSize: 28,
+                  fontWeight: FontWeight.w700,
+                ),
               ),
               const SizedBox(height: 16),
               Expanded(
                 child: _isLoadingHistory
                     ? const Center(child: CircularProgressIndicator())
                     : _historyError != null
-                        ? Center(child: Text('Cannot load history: $_historyError'))
-                        : Container(
-                            decoration: BoxDecoration(
-                              color: Colors.white,
-                              borderRadius: BorderRadius.circular(12),
-                              border: Border.all(color: const Color(0xFFE8EAED)),
-                            ),
-                            child: _historyOrders.isEmpty
-                                ? const Center(child: Text('No orders found for this phone number.'))
-                                : SingleChildScrollView(
-                                    scrollDirection: Axis.horizontal,
-                                    child: DataTable(
-                                      columns: const [
-                                        DataColumn(label: Text('ORDER ID')),
-                                        DataColumn(label: Text('DATE/TIME')),
-                                        DataColumn(label: Text('TOTAL')),
-                                        DataColumn(label: Text('DISCOUNT (%)')),
-                                        DataColumn(label: Text('PAYABLE')),
-                                        DataColumn(label: Text('PAYMENT')),
-                                        DataColumn(label: Text('STATUS')),
-                                        DataColumn(label: Text('ACTION')),
-                                      ],
-                                      rows: _historyOrders
-                                          .map(
-                                            (o) => DataRow(
-                                              cells: [
-                                                DataCell(Text(o.orderNo)),
-                                                DataCell(Text(o.orderDateTime)),
-                                                DataCell(Text(_money(o.total))),
-                                                DataCell(Text(o.discountPercent.toStringAsFixed(0))),
-                                                DataCell(Text(_money(o.payable))),
-                                                DataCell(Text(o.paymentMethod)),
-                                                DataCell(Text(o.status)),
-                                                DataCell(
-                                                  TextButton(
-                                                    onPressed: () {
-                                                      setState(() {
-                                                        _selectedOrderId = o.id;
-                                                      });
-                                                      _navigateToTab(
-                                                        _CashierTab.orderDetail,
-                                                        phone: _selectedPhone,
-                                                      );
-                                                    },
-                                                    child: const Text('View'),
-                                                  ),
-                                                ),
-                                              ],
+                    ? Center(child: Text('Cannot load history: $_historyError'))
+                    : Container(
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: const Color(0xFFE8EAED)),
+                        ),
+                        child: _historyOrders.isEmpty
+                            ? const Center(
+                                child: Text(
+                                  'No orders found for this phone number.',
+                                ),
+                              )
+                            : SingleChildScrollView(
+                                scrollDirection: Axis.horizontal,
+                                child: DataTable(
+                                  columns: const [
+                                    DataColumn(label: Text('ORDER ID')),
+                                    DataColumn(label: Text('DATE/TIME')),
+                                    DataColumn(label: Text('TOTAL')),
+                                    DataColumn(label: Text('DISCOUNT (%)')),
+                                    DataColumn(label: Text('PAYABLE')),
+                                    DataColumn(label: Text('PAYMENT')),
+                                    DataColumn(label: Text('STATUS')),
+                                    DataColumn(label: Text('ACTION')),
+                                  ],
+                                  rows: _historyOrders
+                                      .map(
+                                        (o) => DataRow(
+                                          cells: [
+                                            DataCell(Text(o.orderNo)),
+                                            DataCell(Text(o.orderDateTime)),
+                                            DataCell(Text(_money(o.total))),
+                                            DataCell(
+                                              Text(
+                                                o.discountPercent
+                                                    .toStringAsFixed(0),
+                                              ),
                                             ),
-                                          )
-                                          .toList(),
-                                    ),
-                                  ),
-                          ),
+                                            DataCell(Text(_money(o.payable))),
+                                            DataCell(Text(o.paymentMethod)),
+                                            DataCell(Text(o.status)),
+                                            DataCell(
+                                              TextButton(
+                                                onPressed: () {
+                                                  setState(() {
+                                                    _selectedOrderId = o.id;
+                                                  });
+                                                  _navigateToTab(
+                                                    _CashierTab.orderDetail,
+                                                    phone: _selectedPhone,
+                                                  );
+                                                },
+                                                child: const Text('View'),
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      )
+                                      .toList(),
+                                ),
+                              ),
+                      ),
               ),
             ],
           ),
@@ -733,7 +1011,9 @@ class _CashierDashboardPageState extends State<CashierDashboardPage> {
               ),
               const SizedBox(height: 8),
               if (_isLoadingOrderDetail)
-                const Expanded(child: Center(child: CircularProgressIndicator()))
+                const Expanded(
+                  child: Center(child: CircularProgressIndicator()),
+                )
               else if (_orderDetailError != null)
                 Expanded(
                   child: Center(
@@ -755,7 +1035,9 @@ class _CashierDashboardPageState extends State<CashierDashboardPage> {
                   ),
                 )
               else if (_orderDetail == null)
-                const Expanded(child: Center(child: Text('Order detail not found.')))
+                const Expanded(
+                  child: Center(child: Text('Order detail not found.')),
+                )
               else
                 Expanded(
                   child: SingleChildScrollView(
@@ -801,20 +1083,28 @@ class _CashierDashboardPageState extends State<CashierDashboardPage> {
           Container(
             width: 240,
             decoration: const BoxDecoration(
-              gradient: LinearGradient(colors: [Color(0xFF667EEA), Color(0xFF764BA2)]),
+              gradient: LinearGradient(
+                colors: [Color(0xFF667EEA), Color(0xFF764BA2)],
+              ),
             ),
             child: Column(
               children: [
                 Container(
                   width: double.infinity,
-                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 22),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 20,
+                    vertical: 22,
+                  ),
                   color: const Color.fromRGBO(0, 0, 0, 0.12),
                   child: const Row(
                     children: [
                       CircleAvatar(
                         radius: 18,
                         backgroundColor: Colors.white,
-                        child: Text('P', style: TextStyle(color: Color(0xFF667EEA))),
+                        child: Text(
+                          'P',
+                          style: TextStyle(color: Color(0xFF667EEA)),
+                        ),
                       ),
                       SizedBox(width: 10),
                       Text('SMS SYSTEM', style: TextStyle(color: Colors.white)),
@@ -829,11 +1119,17 @@ class _CashierDashboardPageState extends State<CashierDashboardPage> {
                 ),
                 _MenuItem(
                   label: 'Customer',
-                  active: _selectedTab == _CashierTab.customers || _selectedTab == _CashierTab.customerHistory,
+                  active:
+                      _selectedTab == _CashierTab.customers ||
+                      _selectedTab == _CashierTab.customerHistory,
                   onTap: () => _navigateToTab(_CashierTab.customers),
                 ),
                 const Spacer(),
-                _MenuItem(label: 'Logout', active: false, onTap: _openCloseShiftDialog),
+                _MenuItem(
+                  label: 'Logout',
+                  active: false,
+                  onTap: _openCloseShiftDialog,
+                ),
                 const SizedBox(height: 10),
               ],
             ),
@@ -847,18 +1143,26 @@ class _CashierDashboardPageState extends State<CashierDashboardPage> {
                     padding: const EdgeInsets.symmetric(horizontal: 24),
                     decoration: const BoxDecoration(
                       color: Colors.white,
-                      border: Border(bottom: BorderSide(color: Color(0xFFE8EAED))),
+                      border: Border(
+                        bottom: BorderSide(color: Color(0xFFE8EAED)),
+                      ),
                     ),
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.end,
                       children: [
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 8,
+                          ),
                           decoration: BoxDecoration(
                             color: const Color(0xFF667EEA),
                             borderRadius: BorderRadius.circular(8),
                           ),
-                          child: Text(_timeText(), style: const TextStyle(color: Colors.white)),
+                          child: Text(
+                            _timeText(),
+                            style: const TextStyle(color: Colors.white),
+                          ),
                         ),
                         const SizedBox(width: 14),
                         Column(
@@ -866,7 +1170,13 @@ class _CashierDashboardPageState extends State<CashierDashboardPage> {
                           crossAxisAlignment: CrossAxisAlignment.end,
                           children: [
                             Text(fullName),
-                            const Text('Cashier', style: TextStyle(fontSize: 12, color: Color(0xFF6B7280))),
+                            const Text(
+                              'Cashier',
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: Color(0xFF6B7280),
+                              ),
+                            ),
                           ],
                         ),
                         const SizedBox(width: 12),
@@ -882,7 +1192,9 @@ class _CashierDashboardPageState extends State<CashierDashboardPage> {
                               borderRadius: BorderRadius.circular(10),
                             ),
                             child: Text(
-                              fullName.isNotEmpty ? fullName[0].toUpperCase() : 'C',
+                              fullName.isNotEmpty
+                                  ? fullName[0].toUpperCase()
+                                  : 'C',
                               style: const TextStyle(
                                 color: Colors.white,
                                 fontWeight: FontWeight.w700,
@@ -918,11 +1230,7 @@ class _CashierDashboardPageState extends State<CashierDashboardPage> {
 }
 
 class _MenuItem extends StatelessWidget {
-  const _MenuItem({
-    required this.label,
-    required this.active,
-    this.onTap,
-  });
+  const _MenuItem({required this.label, required this.active, this.onTap});
 
   final String label;
   final bool active;
@@ -931,7 +1239,9 @@ class _MenuItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Material(
-      color: active ? const Color.fromRGBO(255, 255, 255, 0.2) : Colors.transparent,
+      color: active
+          ? const Color.fromRGBO(255, 255, 255, 0.2)
+          : Colors.transparent,
       child: InkWell(
         onTap: onTap,
         child: Container(
@@ -951,10 +1261,7 @@ class _MenuItem extends StatelessWidget {
 }
 
 class _OrderDetailCard extends StatelessWidget {
-  const _OrderDetailCard({
-    required this.detail,
-    required this.moneyFormatter,
-  });
+  const _OrderDetailCard({required this.detail, required this.moneyFormatter});
 
   final OrderDetail detail;
   final String Function(double value) moneyFormatter;
@@ -991,7 +1298,10 @@ class _OrderDetailCard extends StatelessWidget {
             children: [
               Text(
                 'Order Detail - ${detail.orderNo}',
-                style: const TextStyle(fontSize: 28, fontWeight: FontWeight.w700),
+                style: const TextStyle(
+                  fontSize: 28,
+                  fontWeight: FontWeight.w700,
+                ),
               ),
               const SizedBox(height: 16),
               Text(
@@ -1007,7 +1317,9 @@ class _OrderDetailCard extends StatelessWidget {
               SingleChildScrollView(
                 scrollDirection: Axis.horizontal,
                 child: DataTable(
-                  headingRowColor: const WidgetStatePropertyAll(Color(0xFFF7F8FA)),
+                  headingRowColor: const WidgetStatePropertyAll(
+                    Color(0xFFF7F8FA),
+                  ),
                   columns: const [
                     DataColumn(label: Text('ĐƠN GIÁ')),
                     DataColumn(label: Text('SỐ LƯỢNG')),
@@ -1018,7 +1330,9 @@ class _OrderDetailCard extends StatelessWidget {
                         (item) => DataRow(
                           cells: [
                             DataCell(
-                              Text('(${item.productName} - ${moneyFormatter(item.unitPrice)})'),
+                              Text(
+                                '(${item.productName} - ${moneyFormatter(item.unitPrice)})',
+                              ),
                             ),
                             DataCell(Text(item.qty.toString())),
                             DataCell(Text(moneyFormatter(item.amount))),
@@ -1031,7 +1345,10 @@ class _OrderDetailCard extends StatelessWidget {
               const SizedBox(height: 12),
               const Divider(color: Color(0xFFE8EAED), thickness: 1.5),
               const SizedBox(height: 8),
-              _SummaryRow(label: 'Tổng tiền hàng', value: moneyFormatter(detail.subtotal)),
+              _SummaryRow(
+                label: 'Tổng tiền hàng',
+                value: moneyFormatter(detail.subtotal),
+              ),
               _SummaryRow(label: 'Giảm giá', value: _discountText()),
               const Divider(color: Color(0xFFE8EAED)),
               _SummaryRow(
@@ -1061,7 +1378,11 @@ class _SummaryRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final style = isTotal
-        ? const TextStyle(fontSize: 19, fontWeight: FontWeight.w700, color: Color(0xFF1A1D21))
+        ? const TextStyle(
+            fontSize: 19,
+            fontWeight: FontWeight.w700,
+            color: Color(0xFF1A1D21),
+          )
         : const TextStyle(fontSize: 16, color: Color(0xFF374151));
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 4),
@@ -1075,4 +1396,3 @@ class _SummaryRow extends StatelessWidget {
     );
   }
 }
-

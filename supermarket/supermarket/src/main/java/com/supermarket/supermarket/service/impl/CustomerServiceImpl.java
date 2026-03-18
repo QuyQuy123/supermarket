@@ -1,5 +1,6 @@
 package com.supermarket.supermarket.service.impl;
 
+import com.supermarket.supermarket.dto.request.CreateCustomerRequest;
 import com.supermarket.supermarket.dto.request.UpdateCustomerRequest;
 import com.supermarket.supermarket.dto.response.CustomerListItemResponse;
 import com.supermarket.supermarket.entity.Customer;
@@ -26,6 +27,28 @@ public class CustomerServiceImpl implements CustomerService {
             .stream()
             .map(this::toResponse)
             .toList();
+    }
+
+    @Override
+    public CustomerListItemResponse createCustomer(CreateCustomerRequest request) {
+        String phone = request.getPhone().trim();
+        if (customerRepository.existsByPhone(phone)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Phone already exists");
+        }
+
+        LocalDateTime now = LocalDateTime.now();
+        Customer customer = Customer.builder()
+            .name(request.getName().trim())
+            .phone(phone)
+            .points(0)
+            .totalPurchases(0)
+            .totalAmount(orZero(request.getTotalAmount()))
+            .createdAt(now)
+            .updatedAt(now)
+            .build();
+
+        customer = customerRepository.save(customer);
+        return toResponse(customer);
     }
 
     @Override
