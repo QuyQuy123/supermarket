@@ -1,0 +1,36 @@
+﻿Analyzing supermarket_Manager_System...                         
+
+warning - Unused import: 'package:supermarket_manager_system/presentation/pages/customers_page.dart' - lib\main.dart:8:8 - unused_import
+   info - Unnecessary braces in a string interpolation - lib\presentation\pages\customers_page.dart:324:13 - unnecessary_brace_in_string_interps
+warning - The declaration '_ActionBtn' isn't referenced - lib\presentation\pages\customers_page.dart:447:7 - unused_element
+   info - Unnecessary braces in a string interpolation - lib\presentation\pages\customers_page.dart:1064:13 - unnecessary_brace_in_string_interps
+   info - Unnecessary braces in a string interpolation - lib\presentation\pages\customers_page.dart:1437:13 - unnecessary_brace_in_string_interps
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\presentation\pages\customers_page.dart:1524:41 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\presentation\pages\discount.dart:175:53 - deprecated_member_use
+warning - The declaration '_ManagerHeader' isn't referenced - lib\presentation\pages\manager_dashboard_page.dart:432:7 - unused_element
+warning - The declaration '_ManagerTopCards' isn't referenced - lib\presentation\pages\manager_dashboard_page.dart:585:7 - unused_element
+warning - The declaration '_ManagerStatsGrid' isn't referenced - lib\presentation\pages\manager_dashboard_page.dart:682:7 - unused_element
+warning - The declaration '_ManagerChartRow' isn't referenced - lib\presentation\pages\manager_dashboard_page.dart:739:7 - unused_element
+warning - The declaration '_ManagerTransactionsTable' isn't referenced - lib\presentation\pages\manager_dashboard_page.dart:810:7 - unused_element
+
+flutter : 12 issues 
+found. (ran in 2.6s)
+At line:1 char:1
++ flutter analyze 
+--no-pub > 
+analyze_final_v2.txt 
+2>&1; Get-Content ana 
+...
++ ~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~
+    + CategoryInfo     
+         : NotSpecifi  
+  ed: (12 issues fou   
+ nd. (ran in 2.6s):    
+String) [], Remote    
+Exception
+    + FullyQualifiedEr 
+   rorId : NativeComm  
+  andError
+ 

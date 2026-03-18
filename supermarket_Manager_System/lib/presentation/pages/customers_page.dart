@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:supermarket_manager_system/data/services/customer_api_service.dart';
@@ -294,7 +295,7 @@ class _CustomersContentState extends State<CustomersContent> {
                           DataCell(
                             Container(
                                 alignment: Alignment.centerRight,
-                                child: Text('—')), // Discount placeholder
+                                child: const Text('—')), // Discount placeholder
                           ),
                           DataCell(
                             Center(
@@ -321,7 +322,7 @@ class _CustomersContentState extends State<CustomersContent> {
       RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
       (m) => '${m[1]},',
     );
-    return '${fmt}đ';
+    return '$fmtđ';
   }
 }
 
@@ -523,7 +524,17 @@ class _AddCustomerDialogState extends State<_AddCustomerDialog> {
       if (!mounted) return;
       setState(() {
         _isSubmitting = false;
-        _errorText = e.toString().replaceFirst('Exception: ', '');
+        final errorMsg = e.toString().replaceFirst('Exception: ', '');
+        try {
+          final decoded = json.decode(errorMsg);
+          if (decoded is Map) {
+            _errorText = decoded.values.first.toString();
+          } else {
+            _errorText = errorMsg;
+          }
+        } catch (_) {
+          _errorText = errorMsg;
+        }
       });
     }
   }
@@ -556,6 +567,9 @@ class _AddCustomerDialogState extends State<_AddCustomerDialog> {
                 validator: (v) {
                   if (v == null || v.trim().isEmpty) return 'Name is required';
                   if (v.trim().length < 2) return 'Name must be at least 2 characters';
+                  if (!RegExp(r'^[a-zA-Z\s\u00C0-\u024F\u1E00-\u1EFF]+$').hasMatch(v.trim())) {
+                    return 'Name must only contain letters';
+                  }
                   return null;
                 },
               ),
@@ -717,7 +731,17 @@ class _EditCustomerDialogState extends State<_EditCustomerDialog> {
       if (!mounted) return;
       setState(() {
         _isSubmitting = false;
-        _errorText = e.toString().replaceFirst('Exception: ', '');
+        final errorMsg = e.toString().replaceFirst('Exception: ', '');
+        try {
+          final decoded = json.decode(errorMsg);
+          if (decoded is Map) {
+            _errorText = decoded.values.first.toString();
+          } else {
+            _errorText = errorMsg;
+          }
+        } catch (_) {
+          _errorText = errorMsg;
+        }
       });
     }
   }
@@ -748,6 +772,9 @@ class _EditCustomerDialogState extends State<_EditCustomerDialog> {
                 validator: (v) {
                   if (v == null || v.trim().isEmpty) return 'Name is required';
                   if (v.trim().length < 2) return 'Name must be at least 2 characters';
+                  if (!RegExp(r'^[a-zA-Z\s\u00C0-\u024F\u1E00-\u1EFF]+$').hasMatch(v.trim())) {
+                    return 'Name must only contain letters';
+                  }
                   return null;
                 },
               ),
@@ -1402,7 +1429,7 @@ class ViewCustomerHistoryScreen extends StatefulWidget {
           RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
           (m) => '${m[1]},',
         );
-    return '${fmt}đ';
+    return '$fmtđ';
   }
 
   @override

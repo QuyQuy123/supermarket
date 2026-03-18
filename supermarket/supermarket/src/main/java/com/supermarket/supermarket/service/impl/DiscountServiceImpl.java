@@ -10,8 +10,10 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
 
 @Service
 @RequiredArgsConstructor
@@ -36,6 +38,9 @@ public class DiscountServiceImpl implements DiscountService {
     @Override
     @Transactional
     public DiscountResponse createDiscount(CreateDiscountRequest request) {
+        if (request.getStartDate().isAfter(request.getEndDate())) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Start date must be before or equal to end date");
+        }
         Discount discount = Discount.builder()
                 .name(request.getName())
                 .percent(request.getPercent())
@@ -52,6 +57,9 @@ public class DiscountServiceImpl implements DiscountService {
     @Override
     @Transactional
     public DiscountResponse updateDiscount(Integer id, UpdateDiscountRequest request) {
+        if (request.getStartDate().isAfter(request.getEndDate())) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Start date must be before or equal to end date");
+        }
         Discount discount = discountRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Discount not found with id: " + id));
         

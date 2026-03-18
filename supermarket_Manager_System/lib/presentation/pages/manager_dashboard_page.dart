@@ -6,7 +6,6 @@ import 'package:supermarket_manager_system/presentation/pages/customers_page.dar
 import 'package:supermarket_manager_system/presentation/pages/dashboard_content.dart';
 import 'package:supermarket_manager_system/presentation/pages/orders_page.dart';
 import 'package:supermarket_manager_system/presentation/pages/profile_content_page.dart';
-import 'package:supermarket_manager_system/presentation/pages/revenue_report_page.dart';
 import 'package:supermarket_manager_system/presentation/pages/discount.dart';
 import 'package:supermarket_manager_system/presentation/pages/suppliers_page.dart';
 import 'package:supermarket_manager_system/presentation/pages/products_page.dart';
@@ -24,7 +23,6 @@ enum _ManagerTab {
   profile,
   profileEdit,
   productDetail,
-  reports
 }
 
 class ManagerDashboardPage extends StatefulWidget {
@@ -64,7 +62,6 @@ class _ManagerDashboardPageState extends State<ManagerDashboardPage> {
       'products' => _ManagerTab.products,
       'expired' => _ManagerTab.expired,
       'profile-edit' => _ManagerTab.profileEdit,
-      'reports' => _ManagerTab.reports,
       _ => _ManagerTab.dashboard,
     };
   }
@@ -81,7 +78,6 @@ class _ManagerDashboardPageState extends State<ManagerDashboardPage> {
       _ManagerTab.productDetail => '/manager/expired',
       _ManagerTab.profile => '/manager/profile',
       _ManagerTab.profileEdit => '/manager/profile/edit',
-      _ManagerTab.reports => '/manager/reports',
     };
   }
 
@@ -206,7 +202,6 @@ class _ManagerDashboardPageState extends State<ManagerDashboardPage> {
                     onSuppliersTap: () => _selectTab(_ManagerTab.suppliers),
                     onProductsTap: () => _selectTab(_ManagerTab.products),
                     onExpiredTap: () => _selectTab(_ManagerTab.expired),
-                    onReportsTap: () => _selectTab(_ManagerTab.reports),
                   ),
                 )
               : null,
@@ -225,7 +220,6 @@ class _ManagerDashboardPageState extends State<ManagerDashboardPage> {
                     onSuppliersTap: () => _selectTab(_ManagerTab.suppliers),
                     onProductsTap: () => _selectTab(_ManagerTab.products),
                     onExpiredTap: () => _selectTab(_ManagerTab.expired),
-                    onReportsTap: () => _selectTab(_ManagerTab.reports),
                   ),
                 ),
               Expanded(
@@ -297,12 +291,6 @@ class _ManagerDashboardPageState extends State<ManagerDashboardPage> {
                     onSaved: _onProfileUpdated,
                     onCancel: () => _selectTab(_ManagerTab.profile),
                   ),
-                  _ManagerTab.reports => RevenueReportPage(
-                    fullName: widget.fullName,
-                    isCompact: isCompact,
-                    currentTimeText: _formatClock(_now),
-                    onProfileTap: () => _selectTab(_ManagerTab.profile),
-                  ),
                 },
               ),
             ],
@@ -324,7 +312,6 @@ class _ManagerSidebar extends StatelessWidget {
     required this.onSuppliersTap,
     required this.onProductsTap,
     required this.onExpiredTap,
-    this.onReportsTap,
   });
 
   final VoidCallback onLogout;
@@ -336,7 +323,6 @@ class _ManagerSidebar extends StatelessWidget {
   final VoidCallback onSuppliersTap;
   final VoidCallback onProductsTap;
   final VoidCallback onExpiredTap;
-  final VoidCallback? onReportsTap;
 
   @override
   Widget build(BuildContext context) {
@@ -410,11 +396,7 @@ class _ManagerSidebar extends StatelessWidget {
                       active: selectedTab == _ManagerTab.expired,
                       onTap: onExpiredTap,
                     ),
-                    _ManagerSidebarItem(
-                      label: 'Reports',
-                      active: selectedTab == _ManagerTab.reports,
-                      onTap: onReportsTap,
-                    ),
+
                   ],
                 ),
               ),

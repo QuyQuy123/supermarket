@@ -54,6 +54,29 @@ class SupermarketManagerApp extends StatelessWidget {
         }
         return '/role-home';
       }
+
+      // Role-based route guards for authenticated users
+      if (isLoggedIn) {
+        final roleId = AppSession.instance.roleId;
+        final role = AppSession.instance.role.toLowerCase();
+        final isCashier = roleId == 3 || role.contains('cashier');
+        final isAdmin = role.contains('admin');
+        final isManager = role.contains('manager');
+
+        // Cashier cannot access /admin or /manager routes
+        if (isCashier && (path.startsWith('/admin') || path.startsWith('/manager'))) {
+          return '/cashier/open-shift';
+        }
+        // Manager cannot access /admin routes
+        if (isManager && path.startsWith('/admin')) {
+          return '/manager/dashboard';
+        }
+        // Admin cannot access /cashier or /manager routes
+        if (isAdmin && (path.startsWith('/cashier') || path.startsWith('/manager'))) {
+          return '/admin/dashboard';
+        }
+      }
+
       return null;
     },
     routes: [

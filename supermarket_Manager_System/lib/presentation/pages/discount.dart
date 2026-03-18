@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:supermarket_manager_system/data/services/discount_api_service.dart';
 import 'package:supermarket_manager_system/domain/models/discount.dart';
@@ -447,7 +449,15 @@ class _AddEditDiscountDialogState extends State<_AddEditDiscountDialog> {
       if (mounted) Navigator.pop(context, true);
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $e')));
+        final errorMsg = e.toString().replaceFirst('Exception: ', '');
+        String displayError = errorMsg;
+        try {
+          final decoded = jsonDecode(errorMsg);
+          if (decoded is Map) {
+            displayError = decoded.values.first.toString();
+          }
+        } catch (_) {}
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $displayError')));
       }
     } finally {
       if (mounted) setState(() => _isSaving = false);
@@ -538,7 +548,10 @@ class _AddEditDiscountDialogState extends State<_AddEditDiscountDialog> {
           ),
           autovalidateMode: AutovalidateMode.onUserInteraction,
           validator: (value) {
-            if (value == null || value.isEmpty) return 'This field is required';
+            if (value == null || value.trim().isEmpty) return 'This field is required';
+            if (label == 'Discount Name') {
+              if (value.trim().length < 2) return 'Name must be at least 2 characters';
+            }
             if (label.contains('%')) {
               final val = double.tryParse(value);
               if (val == null) return 'Invalid number';
@@ -573,7 +586,19 @@ class _AddEditDiscountDialogState extends State<_AddEditDiscountDialog> {
             contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
           ),
           autovalidateMode: AutovalidateMode.onUserInteraction,
-          validator: (value) => value == null || value.isEmpty ? 'This field is required' : null,
+          validator: (value) {
+            if (value == null || value.isEmpty) return 'This field is required';
+            if (label == 'End Date' && _startDateController.text.isNotEmpty) {
+              try {
+                final start = _parseDate(_startDateController.text);
+                final end = _parseDate(value);
+                if (end.isBefore(start)) {
+                  return 'End date cannot be before start date';
+                }
+              } catch (_) {}
+            }
+            return null;
+          },
         ),
       ],
     );
