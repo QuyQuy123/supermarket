@@ -9,3 +9,4 @@ public interface AuthService {
     boolean verifyOtp(String otp);
     void resetPassword(String otp, String newPassword);
 }
+

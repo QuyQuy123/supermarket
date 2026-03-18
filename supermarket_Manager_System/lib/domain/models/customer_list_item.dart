@@ -6,6 +6,7 @@ class CustomerListItem {
     required this.points,
     required this.totalPurchases,
     required this.totalAmount,
+    required this.discountPercent,
   });
 
   final int id;
@@ -14,6 +15,7 @@ class CustomerListItem {
   final int points;
   final int totalPurchases;
   final double totalAmount;
+  final double discountPercent;
 
   factory CustomerListItem.fromJson(Map<String, dynamic> json) {
     return CustomerListItem(
@@ -23,6 +25,7 @@ class CustomerListItem {
       points: (json['points'] as num?)?.toInt() ?? 0,
       totalPurchases: (json['totalPurchases'] as num?)?.toInt() ?? 0,
       totalAmount: (json['totalAmount'] as num?)?.toDouble() ?? 0,
+      discountPercent: (json['discountPercent'] as num?)?.toDouble() ?? 0,
     );
   }
 }

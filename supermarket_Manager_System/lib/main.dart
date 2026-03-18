@@ -1,16 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_web_plugins/url_strategy.dart';
 import 'package:go_router/go_router.dart';
+import 'package:supermarket_manager_system/presentation/pages/add_product_page.dart';
 import 'package:supermarket_manager_system/presentation/pages/admin_dashboard_page.dart';
-import 'package:supermarket_manager_system/presentation/pages/cashier_barcode_scanner_page.dart';
+import 'package:supermarket_manager_system/presentation/pages/cashier_dashboard_page.dart';
 import 'package:supermarket_manager_system/presentation/pages/cashier_open_shift_page.dart';
-import 'package:supermarket_manager_system/presentation/pages/customers_page.dart';
 import 'package:supermarket_manager_system/presentation/pages/login_page.dart';
 import 'package:supermarket_manager_system/presentation/pages/manager_dashboard_page.dart';
 import 'package:supermarket_manager_system/presentation/pages/role_home_page.dart';
+import 'package:supermarket_manager_system/presentation/pages/supplier_detail_page.dart';
 import 'package:supermarket_manager_system/presentation/pages/forgot_password_page.dart';
 import 'package:supermarket_manager_system/presentation/pages/verify_otp_page.dart';
 import 'package:supermarket_manager_system/presentation/pages/set_new_password_page.dart';
+import 'package:supermarket_manager_system/presentation/pages/product_detail_page.dart';
 import 'package:supermarket_manager_system/utils/app_session.dart';
 
 void main() {
@@ -39,7 +41,11 @@ class SupermarketManagerApp extends StatelessWidget {
       }
 
       if (isLoggedIn && (path == '/login' || path == '/')) {
+        final roleId = AppSession.instance.roleId;
         final role = AppSession.instance.role.toLowerCase();
+        if (roleId == 3 || role.contains('cashier')) {
+          return '/cashier/open-shift';
+        }
         if (role.contains('admin')) {
           return '/admin/dashboard';
         }
@@ -68,26 +74,70 @@ class SupermarketManagerApp extends StatelessWidget {
           return SetNewPasswordPage(otp: otp);
         },
       ),
-      GoRoute(path: '/admin', redirect: (context, state) => '/admin/dashboard'),
       GoRoute(
-        path: '/admin/:section',
-        pageBuilder: (context, state) => NoTransitionPage(
-          key: const ValueKey('admin-shell'),
-          child: _buildAdminPage(
-            context: context,
-            initialTabKey: _resolveAdminTabKey(state),
+        path: '/admin',
+        redirect: (context, state) {
+          if (state.uri.path == '/admin') return '/admin/dashboard';
+          return null;
+        },
+        routes: [
+          GoRoute(
+            path: 'add-product',
+            pageBuilder: (context, state) {
+              return MaterialPage(
+                key: const ValueKey('admin-add-product'),
+                child: AddProductPage(
+                  basePath: 'admin',
+                  fullName: AppSession.instance.fullName,
+                ),
+              );
+            },
           ),
-        ),
-      ),
-      GoRoute(
-        path: '/admin/:section/:subSection',
-        pageBuilder: (context, state) => NoTransitionPage(
-          key: const ValueKey('admin-shell'),
-          child: _buildAdminPage(
-            context: context,
-            initialTabKey: _resolveAdminTabKey(state),
+          GoRoute(
+            path: 'product-detail/:id',
+            pageBuilder: (context, state) {
+              final id = int.tryParse(state.pathParameters['id'] ?? '') ?? 0;
+              return MaterialPage(
+                key: ValueKey('admin-product-detail-$id'),
+                child: ProductDetailPage(
+                  productId: id,
+                  basePath: 'admin',
+                  fullName: AppSession.instance.fullName,
+                ),
+              );
+            },
           ),
-        ),
+          GoRoute(
+            path: 'supplier-detail/:id',
+            pageBuilder: (context, state) {
+              final id = int.tryParse(state.pathParameters['id'] ?? '') ?? 0;
+              return MaterialPage(
+                key: ValueKey('admin-supplier-detail-$id'),
+                child: SupplierDetailPage(supplierId: id, basePath: 'admin'),
+              );
+            },
+          ),
+          GoRoute(
+            path: ':section',
+            pageBuilder: (context, state) => NoTransitionPage(
+              key: const ValueKey('admin-shell'),
+              child: _buildAdminPage(
+                context: context,
+                initialTabKey: _resolveAdminTabKey(state),
+              ),
+            ),
+          ),
+          GoRoute(
+            path: ':section/:subSection',
+            pageBuilder: (context, state) => NoTransitionPage(
+              key: const ValueKey('admin-shell'),
+              child: _buildAdminPage(
+                context: context,
+                initialTabKey: _resolveAdminTabKey(state),
+              ),
+            ),
+          ),
+        ],
       ),
       GoRoute(
         path: '/role-home',
@@ -108,38 +158,93 @@ class SupermarketManagerApp extends StatelessWidget {
             CashierOpenShiftPage(fullName: AppSession.instance.fullName),
       ),
       GoRoute(
-        path: '/cashier/barcode-scanner',
-        builder: (context, state) =>
-            CashierBarcodeScannerPage(fullName: AppSession.instance.fullName),
+        path: '/cashier/:section',
+        pageBuilder: (context, state) => NoTransitionPage(
+          key: const ValueKey('cashier-shell'),
+          child: _buildCashierPage(
+            context: context,
+            initialTabKey: _resolveCashierTabKey(state),
+            initialPhone: _resolveCashierPhone(state),
+            initialOrderId: _resolveCashierOrderId(state),
+          ),
+        ),
       ),
       GoRoute(
-        path: '/cashier/customers',
-        builder: (context, state) =>
-            CashierCustomersPage(fullName: AppSession.instance.fullName),
+        path: '/cashier/:section/:subSection',
+        pageBuilder: (context, state) => NoTransitionPage(
+          key: const ValueKey('cashier-shell'),
+          child: _buildCashierPage(
+            context: context,
+            initialTabKey: _resolveCashierTabKey(state),
+            initialPhone: _resolveCashierPhone(state),
+            initialOrderId: _resolveCashierOrderId(state),
+          ),
+        ),
       ),
       GoRoute(
         path: '/manager',
-        redirect: (context, state) => '/manager/dashboard',
-      ),
-      GoRoute(
-        path: '/manager/:section',
-        pageBuilder: (context, state) => NoTransitionPage(
-          key: const ValueKey('manager-dashboard'),
-          child: _buildManagerPage(
-            context: context,
-            initialTabKey: _resolveManagerTabKey(state),
+        redirect: (context, state) {
+          if (state.uri.path == '/manager') return '/manager/dashboard';
+          return null;
+        },
+        routes: [
+          GoRoute(
+            path: 'add-product',
+            pageBuilder: (context, state) {
+              return MaterialPage(
+                key: const ValueKey('manager-add-product'),
+                child: AddProductPage(
+                  basePath: 'manager',
+                  fullName: AppSession.instance.fullName,
+                ),
+              );
+            },
           ),
-        ),
-      ),
-      GoRoute(
-        path: '/manager/:section/:subSection',
-        pageBuilder: (context, state) => NoTransitionPage(
-          key: const ValueKey('manager-dashboard'),
-          child: _buildManagerPage(
-            context: context,
-            initialTabKey: _resolveManagerTabKey(state),
+          GoRoute(
+            path: 'product-detail/:id',
+            pageBuilder: (context, state) {
+              final id = int.tryParse(state.pathParameters['id'] ?? '') ?? 0;
+              return MaterialPage(
+                key: ValueKey('manager-product-detail-$id'),
+                child: ProductDetailPage(
+                  productId: id,
+                  basePath: 'manager',
+                  fullName: AppSession.instance.fullName,
+                ),
+              );
+            },
           ),
-        ),
+          GoRoute(
+            path: 'supplier-detail/:id',
+            pageBuilder: (context, state) {
+              final id = int.tryParse(state.pathParameters['id'] ?? '') ?? 0;
+              return MaterialPage(
+                key: ValueKey('manager-supplier-detail-$id'),
+                child: SupplierDetailPage(supplierId: id, basePath: 'manager'),
+              );
+            },
+          ),
+          GoRoute(
+            path: ':section',
+            pageBuilder: (context, state) => NoTransitionPage(
+              key: const ValueKey('manager-dashboard'),
+              child: _buildManagerPage(
+                context: context,
+                initialTabKey: _resolveManagerTabKey(state),
+              ),
+            ),
+          ),
+          GoRoute(
+            path: ':section/:subSection',
+            pageBuilder: (context, state) => NoTransitionPage(
+              key: const ValueKey('manager-dashboard'),
+              child: _buildManagerPage(
+                context: context,
+                initialTabKey: _resolveManagerTabKey(state),
+              ),
+            ),
+          ),
+        ],
       ),
     ],
   );
@@ -172,21 +277,16 @@ class SupermarketManagerApp extends StatelessWidget {
     final section = state.pathParameters['section'] ?? 'dashboard';
     final subSection = state.pathParameters['subSection'];
 
-    if (section == 'users') {
-      return 'users';
-    }
-    if (section == 'orders') {
-      return 'orders';
-    }
-    if (section == 'customers') {
-      return 'customers';
-    }
-    if (section == 'profile' && subSection == 'edit') {
-      return 'profile-edit';
-    }
-    if (section == 'profile') {
-      return 'profile';
-    }
+    if (section == 'users') return 'users';
+    if (section == 'orders') return 'orders';
+    if (section == 'customers') return 'customers';
+    if (section == 'discount') return 'discount';
+    if (section == 'suppliers') return 'suppliers';
+    if (section == 'products') return 'products';
+    if (section == 'expired') return 'expired';
+    if (section == 'reports') return 'reports';
+    if (section == 'profile' && subSection == 'edit') return 'profile-edit';
+    if (section == 'profile') return 'profile';
     return 'dashboard';
   }
 
@@ -211,38 +311,70 @@ class SupermarketManagerApp extends StatelessWidget {
     );
   }
 
-  static String _resolveManagerTabKey(GoRouterState state) {
-    final section = state.pathParameters['section'] ?? 'dashboard';
+  static Widget _buildCashierPage({
+    required BuildContext context,
+    required String initialTabKey,
+    required String initialPhone,
+    required int? initialOrderId,
+  }) {
+    final userId = AppSession.instance.userId;
+    if (userId == null) {
+      return const LoginPage();
+    }
+    return CashierDashboardPage(
+      key: const ValueKey('cashier-dashboard-shell'),
+      fullName: AppSession.instance.fullName,
+      userId: userId,
+      initialTabKey: initialTabKey,
+      initialPhone: initialPhone,
+      initialOrderId: initialOrderId,
+      onNavigatePath: (path) => context.go(path),
+      onLogoutRequested: () {
+        AppSession.instance.clear();
+        context.go('/login');
+      },
+    );
+  }
+
+  static String _resolveCashierTabKey(GoRouterState state) {
+    final section = state.pathParameters['section'] ?? 'barcode-scanner';
     final subSection = state.pathParameters['subSection'];
+    if (section == 'customers' && subSection == 'history') {
+      return 'customer-history';
+    }
+    if (section == 'orders' && subSection == 'detail') {
+      return 'order-detail';
+    }
     if (section == 'profile' && subSection == 'edit') {
       return 'profile-edit';
     }
-    if (section == 'orders') {
-      return 'orders';
-    }
-    if (section == 'customers') {
-      return 'customers';
-    }
-    if (section == 'profile') {
-      return 'profile';
-    }
-    return 'dashboard';
+    if (section == 'profile') return 'profile';
+    if (section == 'customers') return 'customers';
+    return 'scanner';
   }
 
-  // static String _defaultPathForCurrentSession() {
-  //   final roleId = AppSession.instance.roleId;
-  //   final role = AppSession.instance.role.toLowerCase();
-  //   if (roleId == 3 || role.contains('cashier')) {
-  //     return '/cashier/open-shift';
-  //   }
-  //   if (role.contains('admin')) {
-  //     return '/admin/dashboard';
-  //   }
-  //   if (role.contains('manager')) {
-  //     return '/manager/dashboard';
-  //   }
-  //   return '/role-home';
-  // }
+  static String _resolveCashierPhone(GoRouterState state) {
+    return state.uri.queryParameters['phone'] ?? '';
+  }
+
+  static int? _resolveCashierOrderId(GoRouterState state) {
+    return int.tryParse(state.uri.queryParameters['orderId'] ?? '');
+  }
+
+  static String _resolveManagerTabKey(GoRouterState state) {
+    final section = state.pathParameters['section'] ?? 'dashboard';
+    final subSection = state.pathParameters['subSection'];
+    if (section == 'profile' && subSection == 'edit') return 'profile-edit';
+    if (section == 'orders') return 'orders';
+    if (section == 'customers') return 'customers';
+    if (section == 'discount') return 'discount';
+    if (section == 'suppliers') return 'suppliers';
+    if (section == 'products') return 'products';
+    if (section == 'expired') return 'expired';
+    if (section == 'reports') return 'reports';
+    if (section == 'profile') return 'profile';
+    return 'dashboard';
+  }
 
   @override
   Widget build(BuildContext context) {

@@ -2,6 +2,7 @@ class OrderListItem {
   const OrderListItem({
     required this.id,
     required this.orderNo,
+    required this.orderDateTime,
     required this.customerName,
     required this.customerPhone,
     required this.total,
@@ -16,6 +17,7 @@ class OrderListItem {
 
   final int id;
   final String orderNo;
+  final String orderDateTime;
   final String customerName;
   final String customerPhone;
   final double total;
@@ -31,6 +33,7 @@ class OrderListItem {
     return OrderListItem(
       id: (json['id'] as num?)?.toInt() ?? 0,
       orderNo: json['orderNo'] as String? ?? '—',
+      orderDateTime: json['orderDateTime'] as String? ?? '—',
       customerName: json['customerName'] as String? ?? '—',
       customerPhone: json['customerPhone'] as String? ?? '—',
       total: (json['total'] as num?)?.toDouble() ?? 0,

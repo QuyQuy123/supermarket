@@ -13,4 +13,5 @@ public class CustomerListItemResponse {
     private Integer points;
     private Integer totalPurchases;
     private BigDecimal totalAmount;
+    private BigDecimal discountPercent;
 }

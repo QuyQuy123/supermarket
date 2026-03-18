@@ -17,6 +17,7 @@ class CashierBarcodeScannerPage extends StatefulWidget {
 class _CashierBarcodeScannerPageState extends State<CashierBarcodeScannerPage> {
   late DateTime _now;
   Timer? _clockTimer;
+  final TextEditingController _totalCashEndController = TextEditingController();
 
   @override
   void initState() {
@@ -32,6 +33,7 @@ class _CashierBarcodeScannerPageState extends State<CashierBarcodeScannerPage> {
   @override
   void dispose() {
     _clockTimer?.cancel();
+    _totalCashEndController.dispose();
     super.dispose();
   }
 
@@ -43,9 +45,192 @@ class _CashierBarcodeScannerPageState extends State<CashierBarcodeScannerPage> {
     return value.toString().padLeft(2, '0');
   }
 
-  void _logout() {
-    AppSession.instance.clear();
-    context.go('/login');
+  Future<void> _openCloseShiftDialog() async {
+    final fullName = widget.fullName.isEmpty ? 'Cashier' : widget.fullName;
+    _totalCashEndController.clear();
+
+    await showDialog<void>(
+      context: context,
+      barrierDismissible: false,
+      builder: (dialogContext) {
+        return Dialog(
+          insetPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
+          backgroundColor: Colors.transparent,
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 480),
+            child: Container(
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: const Color(0xFFE8EAED)),
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 18),
+                    decoration: const BoxDecoration(
+                      borderRadius: BorderRadius.vertical(top: Radius.circular(12)),
+                      gradient: LinearGradient(
+                        colors: [Color(0xFF0D9488), Color(0xFF0F766E)],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
+                    ),
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Close Shift',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 24,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
+                              SizedBox(height: 6),
+                              Text(
+                                'Enter total cash at end of shift to close your shift.',
+                                style: TextStyle(color: Colors.white, fontSize: 13),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        InkWell(
+                          onTap: () => Navigator.of(dialogContext).pop(),
+                          borderRadius: BorderRadius.circular(16),
+                          child: const SizedBox(
+                            width: 28,
+                            height: 28,
+                            child: Icon(Icons.close, color: Colors.white, size: 20),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.all(24),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        const Text(
+                          'Employee name',
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                            color: Color(0xFF374151),
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFF9FAFB),
+                            borderRadius: BorderRadius.circular(8),
+                            border: Border.all(color: const Color(0xFFE5E7EB)),
+                          ),
+                          child: Text(
+                            fullName,
+                            style: const TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w500,
+                              color: Color(0xFF1A1D21),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 20),
+                        const Text(
+                          'Total cash at end of shift',
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                            color: Color(0xFF374151),
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        TextField(
+                          controller: _totalCashEndController,
+                          keyboardType: TextInputType.number,
+                          decoration: InputDecoration(
+                            hintText: 'Enter total cash after shift (e.g. 1500000)',
+                            contentPadding: const EdgeInsets.symmetric(
+                              horizontal: 14,
+                              vertical: 12,
+                            ),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            enabledBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(8),
+                              borderSide: const BorderSide(color: Color(0xFFD1D5DB)),
+                            ),
+                            focusedBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(8),
+                              borderSide: const BorderSide(color: Color(0xFF0D9488), width: 2),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        const Text(
+                          'Total cash in drawer at the end of your shift.',
+                          style: TextStyle(fontSize: 12, color: Color(0xFF6B7280)),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Container(
+                    padding: const EdgeInsets.all(24),
+                    decoration: const BoxDecoration(
+                      color: Color(0xFFF9FAFB),
+                      border: Border(top: BorderSide(color: Color(0xFFE8EAED))),
+                      borderRadius: BorderRadius.vertical(bottom: Radius.circular(12)),
+                    ),
+                    child: SizedBox(
+                      height: 48,
+                      child: ElevatedButton(
+                        onPressed: () {
+                          final raw = _totalCashEndController.text.trim().replaceAll(',', '');
+                          final amount = double.tryParse(raw);
+                          if (amount == null || amount < 0) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text('Please enter a valid total cash amount.'),
+                              ),
+                            );
+                            return;
+                          }
+
+                          Navigator.of(dialogContext).pop();
+                          AppSession.instance.clear();
+                          context.go('/login');
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFF0D9488),
+                          foregroundColor: Colors.white,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                        ),
+                        child: const Text(
+                          'Confirm & close shift',
+                          style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
+    );
   }
 
   @override
@@ -98,7 +283,11 @@ class _CashierBarcodeScannerPageState extends State<CashierBarcodeScannerPage> {
                   ),
                 ),
                 const SizedBox(height: 8),
-                const _CashierMenuItem(label: 'Barcode Scanner', active: true),
+                _CashierMenuItem(
+                  label: 'Barcode Scanner',
+                  active: true,
+                  onTap: () => context.go('/cashier/barcode-scanner'),
+                ),
                 _CashierMenuItem(
                   label: 'Customer',
                   active: false,
@@ -108,7 +297,7 @@ class _CashierBarcodeScannerPageState extends State<CashierBarcodeScannerPage> {
                 _CashierMenuItem(
                   label: 'Logout',
                   active: false,
-                  onTap: _logout,
+                  onTap: _openCloseShiftDialog,
                 ),
                 const SizedBox(height: 10),
               ],

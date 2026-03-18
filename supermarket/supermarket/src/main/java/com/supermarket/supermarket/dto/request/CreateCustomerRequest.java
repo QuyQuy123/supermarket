@@ -15,6 +15,7 @@ public class CreateCustomerRequest {
 
     @NotBlank(message = "Customer name is required")
     @Size(min = 2, max = 100, message = "Name must be between 2 and 100 characters")
+    @Pattern(regexp = "^[a-zA-Z\\s\\u00C0-\\u024F\\u1E00-\\u1EFF]+$", message = "Name must only contain letters")
     private String name;
 
     @NotBlank(message = "Phone is required")

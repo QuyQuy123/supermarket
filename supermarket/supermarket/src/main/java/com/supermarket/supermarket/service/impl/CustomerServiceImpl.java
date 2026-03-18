@@ -12,6 +12,7 @@ import com.supermarket.supermarket.service.OrderService;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Objects;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -64,11 +65,11 @@ public class CustomerServiceImpl implements CustomerService {
         Customer customer = customerRepository.findById(id)
             .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Customer not found"));
         String phone = request.getPhone().trim();
-        customerRepository.findByPhone(phone).ifPresent(existing -> {
-            if (!existing.getId().equals(id)) {
-                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Phone number already used by another customer");
-            }
-        });
+        
+        if (customerRepository.existsByPhoneAndIdNot(phone, id)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Phone number already used by another customer");
+        }
+
         customer.setName(request.getName().trim());
         customer.setPhone(phone);
         if (request.getTotalAmount() != null) {
@@ -92,9 +93,10 @@ public class CustomerServiceImpl implements CustomerService {
             .id(c.getId())
             .name(emptyAsDash(c.getName()))
             .phone(emptyAsDash(c.getPhone()))
-            .points(c.getPoints() != null ? c.getPoints() : 0)
-            .totalPurchases(c.getTotalPurchases() != null ? c.getTotalPurchases() : 0)
-            .totalAmount(c.getTotalAmount() != null ? c.getTotalAmount() : BigDecimal.ZERO)
+            .points(Objects.requireNonNullElse(c.getPoints(), 0))
+            .totalPurchases(Objects.requireNonNullElse(c.getTotalPurchases(), 0))
+            .totalAmount(orZero(c.getTotalAmount()))
+            .discountPercent(c.getDiscount() == null ? BigDecimal.ZERO : orZero(c.getDiscount().getPercent()))
             .build();
     }
 
@@ -109,9 +111,9 @@ public class CustomerServiceImpl implements CustomerService {
             .id(c.getId())
             .name(emptyAsDash(c.getName()))
             .phone(emptyAsDash(c.getPhone()))
-            .points(c.getPoints() != null ? c.getPoints() : 0)
-            .totalPurchases(c.getTotalPurchases() != null ? c.getTotalPurchases() : 0)
-            .totalAmount(c.getTotalAmount() != null ? c.getTotalAmount() : BigDecimal.ZERO)
+            .points(Objects.requireNonNullElse(c.getPoints(), 0))
+            .totalPurchases(Objects.requireNonNullElse(c.getTotalPurchases(), 0))
+            .totalAmount(orZero(c.getTotalAmount()))
             .discountId(discountId)
             .discountName(discountName != null ? discountName : "—")
             .createdAt(c.getCreatedAt())
@@ -119,7 +121,11 @@ public class CustomerServiceImpl implements CustomerService {
             .build();
     }
 
-    private static String emptyAsDash(String value) {
+    private BigDecimal orZero(BigDecimal value) {
+        return value == null ? BigDecimal.ZERO : value;
+    }
+
+    private String emptyAsDash(String value) {
         return value == null || value.isBlank() ? "—" : value;
     }
 }
