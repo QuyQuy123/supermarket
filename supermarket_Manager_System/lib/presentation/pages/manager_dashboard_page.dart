@@ -205,95 +205,98 @@ class _ManagerDashboardPageState extends State<ManagerDashboardPage> {
                   ),
                 )
               : null,
-          body: Row(
-            children: [
-              if (!isCompact)
+          body: SafeArea(
+            child: Row(
+              children: [
+                if (!isCompact)
                   SizedBox(
-                  width: 230,
-                  child: _ManagerSidebar(
-                    onLogout: _logout,
-                    selectedTab: _selectedTab,
-                    onDashboardTap: () => _selectTab(_ManagerTab.dashboard),
-                    onOrdersTap: () => _selectTab(_ManagerTab.orders),
-                    onCustomersTap: () => _selectTab(_ManagerTab.customers),
-                    onDiscountTap: () => _selectTab(_ManagerTab.discount),
-                    onSuppliersTap: () => _selectTab(_ManagerTab.suppliers),
-                    onProductsTap: () => _selectTab(_ManagerTab.products),
-                    onExpiredTap: () => _selectTab(_ManagerTab.expired),
+                    width: 230,
+                    child: _ManagerSidebar(
+                      onLogout: _logout,
+                      selectedTab: _selectedTab,
+                      onDashboardTap: () => _selectTab(_ManagerTab.dashboard),
+                      onOrdersTap: () => _selectTab(_ManagerTab.orders),
+                      onCustomersTap: () => _selectTab(_ManagerTab.customers),
+                      onDiscountTap: () => _selectTab(_ManagerTab.discount),
+                      onSuppliersTap: () => _selectTab(_ManagerTab.suppliers),
+                      onProductsTap: () => _selectTab(_ManagerTab.products),
+                      onExpiredTap: () => _selectTab(_ManagerTab.expired),
+                    ),
                   ),
-                ),
-              Expanded(
-                child: switch (_selectedTab) {
-                  _ManagerTab.dashboard => DashboardContent(
-                    fullName: widget.fullName,
-                    roleLabel: 'Manager',
-                    isCompact: isCompact,
-                    currentTimeText: _formatClock(_now),
-                    onProfileTap: () => _selectTab(_ManagerTab.profile),
-                  ),
-                  _ManagerTab.orders => OrdersContent(
-                    fullName: widget.fullName,
-                    isCompact: isCompact,
-                    currentTimeText: _formatClock(_now),
-                    roleLabel: 'Manager',
-                    onProfileTap: () => _selectTab(_ManagerTab.profile),
-                  ),
-                  _ManagerTab.customers => CustomersContent(
-                    fullName: widget.fullName,
-                    isCompact: isCompact,
-                    currentTimeText: _formatClock(_now),
-                    onProfileTap: () => _selectTab(_ManagerTab.profile),
-                  ),
-                  _ManagerTab.discount => DiscountsContent(
-                    fullName: widget.fullName,
-                    isCompact: isCompact,
-                    currentTimeText: _formatClock(_now),
-                    onProfileTap: () => _selectTab(_ManagerTab.profile),
-                  ),
-                  _ManagerTab.suppliers => SuppliersContent(
+                Expanded(
+                  child: switch (_selectedTab) {
+                    _ManagerTab.dashboard => DashboardContent(
+                      fullName: widget.fullName,
+                      roleLabel: 'Manager',
+                      isCompact: isCompact,
+                      currentTimeText: _formatClock(_now),
+                      onProfileTap: () => _selectTab(_ManagerTab.profile),
+                    ),
+                    _ManagerTab.orders => OrdersContent(
+                      fullName: widget.fullName,
+                      isCompact: isCompact,
+                      currentTimeText: _formatClock(_now),
+                      roleLabel: 'Manager',
+                      onProfileTap: () => _selectTab(_ManagerTab.profile),
+                    ),
+                    _ManagerTab.customers => CustomersContent(
+                      fullName: widget.fullName,
+                      isCompact: isCompact,
+                      currentTimeText: _formatClock(_now),
+                      onProfileTap: () => _selectTab(_ManagerTab.profile),
+                    ),
+                    _ManagerTab.discount => DiscountsContent(
+                      fullName: widget.fullName,
+                      isCompact: isCompact,
+                      currentTimeText: _formatClock(_now),
+                      onProfileTap: () => _selectTab(_ManagerTab.profile),
+                    ),
+                    _ManagerTab.suppliers => SuppliersContent(
                       fullName: widget.fullName,
                       isCompact: isCompact,
                       currentTimeText: _formatClock(_now),
                       onProfileTap: () => _selectTab(_ManagerTab.profile),
                       basePath: 'manager',
                     ),
-                  _ManagerTab.products => ProductsContent(
+                    _ManagerTab.products => ProductsContent(
                       fullName: widget.fullName,
                       isCompact: isCompact,
                       currentTimeText: _formatClock(_now),
                       onProfileTap: () => _selectTab(_ManagerTab.profile),
                     ),
-                  _ManagerTab.expired => ExpirationContent(
+                    _ManagerTab.expired => ExpirationContent(
                       fullName: widget.fullName,
                       isCompact: isCompact,
                       currentTimeText: _formatClock(_now),
                       onProfileTap: () => _selectTab(_ManagerTab.profile),
                       onProductDetailTap: _openProductDetail,
                     ),
-                  _ManagerTab.productDetail => _selectedProductId != null
-                      ? ProductDetailContent(
-                          productId: _selectedProductId!,
-                          onBack: _closeProductDetail,
-                        )
-                      : Container(),
-                  _ManagerTab.profile => ProfileViewContent(
-                    fullName: widget.fullName,
-                    userId: widget.userId,
-                    isCompact: isCompact,
-                    currentTimeText: _formatClock(_now),
-                    onEditProfile: _openProfileEdit,
-                  ),
-                  _ManagerTab.profileEdit => ProfileEditContent(
-                    userId: widget.userId,
-                    initialDetail: _editingProfile,
-                    isCompact: isCompact,
-                    currentTimeText: _formatClock(_now),
-                    onSaved: _onProfileUpdated,
-                    onCancel: () => _selectTab(_ManagerTab.profile),
-                  ),
-                },
-              ),
-            ],
+                    _ManagerTab.productDetail =>
+                      _selectedProductId != null
+                          ? ProductDetailContent(
+                              productId: _selectedProductId!,
+                              onBack: _closeProductDetail,
+                            )
+                          : Container(),
+                    _ManagerTab.profile => ProfileViewContent(
+                      fullName: widget.fullName,
+                      userId: widget.userId,
+                      isCompact: isCompact,
+                      currentTimeText: _formatClock(_now),
+                      onEditProfile: _openProfileEdit,
+                    ),
+                    _ManagerTab.profileEdit => ProfileEditContent(
+                      userId: widget.userId,
+                      initialDetail: _editingProfile,
+                      isCompact: isCompact,
+                      currentTimeText: _formatClock(_now),
+                      onSaved: _onProfileUpdated,
+                      onCancel: () => _selectTab(_ManagerTab.profile),
+                    ),
+                  },
+                ),
+              ],
+            ),
           ),
         );
       },
@@ -326,6 +329,7 @@ class _ManagerSidebar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final topInset = MediaQuery.paddingOf(context).top;
     return Container(
       decoration: const BoxDecoration(
         gradient: LinearGradient(
@@ -337,7 +341,7 @@ class _ManagerSidebar extends StatelessWidget {
       child: Column(
         children: [
           Container(
-            padding: const EdgeInsets.fromLTRB(20, 24, 20, 20),
+            padding: EdgeInsets.fromLTRB(20, 20 + topInset, 20, 20),
             color: const Color.fromRGBO(0, 0, 0, 0.1),
             child: const Row(
               children: [
@@ -396,15 +400,17 @@ class _ManagerSidebar extends StatelessWidget {
                       active: selectedTab == _ManagerTab.expired,
                       onTap: onExpiredTap,
                     ),
-
                   ],
                 ),
               ),
             ),
           ),
           const Divider(color: Color.fromRGBO(255, 255, 255, 0.25), height: 1),
-          _ManagerSidebarItem(label: 'Logout', onTap: onLogout),
-          const SizedBox(height: 12),
+          SafeArea(
+            top: false,
+            minimum: const EdgeInsets.only(bottom: 10),
+            child: _ManagerSidebarItem(label: 'Logout', onTap: onLogout),
+          ),
         ],
       ),
     );

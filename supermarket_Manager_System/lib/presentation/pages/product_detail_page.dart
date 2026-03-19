@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:supermarket_manager_system/data/services/product_api_service.dart';
 import 'package:supermarket_manager_system/domain/models/product_detail.dart';
 
@@ -52,10 +53,7 @@ class _ProductDetailContentState extends State<ProductDetailContent> {
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 12),
-                ElevatedButton(
-                  onPressed: _reload,
-                  child: const Text('Retry'),
-                ),
+                ElevatedButton(onPressed: _reload, child: const Text('Retry')),
               ],
             ),
           );
@@ -142,22 +140,35 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
 
   @override
   Widget build(BuildContext context) {
+    final isCompact = MediaQuery.sizeOf(context).width < 700;
     return Scaffold(
       backgroundColor: const Color(0xFFF0F2F5),
-      body: Column(
-        children: [
-          _DetailHeader(
-            fullName: widget.fullName,
-            currentTimeText: _formatClock(_now),
-            roleLabel: widget.basePath == 'manager' ? 'Manager' : 'Administrator',
-          ),
-          Expanded(
-            child: ProductDetailContent(
-              productId: widget.productId,
-              onBack: () => Navigator.of(context).pop(),
+      body: SafeArea(
+        child: Column(
+          children: [
+            _DetailHeader(
+              fullName: widget.fullName,
+              currentTimeText: _formatClock(_now),
+              roleLabel: widget.basePath == 'manager'
+                  ? 'Manager'
+                  : 'Administrator',
+              isCompact: isCompact,
             ),
-          ),
-        ],
+            Expanded(
+              child: ProductDetailContent(
+                productId: widget.productId,
+                onBack: () {
+                  final fallbackPath = '/${widget.basePath}/products';
+                  if (context.canPop()) {
+                    context.pop();
+                  } else {
+                    context.go(fallbackPath);
+                  }
+                },
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -168,17 +179,19 @@ class _DetailHeader extends StatelessWidget {
     required this.fullName,
     required this.currentTimeText,
     required this.roleLabel,
+    required this.isCompact,
   });
 
   final String fullName;
   final String currentTimeText;
   final String roleLabel;
+  final bool isCompact;
 
   @override
   Widget build(BuildContext context) {
     return Container(
       height: 72,
-      padding: const EdgeInsets.symmetric(horizontal: 24),
+      padding: EdgeInsets.symmetric(horizontal: isCompact ? 12 : 24),
       decoration: const BoxDecoration(
         color: Colors.white,
         border: Border(bottom: BorderSide(color: Color(0xFFE8EAED))),
@@ -186,6 +199,7 @@ class _DetailHeader extends StatelessWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.end,
         children: [
+          if (isCompact) const Spacer(),
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
             decoration: BoxDecoration(
@@ -197,21 +211,26 @@ class _DetailHeader extends StatelessWidget {
               style: const TextStyle(color: Colors.white),
             ),
           ),
-          const SizedBox(width: 16),
-          Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
-              Text(
-                fullName.isEmpty ? roleLabel : fullName,
-                style: const TextStyle(fontWeight: FontWeight.w600),
-              ),
-              Text(
-                roleLabel,
-                style: const TextStyle(color: Color(0xFF6B7280), fontSize: 12),
-              ),
-            ],
-          ),
+          if (!isCompact) ...[
+            const SizedBox(width: 16),
+            Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                Text(
+                  fullName.isEmpty ? roleLabel : fullName,
+                  style: const TextStyle(fontWeight: FontWeight.w600),
+                ),
+                Text(
+                  roleLabel,
+                  style: const TextStyle(
+                    color: Color(0xFF6B7280),
+                    fontSize: 12,
+                  ),
+                ),
+              ],
+            ),
+          ],
           const SizedBox(width: 12),
           Container(
             width: 40,
@@ -223,7 +242,10 @@ class _DetailHeader extends StatelessWidget {
             ),
             child: Text(
               fullName.isNotEmpty ? fullName[0].toUpperCase() : roleLabel[0],
-              style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700),
+              style: const TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.w700,
+              ),
             ),
           ),
         ],
@@ -250,7 +272,7 @@ class _DetailCard extends StatelessWidget {
             color: Color.fromRGBO(0, 0, 0, 0.06),
             blurRadius: 12,
             offset: Offset(0, 2),
-          )
+          ),
         ],
       ),
       child: Column(
@@ -259,13 +281,11 @@ class _DetailCard extends StatelessWidget {
             builder: (context, constraints) {
               final isNarrow = constraints.maxWidth < 700;
               final imageWidget = _ProductImage(url: detail.imageUrl);
-              final headingWidget = Expanded(
-                child: _ProductHeading(
-                  productName: detail.productName,
-                  barcode: detail.barcode,
-                  status: detail.status,
-                  inStock: detail.inStock,
-                ),
+              final headingWidget = _ProductHeading(
+                productName: detail.productName,
+                barcode: detail.barcode,
+                status: detail.status,
+                inStock: detail.inStock,
               );
 
               if (isNarrow) {
@@ -283,7 +303,7 @@ class _DetailCard extends StatelessWidget {
                 children: [
                   imageWidget,
                   const SizedBox(width: 24),
-                  headingWidget,
+                  Expanded(child: headingWidget),
                 ],
               );
             },
@@ -291,23 +311,54 @@ class _DetailCard extends StatelessWidget {
           const SizedBox(height: 18),
           const Divider(color: Color(0xFFE8EAED)),
           _DetailRow(label: 'Barcode', value: _dashIfEmpty(detail.barcode)),
-          _DetailRow(label: 'Product Batch', value: _dashIfEmpty(detail.productBatch)),
-          _DetailRow(label: 'Product Name', value: _dashIfEmpty(detail.productName)),
-          _DetailRow(label: 'Product Description', value: _dashIfEmpty(detail.description), isDescription: true),
-          _DetailRow(label: 'Cost Price', value: detail.costPrice == null ? '—' : detail.costPrice!.toStringAsFixed(2)),
-          _DetailRow(label: 'Selling Price', value: detail.sellingPrice.toStringAsFixed(2)),
-          _DetailRow(label: 'Qty (Cartons)', value: detail.qtyCartons?.toString() ?? '—'),
+          _DetailRow(
+            label: 'Product Batch',
+            value: _dashIfEmpty(detail.productBatch),
+          ),
+          _DetailRow(
+            label: 'Product Name',
+            value: _dashIfEmpty(detail.productName),
+          ),
+          _DetailRow(
+            label: 'Product Description',
+            value: _dashIfEmpty(detail.description),
+            isDescription: true,
+          ),
+          _DetailRow(
+            label: 'Cost Price',
+            value: detail.costPrice == null
+                ? '—'
+                : detail.costPrice!.toStringAsFixed(2),
+          ),
+          _DetailRow(
+            label: 'Selling Price',
+            value: detail.sellingPrice.toStringAsFixed(2),
+          ),
+          _DetailRow(
+            label: 'Qty (Cartons)',
+            value: detail.qtyCartons?.toString() ?? '—',
+          ),
           _DetailRow(label: 'In Stock', value: detail.inStock.toString()),
-          _DetailRow(label: 'Supplier', value: _dashIfEmpty(detail.supplierName)),
-          _DetailRow(label: 'Category', value: _dashIfEmpty(detail.categoryName)),
+          _DetailRow(
+            label: 'Supplier',
+            value: _dashIfEmpty(detail.supplierName),
+          ),
+          _DetailRow(
+            label: 'Category',
+            value: _dashIfEmpty(detail.categoryName),
+          ),
           _DetailRow(label: 'MFT Date', value: _dashIfEmpty(detail.mftDate)),
-          _DetailRow(label: 'Expiry Date', value: _dashIfEmpty(detail.expiryDate)),
+          _DetailRow(
+            label: 'Expiry Date',
+            value: _dashIfEmpty(detail.expiryDate),
+          ),
         ],
       ),
     );
   }
 
-  static String _dashIfEmpty(String value) => value.trim().isEmpty ? '—' : value;
+  static String _dashIfEmpty(String value) =>
+      value.trim().isEmpty ? '—' : value;
 }
 
 class _ProductImage extends StatelessWidget {
@@ -333,10 +384,7 @@ class _ProductImage extends StatelessWidget {
       ),
       child: const Text(
         'Product Image',
-        style: TextStyle(
-          color: Color(0xFF6B7280),
-          fontWeight: FontWeight.w600,
-        ),
+        style: TextStyle(color: Color(0xFF6B7280), fontWeight: FontWeight.w600),
       ),
     );
 
@@ -374,9 +422,14 @@ class _ProductHeading extends StatelessWidget {
   Widget build(BuildContext context) {
     final normalized = status.toLowerCase();
     final computedInStock = inStock > 0;
-    final isInStock = normalized.contains('in') || (status.trim().isEmpty && computedInStock);
-    final badgeBg = isInStock ? const Color(0xFFD1FAE5) : const Color(0xFFFEE2E2);
-    final badgeFg = isInStock ? const Color(0xFF065F46) : const Color(0xFF991B1B);
+    final isInStock =
+        normalized.contains('in') || (status.trim().isEmpty && computedInStock);
+    final badgeBg = isInStock
+        ? const Color(0xFFD1FAE5)
+        : const Color(0xFFFEE2E2);
+    final badgeFg = isInStock
+        ? const Color(0xFF065F46)
+        : const Color(0xFF991B1B);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -457,4 +510,3 @@ class _DetailRow extends StatelessWidget {
     );
   }
 }
-

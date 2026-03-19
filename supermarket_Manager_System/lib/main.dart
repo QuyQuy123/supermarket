@@ -126,7 +126,7 @@ class SupermarketManagerApp extends StatelessWidget {
             },
           ),
           GoRoute(
-            path: 'product-detail/:id',
+            path: 'products/detail/:id',
             pageBuilder: (context, state) {
               final id = int.tryParse(state.pathParameters['id'] ?? '') ?? 0;
               return MaterialPage(
@@ -233,7 +233,7 @@ class SupermarketManagerApp extends StatelessWidget {
             },
           ),
           GoRoute(
-            path: 'product-detail/:id',
+            path: 'products/detail/:id',
             pageBuilder: (context, state) {
               final id = int.tryParse(state.pathParameters['id'] ?? '') ?? 0;
               return MaterialPage(

@@ -365,6 +365,7 @@ class _SidebarMenu extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final topInset = MediaQuery.paddingOf(context).top;
     return Container(
       decoration: const BoxDecoration(
         gradient: LinearGradient(
@@ -376,7 +377,7 @@ class _SidebarMenu extends StatelessWidget {
       child: Column(
         children: [
           Container(
-            padding: const EdgeInsets.fromLTRB(20, 24, 20, 20),
+            padding: EdgeInsets.fromLTRB(20, 20 + topInset, 20, 20),
             color: const Color.fromRGBO(0, 0, 0, 0.1),
             child: const Row(
               children: [

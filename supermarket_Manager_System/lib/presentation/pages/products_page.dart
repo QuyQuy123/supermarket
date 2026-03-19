@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:supermarket_manager_system/data/services/product_api_service.dart';
 import 'package:supermarket_manager_system/domain/models/product_list_item.dart';
+import 'package:supermarket_manager_system/presentation/widgets/dashboard_header.dart';
 import 'package:supermarket_manager_system/presentation/widgets/update_product_dialog.dart';
 
 class ProductsContent extends StatefulWidget {
@@ -333,7 +334,7 @@ class _ProductsContentState extends State<ProductsContent> {
               onTap: product.id <= 0
                   ? null
                   : () => context.push(
-                      '${_basePathFromLocation(context)}/product-detail/${product.id}',
+                      '${_basePathFromLocation(context)}/products/detail/${product.id}',
                     ),
               child: Text(
                 product.barcode.isEmpty ? '-' : product.barcode,
@@ -493,81 +494,14 @@ class _ProductsHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      height: 72,
-      padding: const EdgeInsets.symmetric(horizontal: 24),
-      decoration: const BoxDecoration(
-        color: Colors.white,
-        border: Border(bottom: BorderSide(color: Color(0xFFE8EAED))),
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          if (isCompact)
-            Builder(
-              builder: (context) => IconButton(
-                onPressed: () => Scaffold.of(context).openDrawer(),
-                icon: const Icon(Icons.menu),
-              ),
-            )
-          else
-            const SizedBox(width: 48),
-          Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 12,
-                  vertical: 8,
-                ),
-                decoration: BoxDecoration(
-                  color: const Color(0xFF3B82F6),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Text(
-                  currentTimeText,
-                  style: const TextStyle(color: Colors.white),
-                ),
-              ),
-              const SizedBox(width: 16),
-              Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  Text(
-                    fullName.isEmpty ? 'User' : fullName,
-                    style: const TextStyle(fontWeight: FontWeight.w600),
-                  ),
-                  const Text(
-                    'Administrator',
-                    style: TextStyle(color: Color(0xFF6B7280), fontSize: 12),
-                  ),
-                ],
-              ),
-              const SizedBox(width: 12),
-              InkWell(
-                onTap: onProfileTap,
-                borderRadius: BorderRadius.circular(10),
-                child: Container(
-                  width: 40,
-                  height: 40,
-                  alignment: Alignment.center,
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF1E293B),
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: Text(
-                    fullName.isNotEmpty ? fullName[0].toUpperCase() : 'U',
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
+    return DashboardHeader(
+      fullName: fullName,
+      roleLabel: 'Manager',
+      currentTimeText: currentTimeText,
+      isCompact: isCompact,
+      onProfileTap: onProfileTap,
+      timeChipColor: const Color(0xFF3B82F6),
+      avatarColor: const Color(0xFF1E293B),
     );
   }
 }

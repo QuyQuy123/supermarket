@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:supermarket_manager_system/presentation/widgets/dashboard_header.dart';
 import 'package:go_router/go_router.dart';
 import 'package:supermarket_manager_system/data/services/supplier_api_service.dart';
 import 'package:supermarket_manager_system/domain/models/supplier_list_item.dart';
@@ -43,9 +44,8 @@ class _SuppliersContentState extends State<SuppliersContent> {
     final created = await showDialog<bool>(
       context: context,
       barrierDismissible: false,
-      builder: (_) => _AddSupplierDialog(
-        supplierApiService: _supplierApiService,
-      ),
+      builder: (_) =>
+          _AddSupplierDialog(supplierApiService: _supplierApiService),
     );
 
     if (!mounted) {
@@ -208,9 +208,7 @@ class _SuppliersContentState extends State<SuppliersContent> {
                           decoration: BoxDecoration(
                             color: Colors.white,
                             borderRadius: BorderRadius.circular(12),
-                            border: Border.all(
-                              color: const Color(0xFFE8EAED),
-                            ),
+                            border: Border.all(color: const Color(0xFFE8EAED)),
                           ),
                           child: SingleChildScrollView(
                             scrollDirection: Axis.horizontal,
@@ -279,10 +277,8 @@ class _SuppliersContentState extends State<SuppliersContent> {
                                   .asMap()
                                   .entries
                                   .map(
-                                    (entry) => _buildRow(
-                                      entry.key + 1,
-                                      entry.value,
-                                    ),
+                                    (entry) =>
+                                        _buildRow(entry.key + 1, entry.value),
                                   )
                                   .toList(),
                             ),
@@ -371,7 +367,10 @@ class _SuppliersContentState extends State<SuppliersContent> {
                   icon: const Icon(Icons.visibility_outlined, size: 18),
                   label: const Text('View'),
                   style: OutlinedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 6,
+                    ),
                     foregroundColor: const Color(0xFF667EEA),
                     side: const BorderSide(color: Color(0xFF667EEA)),
                   ),
@@ -382,7 +381,10 @@ class _SuppliersContentState extends State<SuppliersContent> {
                   icon: const Icon(Icons.edit_outlined, size: 18),
                   label: const Text('Edit'),
                   style: OutlinedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 6,
+                    ),
                     foregroundColor: const Color(0xFF667EEA),
                     side: const BorderSide(color: Color(0xFF667EEA)),
                   ),
@@ -393,7 +395,10 @@ class _SuppliersContentState extends State<SuppliersContent> {
                   icon: const Icon(Icons.delete_outline, size: 18),
                   label: const Text('Delete'),
                   style: OutlinedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 6,
+                    ),
                     foregroundColor: Colors.red,
                     side: const BorderSide(color: Colors.red),
                   ),
@@ -488,8 +493,7 @@ class _UpdateSupplierDialogState extends State<_UpdateSupplierDialog> {
       }
       Navigator.of(context).pop(true);
     } catch (error) {
-      final errorMessage =
-          error.toString().replaceFirst('Exception: ', '');
+      final errorMessage = error.toString().replaceFirst('Exception: ', '');
       setState(() {
         _errorText = errorMessage;
       });
@@ -524,10 +528,7 @@ class _UpdateSupplierDialogState extends State<_UpdateSupplierDialog> {
                 children: [
                   const Text(
                     'Update Supplier',
-                    style: TextStyle(
-                      fontSize: 22,
-                      fontWeight: FontWeight.w700,
-                    ),
+                    style: TextStyle(fontSize: 22, fontWeight: FontWeight.w700),
                   ),
                   const SizedBox(height: 20),
                   TextFormField(
@@ -588,7 +589,9 @@ class _UpdateSupplierDialogState extends State<_UpdateSupplierDialog> {
                     items: const [
                       DropdownMenuItem(value: 'active', child: Text('Active')),
                       DropdownMenuItem(
-                          value: 'deactive', child: Text('Deactive')),
+                        value: 'deactive',
+                        child: Text('Deactive'),
+                      ),
                     ],
                     onChanged: _isSubmitting
                         ? null
@@ -618,7 +621,9 @@ class _UpdateSupplierDialogState extends State<_UpdateSupplierDialog> {
                             ? const SizedBox(
                                 width: 20,
                                 height: 20,
-                                child: CircularProgressIndicator(strokeWidth: 2),
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                ),
                               )
                             : const Text('Update'),
                       ),
@@ -649,78 +654,14 @@ class _SuppliersHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      height: 72,
-      padding: const EdgeInsets.symmetric(horizontal: 24),
-      decoration: const BoxDecoration(
-        color: Colors.white,
-        border: Border(bottom: BorderSide(color: Color(0xFFE8EAED))),
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          if (isCompact)
-            Builder(
-              builder: (context) => IconButton(
-                onPressed: () => Scaffold.of(context).openDrawer(),
-                icon: const Icon(Icons.menu),
-              ),
-            )
-          else
-            const SizedBox(width: 48),
-          Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 12,
-                  vertical: 8,
-                ),
-                decoration: BoxDecoration(
-                  color: const Color(0xFF667EEA),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Text(
-                  currentTimeText,
-                  style: const TextStyle(color: Colors.white),
-                ),
-              ),
-              const SizedBox(width: 16),
-              Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  Text(fullName.isEmpty ? 'User' : fullName),
-                  const Text(
-                    'Administrator',
-                    style: TextStyle(color: Color(0xFF6B7280), fontSize: 12),
-                  ),
-                ],
-              ),
-              const SizedBox(width: 12),
-              InkWell(
-                onTap: onProfileTap,
-                borderRadius: BorderRadius.circular(10),
-                child: Container(
-                  width: 40,
-                  height: 40,
-                  alignment: Alignment.center,
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF667EEA),
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: Text(
-                    fullName.isNotEmpty ? fullName[0].toUpperCase() : 'U',
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
+    return DashboardHeader(
+      fullName: fullName,
+      roleLabel: 'Manager',
+      currentTimeText: currentTimeText,
+      isCompact: isCompact,
+      onProfileTap: onProfileTap,
+      timeChipColor: const Color(0xFF667EEA),
+      avatarColor: const Color(0xFF667EEA),
     );
   }
 }
@@ -814,8 +755,7 @@ class _AddSupplierDialogState extends State<_AddSupplierDialog> {
       }
       Navigator.of(context).pop(true);
     } catch (error) {
-      final errorMessage =
-          error.toString().replaceFirst('Exception: ', '');
+      final errorMessage = error.toString().replaceFirst('Exception: ', '');
       setState(() {
         _errorText = errorMessage;
       });
@@ -848,10 +788,7 @@ class _AddSupplierDialogState extends State<_AddSupplierDialog> {
                 children: [
                   const Text(
                     'Add Supplier',
-                    style: TextStyle(
-                      fontSize: 22,
-                      fontWeight: FontWeight.w700,
-                    ),
+                    style: TextStyle(fontSize: 22, fontWeight: FontWeight.w700),
                   ),
                   const SizedBox(height: 20),
                   TextFormField(
@@ -912,7 +849,9 @@ class _AddSupplierDialogState extends State<_AddSupplierDialog> {
                     items: const [
                       DropdownMenuItem(value: 'active', child: Text('Active')),
                       DropdownMenuItem(
-                          value: 'deactive', child: Text('Deactive')),
+                        value: 'deactive',
+                        child: Text('Deactive'),
+                      ),
                     ],
                     onChanged: _isSubmitting
                         ? null
@@ -942,7 +881,9 @@ class _AddSupplierDialogState extends State<_AddSupplierDialog> {
                             ? const SizedBox(
                                 width: 20,
                                 height: 20,
-                                child: CircularProgressIndicator(strokeWidth: 2),
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                ),
                               )
                             : const Text('Save'),
                       ),

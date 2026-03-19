@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
+import 'package:supermarket_manager_system/presentation/widgets/dashboard_header.dart';
 import 'package:supermarket_manager_system/data/services/discount_api_service.dart';
 import 'package:supermarket_manager_system/domain/models/discount.dart';
 
@@ -49,7 +50,8 @@ class _DiscountsContentState extends State<DiscountsContent> {
     final created = await showDialog<bool>(
       context: context,
       barrierDismissible: false,
-      builder: (_) => _AddEditDiscountDialog(discountApiService: _discountApiService),
+      builder: (_) =>
+          _AddEditDiscountDialog(discountApiService: _discountApiService),
     );
 
     if (mounted && created == true) {
@@ -85,10 +87,15 @@ class _DiscountsContentState extends State<DiscountsContent> {
         title: const Text('Confirm Delete'),
         content: const Text('Are you sure you want to delete this discount?'),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Cancel'),
+          ),
           ElevatedButton(
             onPressed: () => Navigator.pop(ctx, true),
-            style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFFDC2626)),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFFDC2626),
+            ),
             child: const Text('Delete', style: TextStyle(color: Colors.white)),
           ),
         ],
@@ -167,11 +174,16 @@ class _DiscountsContentState extends State<DiscountsContent> {
                     child: FutureBuilder<List<Discount>>(
                       future: _discountsFuture,
                       builder: (context, snapshot) {
-                        if (snapshot.connectionState == ConnectionState.waiting) {
-                          return const Center(child: CircularProgressIndicator());
+                        if (snapshot.connectionState ==
+                            ConnectionState.waiting) {
+                          return const Center(
+                            child: CircularProgressIndicator(),
+                          );
                         }
                         if (snapshot.hasError) {
-                          return Center(child: Text('Error: ${snapshot.error}'));
+                          return Center(
+                            child: Text('Error: ${snapshot.error}'),
+                          );
                         }
                         final discounts = snapshot.data ?? [];
                         return Container(
@@ -196,59 +208,74 @@ class _DiscountsContentState extends State<DiscountsContent> {
                               child: SingleChildScrollView(
                                 scrollDirection: Axis.horizontal,
                                 child: DataTable(
-                                  headingRowColor: const WidgetStatePropertyAll(Color(0xFFF7F8FA)),
-                              headingTextStyle: const TextStyle(
-                                fontWeight: FontWeight.w600,
-                                color: Color(0xFF4A5568),
-                                fontSize: 12,
-                              ),
-                              columns: const [
-                                DataColumn(label: Text('S/N')),
-                                DataColumn(label: Text('DISCOUNT NAME')),
-                                DataColumn(label: Text('DISCOUNT %')),
-                                DataColumn(label: Text('MIN ORDER AMOUNT')),
-                                DataColumn(label: Text('START DATE')),
-                                DataColumn(label: Text('END DATE')),
-                                DataColumn(label: Text('ACTION')),
-                              ],
-                              rows: discounts.asMap().entries.map((entry) {
-                                final index = entry.key + 1;
-                                final d = entry.value;
-                                return DataRow(cells: [
-                                  DataCell(Text(index.toString())),
-                                  DataCell(Text(d.name)),
-                                  DataCell(Text('${d.percent}%')),
-                                  DataCell(Text('${d.minOrderAmount.toStringAsFixed(0)}đ')),
-                                  DataCell(Text(_formatDate(d.startDate))),
-                                  DataCell(Text(_formatDate(d.endDate))),
-                                  DataCell(
-                                    Row(
-                                      children: [
-                                        _ActionButton(
-                                          label: 'Edit',
-                                          gradient: const LinearGradient(
-                                            colors: [Color(0xFF667EEA), Color(0xFF764BA2)],
+                                  headingRowColor: const WidgetStatePropertyAll(
+                                    Color(0xFFF7F8FA),
+                                  ),
+                                  headingTextStyle: const TextStyle(
+                                    fontWeight: FontWeight.w600,
+                                    color: Color(0xFF4A5568),
+                                    fontSize: 12,
+                                  ),
+                                  columns: const [
+                                    DataColumn(label: Text('S/N')),
+                                    DataColumn(label: Text('DISCOUNT NAME')),
+                                    DataColumn(label: Text('DISCOUNT %')),
+                                    DataColumn(label: Text('MIN ORDER AMOUNT')),
+                                    DataColumn(label: Text('START DATE')),
+                                    DataColumn(label: Text('END DATE')),
+                                    DataColumn(label: Text('ACTION')),
+                                  ],
+                                  rows: discounts.asMap().entries.map((entry) {
+                                    final index = entry.key + 1;
+                                    final d = entry.value;
+                                    return DataRow(
+                                      cells: [
+                                        DataCell(Text(index.toString())),
+                                        DataCell(Text(d.name)),
+                                        DataCell(Text('${d.percent}%')),
+                                        DataCell(
+                                          Text(
+                                            '${d.minOrderAmount.toStringAsFixed(0)}đ',
                                           ),
-                                          onTap: () => _openEditDiscountDialog(d),
                                         ),
-                                        const SizedBox(width: 8),
-                                        _ActionButton(
-                                          label: 'Delete',
-                                          color: const Color(0xFFDC2626),
-                                          onTap: () => _deleteDiscount(d.id),
+                                        DataCell(
+                                          Text(_formatDate(d.startDate)),
+                                        ),
+                                        DataCell(Text(_formatDate(d.endDate))),
+                                        DataCell(
+                                          Row(
+                                            children: [
+                                              _ActionButton(
+                                                label: 'Edit',
+                                                gradient: const LinearGradient(
+                                                  colors: [
+                                                    Color(0xFF667EEA),
+                                                    Color(0xFF764BA2),
+                                                  ],
+                                                ),
+                                                onTap: () =>
+                                                    _openEditDiscountDialog(d),
+                                              ),
+                                              const SizedBox(width: 8),
+                                              _ActionButton(
+                                                label: 'Delete',
+                                                color: const Color(0xFFDC2626),
+                                                onTap: () =>
+                                                    _deleteDiscount(d.id),
+                                              ),
+                                            ],
+                                          ),
                                         ),
                                       ],
-                                    ),
-                                  ),
-                                ]);
-                              }).toList(),
+                                    );
+                                  }).toList(),
+                                ),
+                              ),
                             ),
                           ),
-                        ),
-                      ),
-                    );
-                  },
-                ),
+                        );
+                      },
+                    ),
                   ),
                 ],
               ),
@@ -279,68 +306,14 @@ class _DiscountsHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      height: 72,
-      padding: const EdgeInsets.symmetric(horizontal: 24),
-      decoration: const BoxDecoration(
-        color: Colors.white,
-        border: Border(bottom: BorderSide(color: Color(0xFFE8EAED))),
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          if (isCompact)
-            Builder(
-              builder: (context) => IconButton(
-                onPressed: () => Scaffold.of(context).openDrawer(),
-                icon: const Icon(Icons.menu),
-              ),
-            )
-          else
-            const SizedBox(width: 48),
-          Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                decoration: BoxDecoration(
-                  color: const Color(0xFF667EEA),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Text(
-                  currentTimeText,
-                  style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w500),
-                ),
-              ),
-              const SizedBox(width: 16),
-              Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  Text(fullName.isEmpty ? 'Administrator' : fullName, style: const TextStyle(fontWeight: FontWeight.w600)),
-                  const Text('Administrator', style: TextStyle(color: Color(0xFF6B7280), fontSize: 12)),
-                ],
-              ),
-              const SizedBox(width: 12),
-              InkWell(
-                onTap: onProfileTap,
-                child: Container(
-                  width: 40,
-                  height: 40,
-                  alignment: Alignment.center,
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF667EEA),
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: Text(
-                    fullName.isNotEmpty ? fullName[0].toUpperCase() : 'A',
-                    style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700),
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
+    return DashboardHeader(
+      fullName: fullName,
+      roleLabel: 'Manager',
+      currentTimeText: currentTimeText,
+      isCompact: isCompact,
+      onProfileTap: onProfileTap,
+      timeChipColor: const Color(0xFF667EEA),
+      avatarColor: const Color(0xFF667EEA),
     );
   }
 }
@@ -368,10 +341,16 @@ class _ActionButton extends StatelessWidget {
       ),
       child: TextButton(
         onPressed: onTap,
-        style: TextButton.styleFrom(padding: const EdgeInsets.symmetric(horizontal: 12)),
+        style: TextButton.styleFrom(
+          padding: const EdgeInsets.symmetric(horizontal: 12),
+        ),
         child: Text(
           label,
-          style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w600),
+          style: const TextStyle(
+            color: Colors.white,
+            fontSize: 12,
+            fontWeight: FontWeight.w600,
+          ),
         ),
       ),
     );
@@ -404,10 +383,22 @@ class _AddEditDiscountDialogState extends State<_AddEditDiscountDialog> {
   void initState() {
     super.initState();
     _nameController = TextEditingController(text: widget.discount?.name ?? '');
-    _percentController = TextEditingController(text: widget.discount?.percent.toString() ?? '');
-    _minOrderController = TextEditingController(text: widget.discount?.minOrderAmount.toString() ?? '');
-    _startDateController = TextEditingController(text: widget.discount != null ? _formatDate(widget.discount!.startDate) : '');
-    _endDateController = TextEditingController(text: widget.discount != null ? _formatDate(widget.discount!.endDate) : '');
+    _percentController = TextEditingController(
+      text: widget.discount?.percent.toString() ?? '',
+    );
+    _minOrderController = TextEditingController(
+      text: widget.discount?.minOrderAmount.toString() ?? '',
+    );
+    _startDateController = TextEditingController(
+      text: widget.discount != null
+          ? _formatDate(widget.discount!.startDate)
+          : '',
+    );
+    _endDateController = TextEditingController(
+      text: widget.discount != null
+          ? _formatDate(widget.discount!.endDate)
+          : '',
+    );
   }
 
   String _formatDate(DateTime date) {
@@ -430,7 +421,11 @@ class _AddEditDiscountDialogState extends State<_AddEditDiscountDialog> {
 
   DateTime _parseDate(String text) {
     final parts = text.split('/');
-    return DateTime(int.parse(parts[2]), int.parse(parts[1]), int.parse(parts[0]));
+    return DateTime(
+      int.parse(parts[2]),
+      int.parse(parts[1]),
+      int.parse(parts[0]),
+    );
   }
 
   Future<void> _save() async {
@@ -450,7 +445,9 @@ class _AddEditDiscountDialogState extends State<_AddEditDiscountDialog> {
       if (newDiscount.startDate.isAfter(newDiscount.endDate)) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Start date must be before or equal to End date')),
+            const SnackBar(
+              content: Text('Start date must be before or equal to End date'),
+            ),
           );
         }
         return;
@@ -459,7 +456,10 @@ class _AddEditDiscountDialogState extends State<_AddEditDiscountDialog> {
       if (widget.discount == null) {
         await widget.discountApiService.createDiscount(newDiscount);
       } else {
-        await widget.discountApiService.updateDiscount(widget.discount!.id, newDiscount);
+        await widget.discountApiService.updateDiscount(
+          widget.discount!.id,
+          newDiscount,
+        );
       }
       if (mounted) Navigator.pop(context, true);
     } catch (e) {
@@ -472,7 +472,9 @@ class _AddEditDiscountDialogState extends State<_AddEditDiscountDialog> {
             displayError = decoded.values.first.toString();
           }
         } catch (_) {}
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $displayError')));
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Error: $displayError')));
       }
     } finally {
       if (mounted) setState(() => _isSaving = false);
@@ -497,19 +499,41 @@ class _AddEditDiscountDialogState extends State<_AddEditDiscountDialog> {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text(
-                      widget.discount == null ? 'Add Discount' : 'Edit Discount',
-                      style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700),
+                      widget.discount == null
+                          ? 'Add Discount'
+                          : 'Edit Discount',
+                      style: const TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.w700,
+                      ),
                     ),
-                    IconButton(onPressed: () => Navigator.pop(context), icon: const Icon(Icons.close)),
+                    IconButton(
+                      onPressed: () => Navigator.pop(context),
+                      icon: const Icon(Icons.close),
+                    ),
                   ],
                 ),
                 const Divider(),
                 const SizedBox(height: 16),
-                _buildTextField('Discount Name', _nameController, hint: 'e.g. Holiday Special'),
+                _buildTextField(
+                  'Discount Name',
+                  _nameController,
+                  hint: 'e.g. Holiday Special',
+                ),
                 const SizedBox(height: 12),
-                _buildTextField('Discount %', _percentController, hint: 'e.g. 5', keyboardType: TextInputType.number),
+                _buildTextField(
+                  'Discount %',
+                  _percentController,
+                  hint: 'e.g. 5',
+                  keyboardType: TextInputType.number,
+                ),
                 const SizedBox(height: 12),
-                _buildTextField('Min Order Amount (đ)', _minOrderController, hint: 'e.g. 500000', keyboardType: TextInputType.number),
+                _buildTextField(
+                  'Min Order Amount (đ)',
+                  _minOrderController,
+                  hint: 'e.g. 500000',
+                  keyboardType: TextInputType.number,
+                ),
                 const SizedBox(height: 12),
                 _buildDateField('Start Date', _startDateController),
                 const SizedBox(height: 12),
@@ -522,20 +546,45 @@ class _AddEditDiscountDialogState extends State<_AddEditDiscountDialog> {
                       onPressed: () => Navigator.pop(context),
                       style: TextButton.styleFrom(
                         backgroundColor: const Color(0xFFDC2626),
-                        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 20,
+                          vertical: 12,
+                        ),
                       ),
-                      child: const Text('Cancel', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600)),
+                      child: const Text(
+                        'Cancel',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
                     ),
                     const SizedBox(width: 12),
                     ElevatedButton(
                       onPressed: _isSaving ? null : _save,
                       style: ElevatedButton.styleFrom(
                         backgroundColor: const Color(0xFF16A34A),
-                        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 20,
+                          vertical: 12,
+                        ),
                       ),
                       child: _isSaving
-                          ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
-                          : Text(widget.discount == null ? 'Submit' : 'Update', style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w600)),
+                          ? const SizedBox(
+                              width: 20,
+                              height: 20,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: Colors.white,
+                              ),
+                            )
+                          : Text(
+                              widget.discount == null ? 'Submit' : 'Update',
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
                     ),
                   ],
                 ),
@@ -547,11 +596,23 @@ class _AddEditDiscountDialogState extends State<_AddEditDiscountDialog> {
     );
   }
 
-  Widget _buildTextField(String label, TextEditingController controller, {String? hint, TextInputType? keyboardType}) {
+  Widget _buildTextField(
+    String label,
+    TextEditingController controller, {
+    String? hint,
+    TextInputType? keyboardType,
+  }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(label, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: Color(0xFF374151))),
+        Text(
+          label,
+          style: const TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.w600,
+            color: Color(0xFF374151),
+          ),
+        ),
         const SizedBox(height: 4),
         TextFormField(
           controller: controller,
@@ -559,18 +620,24 @@ class _AddEditDiscountDialogState extends State<_AddEditDiscountDialog> {
           decoration: InputDecoration(
             hintText: hint,
             border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 16,
+              vertical: 12,
+            ),
           ),
           autovalidateMode: AutovalidateMode.onUserInteraction,
           validator: (value) {
-            if (value == null || value.trim().isEmpty) return 'This field is required';
+            if (value == null || value.trim().isEmpty)
+              return 'This field is required';
             if (label == 'Discount Name') {
-              if (value.trim().length < 2) return 'Name must be at least 2 characters';
+              if (value.trim().length < 2)
+                return 'Name must be at least 2 characters';
             }
             if (label.contains('%')) {
               final val = double.tryParse(value);
               if (val == null) return 'Invalid number';
-              if (val < 0 || val > 100) return 'Percent must be between 0 and 100';
+              if (val < 0 || val > 100)
+                return 'Percent must be between 0 and 100';
             }
             if (label.contains('Amount')) {
               final val = double.tryParse(value);
@@ -588,7 +655,14 @@ class _AddEditDiscountDialogState extends State<_AddEditDiscountDialog> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(label, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: Color(0xFF374151))),
+        Text(
+          label,
+          style: const TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.w600,
+            color: Color(0xFF374151),
+          ),
+        ),
         const SizedBox(height: 4),
         TextFormField(
           controller: controller,
@@ -598,7 +672,10 @@ class _AddEditDiscountDialogState extends State<_AddEditDiscountDialog> {
             hintText: 'DD/MM/YYYY',
             prefixIcon: const Icon(Icons.calendar_today, size: 18),
             border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 16,
+              vertical: 12,
+            ),
           ),
           autovalidateMode: AutovalidateMode.onUserInteraction,
           validator: (value) {
