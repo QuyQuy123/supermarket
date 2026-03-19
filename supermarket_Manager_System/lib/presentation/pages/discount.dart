@@ -627,17 +627,20 @@ class _AddEditDiscountDialogState extends State<_AddEditDiscountDialog> {
           ),
           autovalidateMode: AutovalidateMode.onUserInteraction,
           validator: (value) {
-            if (value == null || value.trim().isEmpty)
+            if (value == null || value.trim().isEmpty) {
               return 'This field is required';
+            }
             if (label == 'Discount Name') {
-              if (value.trim().length < 2)
+              if (value.trim().length < 2) {
                 return 'Name must be at least 2 characters';
+              }
             }
             if (label.contains('%')) {
               final val = double.tryParse(value);
               if (val == null) return 'Invalid number';
-              if (val < 0 || val > 100)
+              if (val < 0 || val > 100) {
                 return 'Percent must be between 0 and 100';
+              }
             }
             if (label.contains('Amount')) {
               final val = double.tryParse(value);

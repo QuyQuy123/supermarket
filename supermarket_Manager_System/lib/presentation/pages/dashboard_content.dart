@@ -75,32 +75,36 @@ class _DashboardContentState extends State<DashboardContent> {
   Future<void> _loadSummary() async {
     try {
       final s = await _service.getDashboardSummary();
-      if (mounted)
+      if (mounted) {
         setState(() {
           _summary = s;
           _loadingSummary = false;
         });
+      }
     } catch (_) {
-      if (mounted)
+      if (mounted) {
         setState(() {
           _loadingSummary = false;
         });
+      }
     }
   }
 
   Future<void> _loadTransactions() async {
     try {
       final t = await _service.getTodayTransactions();
-      if (mounted)
+      if (mounted) {
         setState(() {
           _transactions = t;
           _loadingTransactions = false;
         });
+      }
     } catch (e) {
-      if (mounted)
+      if (mounted) {
         setState(() {
           _loadingTransactions = false;
         });
+      }
     }
   }
 
