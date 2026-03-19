@@ -30,7 +30,7 @@ class ExpirationContent extends StatefulWidget {
 class _ExpirationContentState extends State<ExpirationContent> {
   final _expirationApiService = ExpirationApiService();
   final _productApiService = ProductApiService();
-  
+
   late Future<ExpirationStats> _statsFuture;
   late Future<List<ExpirationProduct>> _productsFuture;
   String _selectedFilter = 'today';
@@ -53,10 +53,12 @@ class _ExpirationContentState extends State<ExpirationContent> {
           _productsFuture = _expirationApiService.getProductsExpiringIn7Days();
           break;
         case '3months':
-          _productsFuture = _expirationApiService.getProductsExpiringIn3Months();
+          _productsFuture = _expirationApiService
+              .getProductsExpiringIn3Months();
           break;
         case '6months':
-          _productsFuture = _expirationApiService.getProductsExpiringIn6Months();
+          _productsFuture = _expirationApiService
+              .getProductsExpiringIn6Months();
           break;
       }
     });
@@ -120,65 +122,85 @@ class _ExpirationContentState extends State<ExpirationContent> {
             child: Column(
               children: [
                 Padding(
-                  padding: const EdgeInsets.fromLTRB(24, 24, 24, 0),
+                  padding: EdgeInsets.fromLTRB(
+                    widget.isCompact ? 14 : 24,
+                    widget.isCompact ? 14 : 24,
+                    widget.isCompact ? 14 : 24,
+                    0,
+                  ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      const Text(
+                      Text(
                         'Expiration Notification',
                         style: TextStyle(
-                          fontSize: 28,
+                          fontSize: widget.isCompact ? 20 : 28,
                           fontWeight: FontWeight.w700,
                         ),
                       ),
-                      const SizedBox(height: 20),
+                      SizedBox(height: widget.isCompact ? 12 : 20),
                       FutureBuilder<ExpirationStats>(
                         future: _statsFuture,
                         builder: (context, snapshot) {
-                          if (snapshot.connectionState == ConnectionState.waiting) {
-                            return const Center(child: CircularProgressIndicator());
+                          if (snapshot.connectionState ==
+                              ConnectionState.waiting) {
+                            return const Center(
+                              child: CircularProgressIndicator(),
+                            );
                           }
                           if (snapshot.hasError) {
-                            return Center(child: Text('Error: ${snapshot.error}'));
+                            return Center(
+                              child: Text('Error: ${snapshot.error}'),
+                            );
                           }
-                          final stats = snapshot.data ?? const ExpirationStats(
-                            expiresToday: 0,
-                            expiresIn7Days: 0,
-                            expiresIn3Months: 0,
-                            expiresIn6Months: 0,
-                          );
+                          final stats =
+                              snapshot.data ??
+                              const ExpirationStats(
+                                expiresToday: 0,
+                                expiresIn7Days: 0,
+                                expiresIn3Months: 0,
+                                expiresIn6Months: 0,
+                              );
                           return _buildStatsCards(stats);
                         },
                       ),
-                      const SizedBox(height: 32),
-                      const Text(
+                      SizedBox(height: widget.isCompact ? 18 : 32),
+                      Text(
                         'Expiration Details',
                         style: TextStyle(
-                          fontSize: 24,
+                          fontSize: widget.isCompact ? 18 : 24,
                           fontWeight: FontWeight.w700,
                         ),
                       ),
-                      const SizedBox(height: 20),
+                      SizedBox(height: widget.isCompact ? 12 : 20),
                     ],
                   ),
                 ),
                 Expanded(
                   child: Padding(
-                    padding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
+                    padding: EdgeInsets.fromLTRB(
+                      widget.isCompact ? 14 : 24,
+                      0,
+                      widget.isCompact ? 14 : 24,
+                      widget.isCompact ? 14 : 24,
+                    ),
                     child: FutureBuilder<List<ExpirationProduct>>(
                       future: _productsFuture,
                       builder: (context, snapshot) {
-                        if (snapshot.connectionState == ConnectionState.waiting) {
-                          return const Center(child: CircularProgressIndicator());
+                        if (snapshot.connectionState ==
+                            ConnectionState.waiting) {
+                          return const Center(
+                            child: CircularProgressIndicator(),
+                          );
                         }
                         if (snapshot.hasError) {
-                          return Center(child: Text('Error: ${snapshot.error}'));
+                          return Center(
+                            child: Text('Error: ${snapshot.error}'),
+                          );
                         }
                         final products = snapshot.data ?? [];
                         if (products.isEmpty) {
-                          return const Center(
-                            child: Text('No products found'),
-                          );
+                          return const Center(child: Text('No products found'));
                         }
                         return _buildProductsTable(products);
                       },
@@ -194,48 +216,67 @@ class _ExpirationContentState extends State<ExpirationContent> {
   }
 
   Widget _buildStatsCards(ExpirationStats stats) {
-    return Row(
-      children: [
-        Expanded(
-          child: _StatCard(
-            icon: '🛒',
-            title: 'Expires Today',
-            count: stats.expiresToday,
-            isSelected: _selectedFilter == 'today',
-            onTap: () => _changeFilter('today'),
-          ),
-        ),
-        const SizedBox(width: 16),
-        Expanded(
-          child: _StatCard(
-            icon: '⭐',
-            title: 'Expires in 7 Days',
-            count: stats.expiresIn7Days,
-            isSelected: _selectedFilter == '7days',
-            onTap: () => _changeFilter('7days'),
-          ),
-        ),
-        const SizedBox(width: 16),
-        Expanded(
-          child: _StatCard(
-            icon: '🔄',
-            title: 'Expires In 3 Month Time',
-            count: stats.expiresIn3Months,
-            isSelected: _selectedFilter == '3months',
-            onTap: () => _changeFilter('3months'),
-          ),
-        ),
-        const SizedBox(width: 16),
-        Expanded(
-          child: _StatCard(
-            icon: '✓',
-            title: 'Expires in 6 Month',
-            count: stats.expiresIn6Months,
-            isSelected: _selectedFilter == '6months',
-            onTap: () => _changeFilter('6months'),
-          ),
-        ),
-      ],
+    final cards = [
+      _StatCard(
+        icon: '🛒',
+        title: 'Expires Today',
+        count: stats.expiresToday,
+        isSelected: _selectedFilter == 'today',
+        onTap: () => _changeFilter('today'),
+        compact: widget.isCompact,
+      ),
+      _StatCard(
+        icon: '⭐',
+        title: 'Expires in 7 Days',
+        count: stats.expiresIn7Days,
+        isSelected: _selectedFilter == '7days',
+        onTap: () => _changeFilter('7days'),
+        compact: widget.isCompact,
+      ),
+      _StatCard(
+        icon: '🔄',
+        title: 'Expires In 3 Month Time',
+        count: stats.expiresIn3Months,
+        isSelected: _selectedFilter == '3months',
+        onTap: () => _changeFilter('3months'),
+        compact: widget.isCompact,
+      ),
+      _StatCard(
+        icon: '✓',
+        title: 'Expires in 6 Month',
+        count: stats.expiresIn6Months,
+        isSelected: _selectedFilter == '6months',
+        onTap: () => _changeFilter('6months'),
+        compact: widget.isCompact,
+      ),
+    ];
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        if (!widget.isCompact) {
+          return Row(
+            children: [
+              Expanded(child: cards[0]),
+              const SizedBox(width: 16),
+              Expanded(child: cards[1]),
+              const SizedBox(width: 16),
+              Expanded(child: cards[2]),
+              const SizedBox(width: 16),
+              Expanded(child: cards[3]),
+            ],
+          );
+        }
+
+        const spacing = 10.0;
+        final cardWidth = (constraints.maxWidth - spacing) / 2;
+        return Wrap(
+          spacing: spacing,
+          runSpacing: spacing,
+          children: cards
+              .map((card) => SizedBox(width: cardWidth, child: card))
+              .toList(),
+        );
+      },
     );
   }
 
@@ -255,19 +296,33 @@ class _ExpirationContentState extends State<ExpirationContent> {
               child: DataTable(
                 horizontalMargin: 16,
                 columnSpacing: 16,
-                headingRowColor: const WidgetStatePropertyAll(Color(0xFFF7F8FA)),
+                headingRowColor: const WidgetStatePropertyAll(
+                  Color(0xFFF7F8FA),
+                ),
                 headingTextStyle: const TextStyle(
                   fontWeight: FontWeight.w700,
                   color: Color(0xFF4A5568),
                   fontSize: 12,
                 ),
                 columns: const [
-                  DataColumn(label: SizedBox(width: 150, child: Text('PRODUCT'))),
-                  DataColumn(label: SizedBox(width: 100, child: Text('STOCK QTY'))),
-                  DataColumn(label: SizedBox(width: 120, child: Text('SUPPLIER'))),
-                  DataColumn(label: SizedBox(width: 110, child: Text('EXPIRY DATE'))),
-                  DataColumn(label: SizedBox(width: 100, child: Text('STATUS'))),
-                  DataColumn(label: SizedBox(width: 180, child: Text('ACTION'))),
+                  DataColumn(
+                    label: SizedBox(width: 150, child: Text('PRODUCT')),
+                  ),
+                  DataColumn(
+                    label: SizedBox(width: 100, child: Text('STOCK QTY')),
+                  ),
+                  DataColumn(
+                    label: SizedBox(width: 120, child: Text('SUPPLIER')),
+                  ),
+                  DataColumn(
+                    label: SizedBox(width: 110, child: Text('EXPIRY DATE')),
+                  ),
+                  DataColumn(
+                    label: SizedBox(width: 100, child: Text('STATUS')),
+                  ),
+                  DataColumn(
+                    label: SizedBox(width: 140, child: Text('ACTION')),
+                  ),
                 ],
                 rows: products.map((product) => _buildRow(product)).toList(),
               ),
@@ -290,12 +345,7 @@ class _ExpirationContentState extends State<ExpirationContent> {
             ),
           ),
         ),
-        DataCell(
-          SizedBox(
-            width: 100,
-            child: Text(product.inStock.toString()),
-          ),
-        ),
+        DataCell(SizedBox(width: 100, child: Text(product.inStock.toString()))),
         DataCell(
           SizedBox(
             width: 120,
@@ -308,51 +358,111 @@ class _ExpirationContentState extends State<ExpirationContent> {
         DataCell(
           SizedBox(
             width: 110,
-            child: Text(
-              product.expiryDate.isEmpty ? '-' : product.expiryDate,
-            ),
+            child: Text(product.expiryDate.isEmpty ? '-' : product.expiryDate),
           ),
         ),
         DataCell(
-          SizedBox(
-            width: 100,
-            child: _StatusBadge(status: product.status),
-          ),
+          SizedBox(width: 100, child: _StatusBadge(status: product.status)),
         ),
         DataCell(
           SizedBox(
-            width: 180,
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                OutlinedButton(
-                  onPressed: () {
-                    if (widget.onProductDetailTap != null) {
-                      widget.onProductDetailTap!(product.id);
-                    } else {
-                      final basePath = _basePathFromLocation(context);
-                      context.push('$basePath/product-detail/${product.id}');
-                    }
-                  },
-                  style: OutlinedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
-                    foregroundColor: const Color(0xFF667EEA),
-                    side: const BorderSide(color: Color(0xFF667EEA)),
+            width: 140,
+            child: widget.isCompact
+                ? Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      OutlinedButton(
+                        onPressed: () {
+                          if (widget.onProductDetailTap != null) {
+                            widget.onProductDetailTap!(product.id);
+                          } else {
+                            final basePath = _basePathFromLocation(context);
+                            context.push(
+                              '$basePath/product-detail/${product.id}',
+                            );
+                          }
+                        },
+                        style: OutlinedButton.styleFrom(
+                          minimumSize: Size.zero,
+                          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 4,
+                          ),
+                          visualDensity: VisualDensity.compact,
+                          foregroundColor: const Color(0xFF667EEA),
+                          side: const BorderSide(color: Color(0xFF667EEA)),
+                        ),
+                        child: const Text('View'),
+                      ),
+                      const SizedBox(height: 6),
+                      OutlinedButton(
+                        onPressed: () => _confirmDeleteProduct(
+                          product.id,
+                          product.productName,
+                        ),
+                        style: OutlinedButton.styleFrom(
+                          minimumSize: Size.zero,
+                          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 4,
+                          ),
+                          visualDensity: VisualDensity.compact,
+                          foregroundColor: Colors.red,
+                          side: const BorderSide(color: Colors.red),
+                        ),
+                        child: const Text('Delete'),
+                      ),
+                    ],
+                  )
+                : Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      OutlinedButton(
+                        onPressed: () {
+                          if (widget.onProductDetailTap != null) {
+                            widget.onProductDetailTap!(product.id);
+                          } else {
+                            final basePath = _basePathFromLocation(context);
+                            context.push(
+                              '$basePath/product-detail/${product.id}',
+                            );
+                          }
+                        },
+                        style: OutlinedButton.styleFrom(
+                          minimumSize: Size.zero,
+                          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 6,
+                          ),
+                          foregroundColor: const Color(0xFF667EEA),
+                          side: const BorderSide(color: Color(0xFF667EEA)),
+                        ),
+                        child: const Text('View'),
+                      ),
+                      const SizedBox(width: 6),
+                      OutlinedButton(
+                        onPressed: () => _confirmDeleteProduct(
+                          product.id,
+                          product.productName,
+                        ),
+                        style: OutlinedButton.styleFrom(
+                          minimumSize: Size.zero,
+                          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 6,
+                          ),
+                          foregroundColor: Colors.red,
+                          side: const BorderSide(color: Colors.red),
+                        ),
+                        child: const Text('Delete'),
+                      ),
+                    ],
                   ),
-                  child: const Text('View'),
-                ),
-                const SizedBox(width: 6),
-                OutlinedButton(
-                  onPressed: () => _confirmDeleteProduct(product.id, product.productName),
-                  style: OutlinedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
-                    foregroundColor: Colors.red,
-                    side: const BorderSide(color: Colors.red),
-                  ),
-                  child: const Text('Delete'),
-                ),
-              ],
-            ),
           ),
         ),
       ],
@@ -403,7 +513,10 @@ class _ExpirationHeader extends StatelessWidget {
           Row(
             children: [
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 8,
+                ),
                 decoration: BoxDecoration(
                   color: const Color(0xFF3B82F6),
                   borderRadius: BorderRadius.circular(8),
@@ -464,6 +577,7 @@ class _StatCard extends StatelessWidget {
     required this.count,
     required this.isSelected,
     required this.onTap,
+    required this.compact,
   });
 
   final String icon;
@@ -471,6 +585,7 @@ class _StatCard extends StatelessWidget {
   final int count;
   final bool isSelected;
   final VoidCallback onTap;
+  final bool compact;
 
   @override
   Widget build(BuildContext context) {
@@ -478,12 +593,14 @@ class _StatCard extends StatelessWidget {
       onTap: onTap,
       borderRadius: BorderRadius.circular(12),
       child: Container(
-        padding: const EdgeInsets.all(20),
+        padding: EdgeInsets.all(compact ? 12 : 20),
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
-            color: isSelected ? const Color(0xFF667EEA) : const Color(0xFFE8EAED),
+            color: isSelected
+                ? const Color(0xFF667EEA)
+                : const Color(0xFFE8EAED),
             width: isSelected ? 2 : 1,
           ),
           boxShadow: isSelected
@@ -492,7 +609,7 @@ class _StatCard extends StatelessWidget {
                     color: const Color(0xFF667EEA).withValues(alpha: 0.2),
                     blurRadius: 8,
                     offset: const Offset(0, 2),
-                  )
+                  ),
                 ]
               : null,
         ),
@@ -501,26 +618,23 @@ class _StatCard extends StatelessWidget {
           children: [
             Row(
               children: [
-                Text(
-                  icon,
-                  style: const TextStyle(fontSize: 32),
-                ),
+                Text(icon, style: TextStyle(fontSize: compact ? 22 : 32)),
                 const Spacer(),
                 Text(
                   count.toString(),
                   style: TextStyle(
-                    fontSize: 32,
+                    fontSize: compact ? 28 : 32,
                     fontWeight: FontWeight.w700,
                     color: isSelected ? const Color(0xFF667EEA) : Colors.black,
                   ),
                 ),
               ],
             ),
-            const SizedBox(height: 8),
+            SizedBox(height: compact ? 4 : 8),
             Text(
               title,
-              style: const TextStyle(
-                fontSize: 14,
+              style: TextStyle(
+                fontSize: compact ? 12 : 14,
                 color: Color(0xFF6B7280),
                 fontWeight: FontWeight.w500,
               ),
@@ -572,11 +686,7 @@ class _StatusBadge extends StatelessWidget {
       ),
       child: Text(
         status.isEmpty ? '-' : status,
-        style: TextStyle(
-          fontSize: 12,
-          fontWeight: FontWeight.w600,
-          color: fg,
-        ),
+        style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: fg),
       ),
     );
   }
@@ -622,7 +732,10 @@ class _DeleteConfirmDialog extends StatelessWidget {
               const SizedBox(height: 8),
               Text(
                 'Product: $productName',
-                style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+                style: const TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                ),
               ),
             ],
             const SizedBox(height: 24),
@@ -632,7 +745,10 @@ class _DeleteConfirmDialog extends StatelessWidget {
                 OutlinedButton(
                   onPressed: () => Navigator.of(context).pop(false),
                   style: OutlinedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 20,
+                      vertical: 12,
+                    ),
                     side: const BorderSide(color: Color(0xFFE5E7EB)),
                   ),
                   child: const Text(
@@ -646,7 +762,10 @@ class _DeleteConfirmDialog extends StatelessWidget {
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFF10B981),
                     foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 20,
+                      vertical: 12,
+                    ),
                   ),
                   child: const Text('Delete'),
                 ),

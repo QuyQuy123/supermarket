@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_web_plugins/url_strategy.dart';
 import 'package:go_router/go_router.dart';
+import 'package:supermarket_manager_system/data/local/database_initializer.dart';
 import 'package:supermarket_manager_system/presentation/pages/add_product_page.dart';
 import 'package:supermarket_manager_system/presentation/pages/admin_dashboard_page.dart';
 import 'package:supermarket_manager_system/presentation/pages/cashier_dashboard_page.dart';
@@ -15,8 +17,13 @@ import 'package:supermarket_manager_system/presentation/pages/set_new_password_p
 import 'package:supermarket_manager_system/presentation/pages/product_detail_page.dart';
 import 'package:supermarket_manager_system/utils/app_session.dart';
 
-void main() {
-  usePathUrlStrategy();
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  if (kIsWeb) {
+    usePathUrlStrategy();
+  }
+  await initDatabase();
+  await AppSession.instance.hydrateFromLocal();
   runApp(const SupermarketManagerApp());
 }
 
@@ -64,7 +71,8 @@ class SupermarketManagerApp extends StatelessWidget {
         final isManager = role.contains('manager');
 
         // Cashier cannot access /admin or /manager routes
-        if (isCashier && (path.startsWith('/admin') || path.startsWith('/manager'))) {
+        if (isCashier &&
+            (path.startsWith('/admin') || path.startsWith('/manager'))) {
           return '/cashier/open-shift';
         }
         // Manager cannot access /admin routes
@@ -72,7 +80,8 @@ class SupermarketManagerApp extends StatelessWidget {
           return '/manager/dashboard';
         }
         // Admin cannot access /cashier or /manager routes
-        if (isAdmin && (path.startsWith('/cashier') || path.startsWith('/manager'))) {
+        if (isAdmin &&
+            (path.startsWith('/cashier') || path.startsWith('/manager'))) {
           return '/admin/dashboard';
         }
       }
