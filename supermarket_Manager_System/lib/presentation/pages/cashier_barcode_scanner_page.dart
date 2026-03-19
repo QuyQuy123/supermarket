@@ -5,15 +5,13 @@ import 'package:go_router/go_router.dart';
 import 'package:supermarket_manager_system/utils/app_session.dart';
 
 class CashierBarcodeScannerPage extends StatefulWidget {
-  const CashierBarcodeScannerPage({
-    super.key,
-    required this.fullName,
-  });
+  const CashierBarcodeScannerPage({super.key, required this.fullName});
 
   final String fullName;
 
   @override
-  State<CashierBarcodeScannerPage> createState() => _CashierBarcodeScannerPageState();
+  State<CashierBarcodeScannerPage> createState() =>
+      _CashierBarcodeScannerPageState();
 }
 
 class _CashierBarcodeScannerPageState extends State<CashierBarcodeScannerPage> {
@@ -255,7 +253,10 @@ class _CashierBarcodeScannerPageState extends State<CashierBarcodeScannerPage> {
               children: [
                 Container(
                   width: double.infinity,
-                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 22),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 20,
+                    vertical: 22,
+                  ),
                   color: const Color.fromRGBO(0, 0, 0, 0.12),
                   child: const Row(
                     children: [
@@ -310,13 +311,18 @@ class _CashierBarcodeScannerPageState extends State<CashierBarcodeScannerPage> {
                   padding: const EdgeInsets.symmetric(horizontal: 24),
                   decoration: const BoxDecoration(
                     color: Colors.white,
-                    border: Border(bottom: BorderSide(color: Color(0xFFE8EAED))),
+                    border: Border(
+                      bottom: BorderSide(color: Color(0xFFE8EAED)),
+                    ),
                   ),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.end,
                     children: [
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 8,
+                        ),
                         decoration: BoxDecoration(
                           color: const Color(0xFF0D9488),
                           borderRadius: BorderRadius.circular(8),
@@ -334,7 +340,10 @@ class _CashierBarcodeScannerPageState extends State<CashierBarcodeScannerPage> {
                           Text(fullName),
                           const Text(
                             'Cashier',
-                            style: TextStyle(fontSize: 12, color: Color(0xFF6B7280)),
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: Color(0xFF6B7280),
+                            ),
                           ),
                         ],
                       ),
@@ -368,8 +377,14 @@ class _CashierBarcodeScannerPageState extends State<CashierBarcodeScannerPage> {
                           spacing: 12,
                           runSpacing: 12,
                           children: [
-                            _inputBox(label: 'Customer Name', hint: 'Optional [Required for credit sales]'),
-                            _inputBox(label: 'Phone', hint: 'Optional [Required for credit sales]'),
+                            _inputBox(
+                              label: 'Customer Name',
+                              hint: 'Optional [Required for credit sales]',
+                            ),
+                            _inputBox(
+                              label: 'Phone',
+                              hint: 'Optional [Required for credit sales]',
+                            ),
                             ElevatedButton(
                               onPressed: () {},
                               style: ElevatedButton.styleFrom(
@@ -434,7 +449,9 @@ class _CashierBarcodeScannerPageState extends State<CashierBarcodeScannerPage> {
                           child: SingleChildScrollView(
                             scrollDirection: Axis.horizontal,
                             child: DataTable(
-                              headingRowColor: const WidgetStatePropertyAll(Color(0xFF7DD3FC)),
+                              headingRowColor: const WidgetStatePropertyAll(
+                                Color(0xFF7DD3FC),
+                              ),
                               columns: const [
                                 DataColumn(label: Text('Product Name')),
                                 DataColumn(label: Text('Stock Qty')),
@@ -446,7 +463,11 @@ class _CashierBarcodeScannerPageState extends State<CashierBarcodeScannerPage> {
                               rows: const [
                                 DataRow(
                                   cells: [
-                                    DataCell(Text('No products. Scan barcode or search to add.')),
+                                    DataCell(
+                                      Text(
+                                        'No products. Scan barcode or search to add.',
+                                      ),
+                                    ),
                                     DataCell(Text('-')),
                                     DataCell(Text('-')),
                                     DataCell(Text('-')),
@@ -463,9 +484,18 @@ class _CashierBarcodeScannerPageState extends State<CashierBarcodeScannerPage> {
                           children: [
                             Text(
                               'Grand Total: ',
-                              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w700,
+                              ),
                             ),
-                            Text('0đ', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+                            Text(
+                              '0đ',
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
                           ],
                         ),
                       ],
@@ -509,7 +539,9 @@ class _CashierMenuItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Material(
-      color: active ? const Color.fromRGBO(255, 255, 255, 0.2) : Colors.transparent,
+      color: active
+          ? const Color.fromRGBO(255, 255, 255, 0.2)
+          : Colors.transparent,
       child: InkWell(
         onTap: onTap,
         child: Container(
@@ -527,4 +559,3 @@ class _CashierMenuItem extends StatelessWidget {
     );
   }
 }
-

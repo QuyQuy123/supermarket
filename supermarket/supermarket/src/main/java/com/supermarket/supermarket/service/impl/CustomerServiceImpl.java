@@ -2,10 +2,13 @@ package com.supermarket.supermarket.service.impl;
 
 import com.supermarket.supermarket.dto.request.CreateCustomerRequest;
 import com.supermarket.supermarket.dto.request.UpdateCustomerRequest;
+import com.supermarket.supermarket.dto.response.CustomerDetailResponse;
 import com.supermarket.supermarket.dto.response.CustomerListItemResponse;
+import com.supermarket.supermarket.dto.response.OrderListItemResponse;
 import com.supermarket.supermarket.entity.Customer;
 import com.supermarket.supermarket.repository.CustomerRepository;
 import com.supermarket.supermarket.service.CustomerService;
+import com.supermarket.supermarket.service.OrderService;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -20,63 +23,101 @@ import org.springframework.web.server.ResponseStatusException;
 public class CustomerServiceImpl implements CustomerService {
 
     private final CustomerRepository customerRepository;
+    private final OrderService orderService;
 
     @Override
     public List<CustomerListItemResponse> getAllCustomers() {
-        return customerRepository.findAllByOrderByIdAsc()
+        return customerRepository.findAllByOrderByNameAsc()
             .stream()
-            .map(this::toResponse)
+            .map(this::toListItem)
             .toList();
+    }
+
+    @Override
+    public CustomerDetailResponse getCustomerDetail(Integer id) {
+        Customer customer = customerRepository.findById(id)
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Customer not found"));
+        return toDetail(customer);
     }
 
     @Override
     public CustomerListItemResponse createCustomer(CreateCustomerRequest request) {
         String phone = request.getPhone().trim();
-        if (customerRepository.existsByPhone(phone)) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Phone already exists");
+        if (customerRepository.findByPhone(phone).isPresent()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Phone number already registered");
         }
-
         LocalDateTime now = LocalDateTime.now();
         Customer customer = Customer.builder()
             .name(request.getName().trim())
             .phone(phone)
             .points(0)
             .totalPurchases(0)
-            .totalAmount(orZero(request.getTotalAmount()))
+            .totalAmount(request.getTotalAmount() != null ? request.getTotalAmount() : BigDecimal.ZERO)
             .createdAt(now)
             .updatedAt(now)
             .build();
-
-        customer = customerRepository.save(customer);
-        return toResponse(customer);
+        Customer saved = customerRepository.save(customer);
+        return toListItem(saved);
     }
 
     @Override
-    public CustomerListItemResponse updateCustomer(Integer customerId, UpdateCustomerRequest request) {
-        Customer customer = customerRepository.findById(customerId)
+    public CustomerListItemResponse updateCustomer(Integer id, UpdateCustomerRequest request) {
+        Customer customer = customerRepository.findById(id)
             .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Customer not found"));
-
         String phone = request.getPhone().trim();
-        if (customerRepository.existsByPhoneAndIdNot(phone, customerId)) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Phone already exists");
+        
+        if (customerRepository.existsByPhoneAndIdNot(phone, id)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Phone number already used by another customer");
         }
 
+        customer.setName(request.getName().trim());
         customer.setPhone(phone);
-        customer.setTotalAmount(orZero(request.getTotalAmount()));
+        if (request.getTotalAmount() != null) {
+            customer.setTotalAmount(request.getTotalAmount());
+        }
         customer.setUpdatedAt(LocalDateTime.now());
-        customer = customerRepository.save(customer);
-        return toResponse(customer);
+        Customer saved = customerRepository.save(customer);
+        return toListItem(saved);
     }
 
-    private CustomerListItemResponse toResponse(Customer customer) {
+    @Override
+    public List<OrderListItemResponse> getCustomerOrderHistory(Integer customerId) {
+        if (!customerRepository.existsById(customerId)) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Customer not found");
+        }
+        return orderService.getOrdersByCustomerId(customerId);
+    }
+
+    private CustomerListItemResponse toListItem(Customer c) {
         return CustomerListItemResponse.builder()
-            .id(customer.getId())
-            .name(emptyAsDash(customer.getName()))
-            .phone(emptyAsDash(customer.getPhone()))
-            .points(Objects.requireNonNullElse(customer.getPoints(), 0))
-            .totalPurchases(Objects.requireNonNullElse(customer.getTotalPurchases(), 0))
-            .totalAmount(orZero(customer.getTotalAmount()))
-            .discountPercent(customer.getDiscount() == null ? BigDecimal.ZERO : orZero(customer.getDiscount().getPercent()))
+            .id(c.getId())
+            .name(emptyAsDash(c.getName()))
+            .phone(emptyAsDash(c.getPhone()))
+            .points(Objects.requireNonNullElse(c.getPoints(), 0))
+            .totalPurchases(Objects.requireNonNullElse(c.getTotalPurchases(), 0))
+            .totalAmount(orZero(c.getTotalAmount()))
+            .discountPercent(c.getDiscount() == null ? BigDecimal.ZERO : orZero(c.getDiscount().getPercent()))
+            .build();
+    }
+
+    private CustomerDetailResponse toDetail(Customer c) {
+        Integer discountId = null;
+        String discountName = null;
+        if (c.getDiscount() != null) {
+            discountId = c.getDiscount().getId();
+            discountName = c.getDiscount().getName();
+        }
+        return CustomerDetailResponse.builder()
+            .id(c.getId())
+            .name(emptyAsDash(c.getName()))
+            .phone(emptyAsDash(c.getPhone()))
+            .points(Objects.requireNonNullElse(c.getPoints(), 0))
+            .totalPurchases(Objects.requireNonNullElse(c.getTotalPurchases(), 0))
+            .totalAmount(orZero(c.getTotalAmount()))
+            .discountId(discountId)
+            .discountName(discountName != null ? discountName : "—")
+            .createdAt(c.getCreatedAt())
+            .updatedAt(c.getUpdatedAt())
             .build();
     }
 
@@ -88,4 +129,3 @@ public class CustomerServiceImpl implements CustomerService {
         return value == null || value.isBlank() ? "—" : value;
     }
 }
-

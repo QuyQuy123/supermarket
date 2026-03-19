@@ -3,6 +3,7 @@ package com.supermarket.supermarket.controller;
 import com.supermarket.supermarket.dto.request.CreateSupplierRequest;
 import com.supermarket.supermarket.dto.request.UpdateSupplierRequest;
 import com.supermarket.supermarket.dto.response.SupplierListItemResponse;
+import com.supermarket.supermarket.dto.response.SupplierOptionResponse;
 import com.supermarket.supermarket.service.SupplierService;
 import jakarta.validation.Valid;
 import java.util.List;
@@ -28,6 +29,11 @@ public class SupplierController {
     @GetMapping
     public ResponseEntity<List<SupplierListItemResponse>> getAllSuppliers() {
         return ResponseEntity.ok(supplierService.getAllSuppliers());
+    }
+
+    @GetMapping("/options")
+    public ResponseEntity<List<SupplierOptionResponse>> getSupplierOptions() {
+        return ResponseEntity.ok(supplierService.getAllSupplierOptions());
     }
 
     @GetMapping("/{id}")

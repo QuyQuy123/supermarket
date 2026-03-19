@@ -606,6 +606,7 @@ class _CashierCustomerPageState extends State<CashierCustomerPage> {
     if (index < 0) {
       return;
     }
+    final nameController = TextEditingController(text: customer.name);
     final phoneController = TextEditingController(text: customer.phone);
     final amountController = TextEditingController(
       text: customer.totalAmount.toStringAsFixed(0),
@@ -685,6 +686,38 @@ class _CashierCustomerPageState extends State<CashierCustomerPage> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
+                        const Text(
+                          'Customer Name',
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                            color: Color(0xFF374151),
+                          ),
+                        ),
+                        const SizedBox(height: 6),
+                        TextField(
+                          controller: nameController,
+                          decoration: InputDecoration(
+                            hintText: 'e.g. John Doe',
+                            contentPadding: const EdgeInsets.symmetric(
+                              horizontal: 12,
+                              vertical: 12,
+                            ),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(8),
+                              borderSide: const BorderSide(color: Color(0xFFD1D5DB)),
+                            ),
+                            enabledBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(8),
+                              borderSide: const BorderSide(color: Color(0xFFD1D5DB)),
+                            ),
+                            focusedBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(8),
+                              borderSide: const BorderSide(color: Color(0xFF667EEA)),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 14),
                         const Text(
                           'Phone',
                           style: TextStyle(
@@ -772,30 +805,32 @@ class _CashierCustomerPageState extends State<CashierCustomerPage> {
                         ElevatedButton(
                           onPressed: () async {
                             final dialogNavigator = Navigator.of(dialogContext);
-                            final phone = phoneController.text.trim();
-                            final amount = amountController.text.trim();
-                            if (phone.isEmpty || amount.isEmpty) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                  content: Text('Phone and Amount are required.'),
-                                ),
-                              );
-                              return;
-                            }
-
-                            final parsedAmount = _parseAmount(amount);
-                            if (parsedAmount == null || parsedAmount < 0) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                  content: Text('Amount must be a valid positive number.'),
-                                ),
-                              );
-                              return;
-                            }
-
                             try {
+                              final name = nameController.text.trim();
+                              final phone = phoneController.text.trim();
+                              final amount = amountController.text.trim();
+                              if (name.isEmpty || phone.isEmpty || amount.isEmpty) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                    content: Text('Name, Phone, and Amount are required.'),
+                                  ),
+                                );
+                                return;
+                              }
+
+                              final parsedAmount = _parseAmount(amount);
+                              if (parsedAmount == null || parsedAmount < 0) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                    content: Text('Amount must be a valid positive number.'),
+                                  ),
+                                );
+                                return;
+                              }
+
                               final updated = await _customerApiService.updateCustomer(
                                 customerId: customer.id,
+                                name: name,
                                 phone: phone,
                                 totalAmount: parsedAmount,
                               );

@@ -1,0 +1,10 @@
+Analyzing supermarket_Manager_System...                         
+
+   info - The imported package 'intl' isn't a dependency of the importing package - lib\presentation\pages\revenue_report_page.dart:2:8 - depend_on_referenced_packages
+  error - Target of URI doesn't exist: 'package:intl/intl.dart' - lib\presentation\pages\revenue_report_page.dart:2:8 - uri_does_not_exist
+   info - Unnecessary braces in a string interpolation - lib\presentation\pages\revenue_report_page.dart:99:13 - unnecessary_brace_in_string_interps
+  error - The method 'DateFormat' isn't defined for the type '_RevenueReportPageState' - lib\presentation\pages\revenue_report_page.dart:103:12 - undefined_method
+  error - The method 'DateFormat' isn't defined for the type '_RevenueReportPageState' - lib\presentation\pages\revenue_report_page.dart:169:57 - undefined_method
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\presentation\pages\revenue_report_page.dart:321:98 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\presentation\pages\revenue_report_page.dart:535:67 - deprecated_member_use
+

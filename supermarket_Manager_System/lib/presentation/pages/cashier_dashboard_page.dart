@@ -8,6 +8,7 @@ import 'package:supermarket_manager_system/domain/models/order_detail.dart';
 import 'package:supermarket_manager_system/domain/models/order_list_item.dart';
 import 'package:supermarket_manager_system/domain/models/user_detail.dart';
 import 'package:supermarket_manager_system/presentation/pages/profile_content_page.dart';
+import 'package:supermarket_manager_system/presentation/widgets/order_detail_card.dart';
 
 enum _CashierTab {
   scanner,
@@ -43,6 +44,7 @@ class CashierDashboardPage extends StatefulWidget {
 }
 
 class _CashierDashboardPageState extends State<CashierDashboardPage> {
+  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   final _customerApiService = CustomerApiService();
   final _orderApiService = OrderApiService();
   final TextEditingController _totalCashEndController = TextEditingController();
@@ -53,7 +55,7 @@ class _CashierDashboardPageState extends State<CashierDashboardPage> {
   String _selectedPhone = '';
   int? _selectedOrderId;
 
-  List<CustomerListItem> _customers = const [];
+  List<CustomerListItem> _customers = [];
   bool _isLoadingCustomers = true;
   String? _customersError;
 
@@ -134,21 +136,32 @@ class _CashierDashboardPageState extends State<CashierDashboardPage> {
     }
   }
 
+  void _closeDrawerIfNeeded() {
+    final isCompact = MediaQuery.sizeOf(context).width < 1024;
+    if (isCompact) {
+      Navigator.of(context).maybePop();
+    }
+  }
+
   void _navigateToTab(_CashierTab tab, {String? phone}) {
     if (tab == _CashierTab.scanner) {
       widget.onNavigatePath('/cashier/barcode-scanner');
+      _closeDrawerIfNeeded();
       return;
     }
     if (tab == _CashierTab.customers) {
       widget.onNavigatePath('/cashier/customers');
+      _closeDrawerIfNeeded();
       return;
     }
     if (tab == _CashierTab.profile) {
       widget.onNavigatePath('/cashier/profile');
+      _closeDrawerIfNeeded();
       return;
     }
     if (tab == _CashierTab.profileEdit) {
       widget.onNavigatePath('/cashier/profile/edit');
+      _closeDrawerIfNeeded();
       return;
     }
     if (tab == _CashierTab.customerHistory) {
@@ -156,6 +169,7 @@ class _CashierDashboardPageState extends State<CashierDashboardPage> {
       widget.onNavigatePath(
         '/cashier/customers/history?phone=${Uri.encodeComponent(targetPhone)}',
       );
+      _closeDrawerIfNeeded();
       return;
     }
     final orderId = _selectedOrderId;
@@ -164,6 +178,7 @@ class _CashierDashboardPageState extends State<CashierDashboardPage> {
       widget.onNavigatePath(
         '/cashier/orders/detail?orderId=$orderId&phone=${Uri.encodeComponent(targetPhone)}',
       );
+      _closeDrawerIfNeeded();
     }
   }
 
@@ -399,6 +414,7 @@ class _CashierDashboardPageState extends State<CashierDashboardPage> {
   Future<void> _openUpdateCustomerDialog(CustomerListItem customer) async {
     final index = _customers.indexWhere((c) => c.id == customer.id);
     if (index < 0) return;
+    final nameController = TextEditingController(text: customer.name);
     final phoneController = TextEditingController(text: customer.phone);
     final amountController = TextEditingController(
       text: customer.totalAmount.toStringAsFixed(0),
@@ -436,6 +452,11 @@ class _CashierDashboardPageState extends State<CashierDashboardPage> {
                   ],
                 ),
                 TextField(
+                  controller: nameController,
+                  decoration: const InputDecoration(labelText: 'Name'),
+                ),
+                const SizedBox(height: 10),
+                TextField(
                   controller: phoneController,
                   decoration: const InputDecoration(labelText: 'Phone'),
                 ),
@@ -456,6 +477,7 @@ class _CashierDashboardPageState extends State<CashierDashboardPage> {
                     ElevatedButton(
                       onPressed: () async {
                         final dialogNavigator = Navigator.of(dialogContext);
+                        final name = nameController.text.trim();
                         final phone = phoneController.text.trim();
                         final amount = double.tryParse(
                           amountController.text
@@ -463,10 +485,15 @@ class _CashierDashboardPageState extends State<CashierDashboardPage> {
                               .replaceAll(',', '')
                               .replaceAll('đ', ''),
                         );
-                        if (phone.isEmpty || amount == null || amount < 0) {
+                        if (name.isEmpty ||
+                            phone.isEmpty ||
+                            amount == null ||
+                            amount < 0) {
                           ScaffoldMessenger.of(context).showSnackBar(
                             const SnackBar(
-                              content: Text('Phone and Amount are required.'),
+                              content: Text(
+                                'Name, Phone, and Amount are required.',
+                              ),
                             ),
                           );
                           return;
@@ -475,6 +502,7 @@ class _CashierDashboardPageState extends State<CashierDashboardPage> {
                           final updated = await _customerApiService
                               .updateCustomer(
                                 customerId: customer.id,
+                                name: name,
                                 phone: phone,
                                 totalAmount: amount,
                               );
@@ -516,164 +544,12 @@ class _CashierDashboardPageState extends State<CashierDashboardPage> {
         ),
       ),
     );
-    phoneController.dispose();
-    amountController.dispose();
-  }
-
-  Future<void> _openAddCustomerDialog() async {
-    final nameController = TextEditingController();
-    final phoneController = TextEditingController();
-    final amountController = TextEditingController();
-
-    await showDialog<void>(
-      context: context,
-      barrierDismissible: true,
-      builder: (dialogContext) => Dialog(
-        insetPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 420),
-          child: Padding(
-            padding: const EdgeInsets.all(18),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Row(
-                  children: [
-                    const Expanded(
-                      child: Text(
-                        'Add Customer',
-                        style: TextStyle(
-                          fontSize: 28,
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                    ),
-                    IconButton(
-                      onPressed: () => Navigator.of(dialogContext).pop(),
-                      icon: const Icon(Icons.close),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 6),
-                const Text('Customer name'),
-                const SizedBox(height: 6),
-                TextField(
-                  controller: nameController,
-                  decoration: const InputDecoration(
-                    hintText: 'e.g. Nguyen Van A',
-                  ),
-                ),
-                const SizedBox(height: 10),
-                const Text('Phone'),
-                const SizedBox(height: 6),
-                TextField(
-                  controller: phoneController,
-                  keyboardType: TextInputType.phone,
-                  decoration: const InputDecoration(
-                    hintText: 'e.g. 0901234567',
-                  ),
-                ),
-                const SizedBox(height: 10),
-                const Text('Amount'),
-                const SizedBox(height: 6),
-                TextField(
-                  controller: amountController,
-                  keyboardType: TextInputType.number,
-                  decoration: const InputDecoration(hintText: 'e.g. 1,000,000'),
-                ),
-                const SizedBox(height: 18),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.end,
-                  children: [
-                    ElevatedButton(
-                      onPressed: () => Navigator.of(dialogContext).pop(),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFFDC2626),
-                      ),
-                      child: const Text(
-                        'Cancel',
-                        style: TextStyle(color: Colors.white),
-                      ),
-                    ),
-                    const SizedBox(width: 10),
-                    ElevatedButton(
-                      onPressed: () async {
-                        final dialogNavigator = Navigator.of(dialogContext);
-                        final messenger = ScaffoldMessenger.of(context);
-                        final name = nameController.text.trim();
-                        final phone = phoneController.text.trim();
-                        final amount = double.tryParse(
-                          amountController.text
-                              .trim()
-                              .replaceAll(',', '')
-                              .replaceAll('đ', ''),
-                        );
-                        if (name.isEmpty ||
-                            phone.isEmpty ||
-                            amount == null ||
-                            amount < 0) {
-                          messenger.showSnackBar(
-                            const SnackBar(
-                              content: Text(
-                                'Name, Phone and Amount are required.',
-                              ),
-                            ),
-                          );
-                          return;
-                        }
-                        try {
-                          await _customerApiService.createCustomer(
-                            name: name,
-                            phone: phone,
-                            totalAmount: amount,
-                          );
-                          if (!mounted) return;
-                          dialogNavigator.pop();
-                          await _loadCustomers();
-                          if (!mounted) return;
-                          messenger.showSnackBar(
-                            const SnackBar(
-                              content: Text('Customer added successfully.'),
-                            ),
-                          );
-                        } catch (error) {
-                          if (!mounted) return;
-                          messenger.showSnackBar(
-                            SnackBar(
-                              content: Text(
-                                error.toString().replaceFirst(
-                                  'Exception: ',
-                                  '',
-                                ),
-                              ),
-                            ),
-                          );
-                        }
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF16A34A),
-                      ),
-                      child: const Text(
-                        'Submit',
-                        style: TextStyle(color: Colors.white),
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
     nameController.dispose();
     phoneController.dispose();
     amountController.dispose();
   }
 
-  Widget _buildBody() {
+  Widget _buildBody({required bool isCompact}) {
     switch (_selectedTab) {
       case _CashierTab.scanner:
         return SingleChildScrollView(
@@ -807,28 +683,9 @@ class _CashierDashboardPageState extends State<CashierDashboardPage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Row(
-                children: [
-                  const Expanded(
-                    child: Text(
-                      'Customer List',
-                      style: TextStyle(
-                        fontSize: 30,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                  ),
-                  ElevatedButton(
-                    onPressed: _openAddCustomerDialog,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF16A34A),
-                    ),
-                    child: const Text(
-                      '+ Add Customer',
-                      style: TextStyle(color: Colors.white),
-                    ),
-                  ),
-                ],
+              const Text(
+                'Customer List',
+                style: TextStyle(fontSize: 30, fontWeight: FontWeight.w700),
               ),
               const SizedBox(height: 16),
               Expanded(
@@ -1041,7 +898,7 @@ class _CashierDashboardPageState extends State<CashierDashboardPage> {
               else
                 Expanded(
                   child: SingleChildScrollView(
-                    child: _OrderDetailCard(
+                    child: OrderDetailCard(
                       detail: _orderDetail!,
                       moneyFormatter: _money,
                     ),
@@ -1054,7 +911,7 @@ class _CashierDashboardPageState extends State<CashierDashboardPage> {
         return ProfileViewContent(
           fullName: widget.fullName,
           userId: widget.userId,
-          isCompact: false,
+          isCompact: isCompact,
           currentTimeText: _timeText(),
           onEditProfile: _openProfileEdit,
         );
@@ -1062,7 +919,7 @@ class _CashierDashboardPageState extends State<CashierDashboardPage> {
         return ProfileEditContent(
           userId: widget.userId,
           initialDetail: _editingProfile,
-          isCompact: false,
+          isCompact: isCompact,
           currentTimeText: _timeText(),
           onSaved: _onProfileUpdated,
           onCancel: () => _navigateToTab(_CashierTab.profile),
@@ -1072,145 +929,179 @@ class _CashierDashboardPageState extends State<CashierDashboardPage> {
 
   @override
   Widget build(BuildContext context) {
-    final fullName = widget.fullName.isEmpty ? 'Cashier' : widget.fullName;
-    final hideShellHeader =
-        _selectedTab == _CashierTab.profile ||
-        _selectedTab == _CashierTab.profileEdit;
-    return Scaffold(
-      backgroundColor: const Color(0xFFF0F2F5),
-      body: Row(
-        children: [
-          Container(
-            width: 240,
-            decoration: const BoxDecoration(
-              gradient: LinearGradient(
-                colors: [Color(0xFF667EEA), Color(0xFF764BA2)],
-              ),
-            ),
-            child: Column(
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final fullName = widget.fullName.isEmpty ? 'Cashier' : widget.fullName;
+        final isCompact = constraints.maxWidth < 1024;
+        final hideShellHeader =
+            _selectedTab == _CashierTab.profile ||
+            _selectedTab == _CashierTab.profileEdit;
+        final sidebar = _CashierSidebar(
+          selectedTab: _selectedTab,
+          onScannerTap: () => _navigateToTab(_CashierTab.scanner),
+          onCustomersTap: () => _navigateToTab(_CashierTab.customers),
+          onLogoutTap: _openCloseShiftDialog,
+        );
+
+        return Scaffold(
+          key: _scaffoldKey,
+          backgroundColor: const Color(0xFFF0F2F5),
+          drawer: isCompact ? Drawer(width: 250, child: sidebar) : null,
+          body: SafeArea(
+            child: Row(
               children: [
-                Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 20,
-                    vertical: 22,
-                  ),
-                  color: const Color.fromRGBO(0, 0, 0, 0.12),
-                  child: const Row(
+                if (!isCompact) SizedBox(width: 240, child: sidebar),
+                Expanded(
+                  child: Column(
                     children: [
-                      CircleAvatar(
-                        radius: 18,
-                        backgroundColor: Colors.white,
-                        child: Text(
-                          'P',
-                          style: TextStyle(color: Color(0xFF667EEA)),
+                      if (!hideShellHeader)
+                        Container(
+                          height: 72,
+                          padding: const EdgeInsets.symmetric(horizontal: 12),
+                          decoration: const BoxDecoration(
+                            color: Colors.white,
+                            border: Border(
+                              bottom: BorderSide(color: Color(0xFFE8EAED)),
+                            ),
+                          ),
+                          child: isCompact
+                              ? Row(
+                                  children: [
+                                    IconButton(
+                                      onPressed: () => _scaffoldKey.currentState
+                                          ?.openDrawer(),
+                                      icon: const Icon(Icons.menu),
+                                      tooltip: 'Open menu',
+                                    ),
+                                    const Spacer(),
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 10,
+                                        vertical: 7,
+                                      ),
+                                      decoration: BoxDecoration(
+                                        color: const Color(0xFF667EEA),
+                                        borderRadius: BorderRadius.circular(8),
+                                      ),
+                                      child: Text(
+                                        _timeText(),
+                                        style: const TextStyle(
+                                          color: Colors.white,
+                                        ),
+                                      ),
+                                    ),
+                                    const SizedBox(width: 10),
+                                    InkWell(
+                                      onTap: () =>
+                                          _navigateToTab(_CashierTab.profile),
+                                      borderRadius: BorderRadius.circular(10),
+                                      child: Container(
+                                        width: 40,
+                                        height: 40,
+                                        alignment: Alignment.center,
+                                        decoration: BoxDecoration(
+                                          color: const Color(0xFF1E293B),
+                                          borderRadius: BorderRadius.circular(
+                                            10,
+                                          ),
+                                        ),
+                                        child: Text(
+                                          fullName.isNotEmpty
+                                              ? fullName[0].toUpperCase()
+                                              : 'C',
+                                          style: const TextStyle(
+                                            color: Colors.white,
+                                            fontWeight: FontWeight.w700,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                )
+                              : Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    const SizedBox(width: 48),
+                                    Row(
+                                      children: [
+                                        Container(
+                                          padding: const EdgeInsets.symmetric(
+                                            horizontal: 12,
+                                            vertical: 8,
+                                          ),
+                                          decoration: BoxDecoration(
+                                            color: const Color(0xFF667EEA),
+                                            borderRadius: BorderRadius.circular(
+                                              8,
+                                            ),
+                                          ),
+                                          child: Text(
+                                            _timeText(),
+                                            style: const TextStyle(
+                                              color: Colors.white,
+                                            ),
+                                          ),
+                                        ),
+                                        const SizedBox(width: 14),
+                                        Column(
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.center,
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.end,
+                                          children: [
+                                            Text(fullName),
+                                            const Text(
+                                              'Cashier',
+                                              style: TextStyle(
+                                                fontSize: 12,
+                                                color: Color(0xFF6B7280),
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                        const SizedBox(width: 12),
+                                        InkWell(
+                                          onTap: () => _navigateToTab(
+                                            _CashierTab.profile,
+                                          ),
+                                          borderRadius: BorderRadius.circular(
+                                            10,
+                                          ),
+                                          child: Container(
+                                            width: 40,
+                                            height: 40,
+                                            alignment: Alignment.center,
+                                            decoration: BoxDecoration(
+                                              color: const Color(0xFF1E293B),
+                                              borderRadius:
+                                                  BorderRadius.circular(10),
+                                            ),
+                                            child: Text(
+                                              fullName.isNotEmpty
+                                                  ? fullName[0].toUpperCase()
+                                                  : 'C',
+                                              style: const TextStyle(
+                                                color: Colors.white,
+                                                fontWeight: FontWeight.w700,
+                                              ),
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ],
+                                ),
                         ),
-                      ),
-                      SizedBox(width: 10),
-                      Text('SMS SYSTEM', style: TextStyle(color: Colors.white)),
+                      Expanded(child: _buildBody(isCompact: isCompact)),
                     ],
                   ),
                 ),
-                const SizedBox(height: 8),
-                _MenuItem(
-                  label: 'Barcode Scanner',
-                  active: _selectedTab == _CashierTab.scanner,
-                  onTap: () => _navigateToTab(_CashierTab.scanner),
-                ),
-                _MenuItem(
-                  label: 'Customer',
-                  active:
-                      _selectedTab == _CashierTab.customers ||
-                      _selectedTab == _CashierTab.customerHistory,
-                  onTap: () => _navigateToTab(_CashierTab.customers),
-                ),
-                const Spacer(),
-                _MenuItem(
-                  label: 'Logout',
-                  active: false,
-                  onTap: _openCloseShiftDialog,
-                ),
-                const SizedBox(height: 10),
               ],
             ),
           ),
-          Expanded(
-            child: Column(
-              children: [
-                if (!hideShellHeader)
-                  Container(
-                    height: 72,
-                    padding: const EdgeInsets.symmetric(horizontal: 24),
-                    decoration: const BoxDecoration(
-                      color: Colors.white,
-                      border: Border(
-                        bottom: BorderSide(color: Color(0xFFE8EAED)),
-                      ),
-                    ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.end,
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 12,
-                            vertical: 8,
-                          ),
-                          decoration: BoxDecoration(
-                            color: const Color(0xFF667EEA),
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: Text(
-                            _timeText(),
-                            style: const TextStyle(color: Colors.white),
-                          ),
-                        ),
-                        const SizedBox(width: 14),
-                        Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          crossAxisAlignment: CrossAxisAlignment.end,
-                          children: [
-                            Text(fullName),
-                            const Text(
-                              'Cashier',
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: Color(0xFF6B7280),
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(width: 12),
-                        InkWell(
-                          onTap: () => _navigateToTab(_CashierTab.profile),
-                          borderRadius: BorderRadius.circular(10),
-                          child: Container(
-                            width: 40,
-                            height: 40,
-                            alignment: Alignment.center,
-                            decoration: BoxDecoration(
-                              color: const Color(0xFF1E293B),
-                              borderRadius: BorderRadius.circular(10),
-                            ),
-                            child: Text(
-                              fullName.isNotEmpty
-                                  ? fullName[0].toUpperCase()
-                                  : 'C',
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontWeight: FontWeight.w700,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                Expanded(child: _buildBody()),
-              ],
-            ),
-          ),
-        ],
-      ),
+        );
+      },
     );
   }
 
@@ -1224,6 +1115,75 @@ class _CashierDashboardPageState extends State<CashierDashboardPage> {
           border: const OutlineInputBorder(),
           isDense: true,
         ),
+      ),
+    );
+  }
+}
+
+class _CashierSidebar extends StatelessWidget {
+  const _CashierSidebar({
+    required this.selectedTab,
+    required this.onScannerTap,
+    required this.onCustomersTap,
+    required this.onLogoutTap,
+  });
+
+  final _CashierTab selectedTab;
+  final VoidCallback onScannerTap;
+  final VoidCallback onCustomersTap;
+  final VoidCallback onLogoutTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          colors: [Color(0xFF667EEA), Color(0xFF764BA2)],
+        ),
+      ),
+      child: Column(
+        children: [
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 22),
+            color: const Color.fromRGBO(0, 0, 0, 0.12),
+            child: const Row(
+              children: [
+                CircleAvatar(
+                  radius: 18,
+                  backgroundColor: Colors.white,
+                  child: Text('P', style: TextStyle(color: Color(0xFF667EEA))),
+                ),
+                SizedBox(width: 10),
+                Text('SMS SYSTEM', style: TextStyle(color: Colors.white)),
+              ],
+            ),
+          ),
+          const SizedBox(height: 8),
+          _MenuItem(
+            label: 'Barcode Scanner',
+            active: selectedTab == _CashierTab.scanner,
+            onTap: onScannerTap,
+          ),
+          _MenuItem(
+            label: 'Customer',
+            active:
+                selectedTab == _CashierTab.customers ||
+                selectedTab == _CashierTab.customerHistory,
+            onTap: onCustomersTap,
+          ),
+          const Spacer(),
+          const Divider(color: Color.fromRGBO(255, 255, 255, 0.25), height: 1),
+          SafeArea(
+            top: false,
+            minimum: const EdgeInsets.only(bottom: 10),
+            child: _MenuItem(
+              label: 'Logout',
+              active: false,
+              onTap: onLogoutTap,
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -1255,143 +1215,6 @@ class _MenuItem extends StatelessWidget {
             ),
           ),
         ),
-      ),
-    );
-  }
-}
-
-class _OrderDetailCard extends StatelessWidget {
-  const _OrderDetailCard({required this.detail, required this.moneyFormatter});
-
-  final OrderDetail detail;
-  final String Function(double value) moneyFormatter;
-
-  String _discountText() {
-    if (detail.discountPercent <= 0 || detail.discountAmount <= 0) {
-      return '0đ';
-    }
-    return '${detail.discountPercent.toStringAsFixed(0)}% (${moneyFormatter(detail.discountAmount)})';
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Align(
-      alignment: Alignment.topLeft,
-      child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 640),
-        child: Container(
-          padding: const EdgeInsets.all(24),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: const Color(0xFFE8EAED)),
-            boxShadow: const [
-              BoxShadow(
-                color: Color(0x14000000),
-                blurRadius: 12,
-                offset: Offset(0, 2),
-              ),
-            ],
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'Order Detail - ${detail.orderNo}',
-                style: const TextStyle(
-                  fontSize: 28,
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-              const SizedBox(height: 16),
-              Text(
-                'Số điện thoại khách hàng (nếu có): ${detail.customerPhone}',
-                style: const TextStyle(fontSize: 16, color: Color(0xFF374151)),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                'Nhân viên bán hàng: ${detail.cashierName}',
-                style: const TextStyle(fontSize: 16, color: Color(0xFF374151)),
-              ),
-              const SizedBox(height: 20),
-              SingleChildScrollView(
-                scrollDirection: Axis.horizontal,
-                child: DataTable(
-                  headingRowColor: const WidgetStatePropertyAll(
-                    Color(0xFFF7F8FA),
-                  ),
-                  columns: const [
-                    DataColumn(label: Text('ĐƠN GIÁ')),
-                    DataColumn(label: Text('SỐ LƯỢNG')),
-                    DataColumn(label: Text('THÀNH TIỀN')),
-                  ],
-                  rows: detail.items
-                      .map(
-                        (item) => DataRow(
-                          cells: [
-                            DataCell(
-                              Text(
-                                '(${item.productName} - ${moneyFormatter(item.unitPrice)})',
-                              ),
-                            ),
-                            DataCell(Text(item.qty.toString())),
-                            DataCell(Text(moneyFormatter(item.amount))),
-                          ],
-                        ),
-                      )
-                      .toList(),
-                ),
-              ),
-              const SizedBox(height: 12),
-              const Divider(color: Color(0xFFE8EAED), thickness: 1.5),
-              const SizedBox(height: 8),
-              _SummaryRow(
-                label: 'Tổng tiền hàng',
-                value: moneyFormatter(detail.subtotal),
-              ),
-              _SummaryRow(label: 'Giảm giá', value: _discountText()),
-              const Divider(color: Color(0xFFE8EAED)),
-              _SummaryRow(
-                label: 'Tổng thanh toán',
-                value: moneyFormatter(detail.totalPayment),
-                isTotal: true,
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _SummaryRow extends StatelessWidget {
-  const _SummaryRow({
-    required this.label,
-    required this.value,
-    this.isTotal = false,
-  });
-
-  final String label;
-  final String value;
-  final bool isTotal;
-
-  @override
-  Widget build(BuildContext context) {
-    final style = isTotal
-        ? const TextStyle(
-            fontSize: 19,
-            fontWeight: FontWeight.w700,
-            color: Color(0xFF1A1D21),
-          )
-        : const TextStyle(fontSize: 16, color: Color(0xFF374151));
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Text(label, style: style),
-          Text(value, style: style),
-        ],
       ),
     );
   }

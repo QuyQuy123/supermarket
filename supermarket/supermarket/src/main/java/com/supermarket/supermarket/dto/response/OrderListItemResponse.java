@@ -1,6 +1,7 @@
 package com.supermarket.supermarket.dto.response;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import lombok.Builder;
 import lombok.Getter;
 
@@ -19,5 +20,6 @@ public class OrderListItemResponse {
     private String paymentMethod;
     private String status;
     private String cashierName;
+    private LocalDateTime createdAt;
 }
 

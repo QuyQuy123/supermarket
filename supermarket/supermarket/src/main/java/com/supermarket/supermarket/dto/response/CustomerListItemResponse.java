@@ -15,4 +15,3 @@ public class CustomerListItemResponse {
     private BigDecimal totalAmount;
     private BigDecimal discountPercent;
 }
-

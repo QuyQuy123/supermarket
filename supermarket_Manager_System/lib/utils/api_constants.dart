@@ -12,8 +12,11 @@ class ApiConstants {
   static const String usersPath = '/api/users';
   static const String userRolesPath = '/api/users/roles';
   static const String ordersPath = '/api/orders';
-  static const String suppliersPath = '/api/suppliers';
   static const String customersPath = '/api/customers';
+  static const String suppliersPath = '/api/suppliers';
   static const String productsPath = '/api/products';
-
+  static const String dashboardPath = '/api/orders/dashboard';
+  static const String dashboardTransactionsPath = '/api/orders/today-transactions';
+  static const String revenueReportPath = '/api/reports/revenue';
+  static const String discountsPath = '/api/discounts';
 }

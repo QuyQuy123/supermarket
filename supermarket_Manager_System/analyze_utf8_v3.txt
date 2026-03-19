@@ -1,0 +1,42 @@
+﻿Analyzing supermarket_Manager_System...                         
+
+   info - Unnecessary braces in a string interpolation - lib\presentation\pages\customers_page.dart:324:13 - unnecessary_brace_in_string_interps
+   info - Unnecessary braces in a string interpolation - lib\presentation\pages\customers_page.dart:1032:13 - unnecessary_brace_in_string_interps
+   info - Unnecessary braces in a string interpolation - lib\presentation\pages\customers_page.dart:1405:13 - unnecessary_brace_in_string_interps
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\presentation\pages\discount.dart:175:53 - deprecated_member_use
+  error - Invalid constant value - lib\presentation\pages\manager_dashboard_page.dart:358:17 - invalid_constant
+  error - The method '_ManagerLogo' isn't defined for the type '_ManagerSidebar' - lib\presentation\pages\manager_dashboard_page.dart:358:17 - undefined_method
+  error - The values in a const list literal must be constants - lib\presentation\pages\manager_dashboard_page.dart:358:17 - non_constant_list_element
+  error - The method '_ManagerSidebarItem' isn't defined for the type '_ManagerSidebar' - lib\presentation\pages\manager_dashboard_page.dart:376:21 - undefined_method
+  error - The method '_ManagerSidebarItem' isn't defined for the type '_ManagerSidebar' - lib\presentation\pages\manager_dashboard_page.dart:381:21 - undefined_method
+  error - The method '_ManagerSidebarItem' isn't defined for the type '_ManagerSidebar' - lib\presentation\pages\manager_dashboard_page.dart:386:21 - undefined_method
+  error - The method '_ManagerSidebarItem' isn't defined for the type '_ManagerSidebar' - lib\presentation\pages\manager_dashboard_page.dart:391:21 - undefined_method
+  error - The method '_ManagerSidebarItem' isn't defined for the type '_ManagerSidebar' - lib\presentation\pages\manager_dashboard_page.dart:396:21 - undefined_method
+  error - The name '_ManagerSidebarItem' isn't a class - lib\presentation\pages\manager_dashboard_page.dart:401:27 - creation_with_non_type
+  error - The method '_ManagerSidebarItem' isn't defined for the type '_ManagerSidebar' - lib\presentation\pages\manager_dashboard_page.dart:402:21 - undefined_method
+  error - The name '_ManagerSidebarItem' isn't a class - lib\presentation\pages\manager_dashboard_page.dart:407:27 - creation_with_non_type
+  error - The method '_ManagerSidebarItem' isn't defined for the type '_ManagerSidebar' - lib\presentation\pages\manager_dashboard_page.dart:408:21 - undefined_method
+  error - The method '_ManagerSidebarItem' isn't defined for the type '_ManagerSidebar' - lib\presentation\pages\manager_dashboard_page.dart:413:21 - undefined_method
+  error - The method '_ManagerSidebarItem' isn't defined for the type '_ManagerSidebar' - lib\presentation\pages\manager_dashboard_page.dart:424:11 - undefined_method
+
+flutter : 18 issues 
+found. (ran in 2.3s)
+At line:1 char:1
++ flutter analyze 
+--no-pub > 
+analyze_final_v3.txt 
+2>&1; Get-Content ana 
+...
++ ~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~
+    + CategoryInfo     
+         : NotSpecifi  
+  ed: (18 issues fou   
+ nd. (ran in 2.3s):    
+String) [], Remote    
+Exception
+    + FullyQualifiedEr 
+   rorId : NativeComm  
+  andError
+ 
