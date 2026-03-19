@@ -10,11 +10,20 @@ class AuthApiService {
     required String password,
   }) async {
     final uri = Uri.parse('${ApiConstants.baseUrl}${ApiConstants.loginPath}');
-    final response = await http.post(
-      uri,
-      headers: {'Content-Type': 'application/json'},
-      body: jsonEncode({'email': emailOrUsername, 'password': password}),
-    );
+    late final http.Response response;
+    try {
+      response = await http.post(
+        uri,
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({'email': emailOrUsername, 'password': password}),
+      );
+    } catch (_) {
+      throw Exception(
+        'Cannot connect to server at ${ApiConstants.baseUrl}. '
+        'If running on a real phone, start app with '
+        '--dart-define=API_BASE_URL=http://<YOUR_PC_LAN_IP>:8080',
+      );
+    }
 
     if (response.body.isEmpty) {
       throw Exception('Empty server response');
@@ -87,7 +96,8 @@ class AuthApiService {
         errorMessage = errorMessage.replaceFirst('Error: ', '');
       }
       if (errorMessage.isEmpty) {
-        errorMessage = 'Failed to reset password (Status: ${response.statusCode})';
+        errorMessage =
+            'Failed to reset password (Status: ${response.statusCode})';
       }
       throw errorMessage;
     }

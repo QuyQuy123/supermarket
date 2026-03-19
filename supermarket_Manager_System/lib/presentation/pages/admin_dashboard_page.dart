@@ -30,7 +30,7 @@ enum _AdminTab {
   profile,
   profileEdit,
   productDetail,
-  reports
+  reports,
 }
 
 class AdminDashboardPage extends StatefulWidget {
@@ -54,6 +54,7 @@ class AdminDashboardPage extends StatefulWidget {
 }
 
 class _AdminDashboardPageState extends State<AdminDashboardPage> {
+  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   _AdminTab _selectedTab = _AdminTab.dashboard;
   UserDetail? _editingProfile;
   int? _selectedProductId;
@@ -77,7 +78,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
   }
 
   String _pathForTab(_AdminTab tab) {
-      return switch (tab) {
+    return switch (tab) {
       _AdminTab.dashboard => '/admin/dashboard',
       _AdminTab.users => '/admin/users',
       _AdminTab.orders => '/admin/orders',
@@ -155,6 +156,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
       _selectedTab = _AdminTab.expired; // Go back to expired tab
     });
   }
+
   void _onProfileUpdated(UserDetail detail) {
     setState(() {
       _editingProfile = detail;
@@ -214,6 +216,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
         final isCompact = constraints.maxWidth < 1024;
 
         return Scaffold(
+          key: _scaffoldKey,
           drawer: isCompact
               ? Drawer(
                   width: 250,
@@ -224,101 +227,124 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                   ),
                 )
               : null,
-          body: Row(
-            children: [
-              if (!isCompact)
-                SizedBox(
-                  width: 230,
-                  child: _SidebarMenu(
-                    selectedTab: _selectedTab,
-                    onSelectTab: _selectTab,
-                    onLogout: _logout,
+          body: SafeArea(
+            child: Row(
+              children: [
+                if (!isCompact)
+                  SizedBox(
+                    width: 230,
+                    child: _SidebarMenu(
+                      selectedTab: _selectedTab,
+                      onSelectTab: _selectTab,
+                      onLogout: _logout,
+                    ),
+                  ),
+                Expanded(
+                  child: Stack(
+                    children: [
+                      switch (_selectedTab) {
+                        _AdminTab.dashboard => DashboardContent(
+                          fullName: widget.fullName,
+                          roleLabel: 'Administrator',
+                          isCompact: isCompact,
+                          currentTimeText: _formatClock(_now),
+                          onProfileTap: () => _selectTab(_AdminTab.profile),
+                        ),
+                        _AdminTab.users => UsersContent(
+                          fullName: widget.fullName,
+                          isCompact: isCompact,
+                          currentTimeText: _formatClock(_now),
+                          onProfileTap: () => _selectTab(_AdminTab.profile),
+                        ),
+                        _AdminTab.orders => OrdersContent(
+                          fullName: widget.fullName,
+                          isCompact: isCompact,
+                          currentTimeText: _formatClock(_now),
+                          roleLabel: 'Administrator',
+                          onProfileTap: () => _selectTab(_AdminTab.profile),
+                        ),
+                        _AdminTab.customers => CustomersContent(
+                          fullName: widget.fullName,
+                          isCompact: isCompact,
+                          currentTimeText: _formatClock(_now),
+                          onProfileTap: () => _selectTab(_AdminTab.profile),
+                        ),
+                        _AdminTab.discount => DiscountsContent(
+                          fullName: widget.fullName,
+                          isCompact: isCompact,
+                          currentTimeText: _formatClock(_now),
+                          onProfileTap: () => _selectTab(_AdminTab.profile),
+                        ),
+                        _AdminTab.suppliers => SuppliersContent(
+                          fullName: widget.fullName,
+                          isCompact: isCompact,
+                          currentTimeText: _formatClock(_now),
+                          onProfileTap: () => _selectTab(_AdminTab.profile),
+                          basePath: 'admin',
+                        ),
+                        _AdminTab.products => ProductsContent(
+                          fullName: widget.fullName,
+                          isCompact: isCompact,
+                          currentTimeText: _formatClock(_now),
+                          onProfileTap: () => _selectTab(_AdminTab.profile),
+                        ),
+                        _AdminTab.expired => ExpirationContent(
+                          fullName: widget.fullName,
+                          isCompact: isCompact,
+                          currentTimeText: _formatClock(_now),
+                          onProfileTap: () => _selectTab(_AdminTab.profile),
+                          onProductDetailTap: _openProductDetail,
+                        ),
+                        _AdminTab.productDetail =>
+                          _selectedProductId != null
+                              ? ProductDetailContent(
+                                  productId: _selectedProductId!,
+                                  onBack: _closeProductDetail,
+                                )
+                              : Container(),
+                        _AdminTab.profile => _ProfileContent(
+                          fullName: widget.fullName,
+                          userId: widget.userId,
+                          isCompact: isCompact,
+                          currentTimeText: _formatClock(_now),
+                          onEditProfile: _openProfileEdit,
+                        ),
+                        _AdminTab.profileEdit => _ProfileEditContent(
+                          userId: widget.userId,
+                          initialDetail: _editingProfile,
+                          isCompact: isCompact,
+                          currentTimeText: _formatClock(_now),
+                          onSaved: _onProfileUpdated,
+                          onCancel: () => _selectTab(_AdminTab.profile),
+                        ),
+                        _AdminTab.reports => RevenueReportPage(
+                          fullName: widget.fullName,
+                          isCompact: isCompact,
+                          currentTimeText: _formatClock(_now),
+                          onProfileTap: () => _selectTab(_AdminTab.profile),
+                        ),
+                      },
+                      if (isCompact)
+                        Positioned(
+                          top: 8,
+                          left: 8,
+                          child: Material(
+                            color: Colors.white,
+                            elevation: 2,
+                            borderRadius: BorderRadius.circular(20),
+                            child: IconButton(
+                              onPressed: () =>
+                                  _scaffoldKey.currentState?.openDrawer(),
+                              icon: const Icon(Icons.menu),
+                              tooltip: 'Open menu',
+                            ),
+                          ),
+                        ),
+                    ],
                   ),
                 ),
-              Expanded(
-                child: switch (_selectedTab) {
-                  _AdminTab.dashboard => DashboardContent(
-                    fullName: widget.fullName,
-                    roleLabel: 'Administrator',
-                    isCompact: isCompact,
-                    currentTimeText: _formatClock(_now),
-                    onProfileTap: () => _selectTab(_AdminTab.profile),
-                  ),
-                  _AdminTab.users => UsersContent(
-                    fullName: widget.fullName,
-                    isCompact: isCompact,
-                    currentTimeText: _formatClock(_now),
-                    onProfileTap: () => _selectTab(_AdminTab.profile),
-                  ),
-                  _AdminTab.orders => OrdersContent(
-                    fullName: widget.fullName,
-                    isCompact: isCompact,
-                    currentTimeText: _formatClock(_now),
-                    roleLabel: 'Administrator',
-                    onProfileTap: () => _selectTab(_AdminTab.profile),
-                  ),
-                  _AdminTab.customers => CustomersContent(
-                    fullName: widget.fullName,
-                    isCompact: isCompact,
-                    currentTimeText: _formatClock(_now),
-                    onProfileTap: () => _selectTab(_AdminTab.profile),
-                  ),
-                  _AdminTab.discount => DiscountsContent(
-                    fullName: widget.fullName,
-                    isCompact: isCompact,
-                    currentTimeText: _formatClock(_now),
-                    onProfileTap: () => _selectTab(_AdminTab.profile),
-                  ),
-                  _AdminTab.suppliers => SuppliersContent(
-                      fullName: widget.fullName,
-                      isCompact: isCompact,
-                      currentTimeText: _formatClock(_now),
-                      onProfileTap: () => _selectTab(_AdminTab.profile),
-                      basePath: 'admin',
-                    ),
-                  _AdminTab.products => ProductsContent(
-                      fullName: widget.fullName,
-                      isCompact: isCompact,
-                      currentTimeText: _formatClock(_now),
-                      onProfileTap: () => _selectTab(_AdminTab.profile),
-                    ),
-                  _AdminTab.expired => ExpirationContent(
-                      fullName: widget.fullName,
-                      isCompact: isCompact,
-                      currentTimeText: _formatClock(_now),
-                      onProfileTap: () => _selectTab(_AdminTab.profile),
-                      onProductDetailTap: _openProductDetail,
-                    ),
-                  _AdminTab.productDetail => _selectedProductId != null
-                      ? ProductDetailContent(
-                          productId: _selectedProductId!,
-                          onBack: _closeProductDetail,
-                        )
-                      : Container(),
-                  _AdminTab.profile => _ProfileContent(
-                    fullName: widget.fullName,
-                    userId: widget.userId,
-                    isCompact: isCompact,
-                    currentTimeText: _formatClock(_now),
-                    onEditProfile: _openProfileEdit,
-                  ),
-                  _AdminTab.profileEdit => _ProfileEditContent(
-                    userId: widget.userId,
-                    initialDetail: _editingProfile,
-                    isCompact: isCompact,
-                    currentTimeText: _formatClock(_now),
-                    onSaved: _onProfileUpdated,
-                    onCancel: () => _selectTab(_AdminTab.profile),
-                  ),
-                  _AdminTab.reports => RevenueReportPage(
-                    fullName: widget.fullName,
-                    isCompact: isCompact,
-                    currentTimeText: _formatClock(_now),
-                    onProfileTap: () => _selectTab(_AdminTab.profile),
-                  ),
-                },
-              ),
-            ],
+              ],
+            ),
           ),
         );
       },
@@ -426,8 +452,11 @@ class _SidebarMenu extends StatelessWidget {
             ),
           ),
           const Divider(color: Color.fromRGBO(255, 255, 255, 0.25), height: 1),
-          _SidebarItem(label: 'Logout', onTap: onLogout),
-          const SizedBox(height: 12),
+          SafeArea(
+            top: false,
+            minimum: const EdgeInsets.only(bottom: 10),
+            child: _SidebarItem(label: 'Logout', onTap: onLogout),
+          ),
         ],
       ),
     );

@@ -120,73 +120,97 @@ class _ProductsContentState extends State<ProductsContent> {
           ),
           Expanded(
             child: Padding(
-              padding: const EdgeInsets.all(24),
+              padding: EdgeInsets.all(widget.isCompact ? 14 : 24),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      const Text(
-                        'Stock Inventory',
-                        style: TextStyle(
-                          fontSize: 28,
-                          fontWeight: FontWeight.w700,
+                  widget.isCompact
+                      ? Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text(
+                              'Stock Inventory',
+                              style: TextStyle(
+                                fontSize: 34,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                            const SizedBox(height: 12),
+                            Wrap(
+                              spacing: 8,
+                              runSpacing: 8,
+                              children: [
+                                _actionButton(
+                                  label: 'Import Product',
+                                  backgroundColor: const Color(0xFF4B5563),
+                                  textColor: Colors.white,
+                                  onPressed: () {},
+                                  compact: true,
+                                ),
+                                _actionButton(
+                                  label: '+ Add New Product',
+                                  backgroundColor: const Color(0xFF93C5FD),
+                                  textColor: const Color(0xFF1E40AF),
+                                  onPressed: () async {
+                                    final result = await context.push(
+                                      '${_basePathFromLocation(context)}/add-product',
+                                    );
+                                    if (result == true) {
+                                      _reloadProducts();
+                                    }
+                                  },
+                                  compact: true,
+                                ),
+                              ],
+                            ),
+                          ],
+                        )
+                      : Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            const Text(
+                              'Stock Inventory',
+                              style: TextStyle(
+                                fontSize: 28,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                            Row(
+                              children: [
+                                _actionButton(
+                                  label: 'Import Product',
+                                  backgroundColor: const Color(0xFF4B5563),
+                                  textColor: Colors.white,
+                                  onPressed: () {},
+                                ),
+                                const SizedBox(width: 8),
+                                _actionButton(
+                                  label: '+ Add New Product',
+                                  backgroundColor: const Color(0xFF93C5FD),
+                                  textColor: const Color(0xFF1E40AF),
+                                  onPressed: () async {
+                                    final result = await context.push(
+                                      '${_basePathFromLocation(context)}/add-product',
+                                    );
+                                    if (result == true) {
+                                      _reloadProducts();
+                                    }
+                                  },
+                                ),
+                              ],
+                            ),
+                          ],
                         ),
-                      ),
-                      Row(
-                        children: [
-                          DecoratedBox(
-                            decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(10),
-                              color: const Color(0xFF4B5563),
-                            ),
-                            child: TextButton(
-                              onPressed: () {},
-                              child: const Text(
-                                'Import Product',
-                                style: TextStyle(
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                            ),
-                          ),
-                          const SizedBox(width: 8),
-                          DecoratedBox(
-                            decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(10),
-                              color: const Color(0xFF93C5FD),
-                            ),
-                            child: TextButton(
-                              onPressed: () async {
-                                final result = await context.push(
-                                  '${_basePathFromLocation(context)}/add-product',
-                                );
-                                if (result == true) {
-                                  _reloadProducts();
-                                }
-                              },
-                              child: const Text(
-                                '+ Add New Product',
-                                style: TextStyle(
-                                  color: Color(0xFF1E40AF),
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 20),
+                  SizedBox(height: widget.isCompact ? 12 : 20),
                   Expanded(
                     child: FutureBuilder<List<ProductListItem>>(
                       future: _productsFuture,
                       builder: (context, snapshot) {
-                        if (snapshot.connectionState == ConnectionState.waiting) {
-                          return const Center(child: CircularProgressIndicator());
+                        if (snapshot.connectionState ==
+                            ConnectionState.waiting) {
+                          return const Center(
+                            child: CircularProgressIndicator(),
+                          );
                         }
                         if (snapshot.hasError) {
                           return Center(
@@ -209,18 +233,14 @@ class _ProductsContentState extends State<ProductsContent> {
 
                         final products = snapshot.data ?? [];
                         if (products.isEmpty) {
-                          return const Center(
-                            child: Text('No products found'),
-                          );
+                          return const Center(child: Text('No products found'));
                         }
 
                         return Container(
                           decoration: BoxDecoration(
                             color: Colors.white,
                             borderRadius: BorderRadius.circular(12),
-                            border: Border.all(
-                              color: const Color(0xFFE8EAED),
-                            ),
+                            border: Border.all(color: const Color(0xFFE8EAED)),
                           ),
                           child: SingleChildScrollView(
                             scrollDirection: Axis.horizontal,
@@ -313,8 +333,8 @@ class _ProductsContentState extends State<ProductsContent> {
               onTap: product.id <= 0
                   ? null
                   : () => context.push(
-                        '${_basePathFromLocation(context)}/product-detail/${product.id}',
-                      ),
+                      '${_basePathFromLocation(context)}/product-detail/${product.id}',
+                    ),
               child: Text(
                 product.barcode.isEmpty ? '-' : product.barcode,
                 style: const TextStyle(
@@ -375,10 +395,7 @@ class _ProductsContentState extends State<ProductsContent> {
           ),
         ),
         DataCell(
-          SizedBox(
-            width: 110,
-            child: _StatusBadge(status: product.status),
-          ),
+          SizedBox(width: 110, child: _StatusBadge(status: product.status)),
         ),
         DataCell(
           SizedBox(
@@ -389,7 +406,10 @@ class _ProductsContentState extends State<ProductsContent> {
                 OutlinedButton(
                   onPressed: () => _showUpdateDialog(product.id),
                   style: OutlinedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 6,
+                    ),
                     foregroundColor: const Color(0xFF667EEA),
                     side: const BorderSide(color: Color(0xFF667EEA)),
                   ),
@@ -397,9 +417,13 @@ class _ProductsContentState extends State<ProductsContent> {
                 ),
                 const SizedBox(width: 6),
                 OutlinedButton(
-                  onPressed: () => _confirmDeleteProduct(product.id, product.productName),
+                  onPressed: () =>
+                      _confirmDeleteProduct(product.id, product.productName),
                   style: OutlinedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 6,
+                    ),
                     foregroundColor: Colors.red,
                     side: const BorderSide(color: Colors.red),
                   ),
@@ -410,6 +434,40 @@ class _ProductsContentState extends State<ProductsContent> {
           ),
         ),
       ],
+    );
+  }
+
+  Widget _actionButton({
+    required String label,
+    required Color backgroundColor,
+    required Color textColor,
+    required VoidCallback onPressed,
+    bool compact = false,
+  }) {
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(compact ? 8 : 10),
+        color: backgroundColor,
+      ),
+      child: TextButton(
+        onPressed: onPressed,
+        style: TextButton.styleFrom(
+          padding: EdgeInsets.symmetric(
+            horizontal: compact ? 10 : 14,
+            vertical: compact ? 10 : 12,
+          ),
+          minimumSize: Size.zero,
+          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+        ),
+        child: Text(
+          label,
+          style: TextStyle(
+            color: textColor,
+            fontWeight: FontWeight.w600,
+            fontSize: compact ? 12 : 14,
+          ),
+        ),
+      ),
     );
   }
 }
@@ -457,7 +515,10 @@ class _ProductsHeader extends StatelessWidget {
           Row(
             children: [
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 8,
+                ),
                 decoration: BoxDecoration(
                   color: const Color(0xFF3B82F6),
                   borderRadius: BorderRadius.circular(8),
@@ -478,10 +539,7 @@ class _ProductsHeader extends StatelessWidget {
                   ),
                   const Text(
                     'Administrator',
-                    style: TextStyle(
-                      color: Color(0xFF6B7280),
-                      fontSize: 12,
-                    ),
+                    style: TextStyle(color: Color(0xFF6B7280), fontSize: 12),
                   ),
                 ],
               ),
@@ -533,11 +591,7 @@ class _StatusBadge extends StatelessWidget {
       ),
       child: Text(
         status.isEmpty ? '-' : status,
-        style: TextStyle(
-          fontSize: 12,
-          fontWeight: FontWeight.w600,
-          color: fg,
-        ),
+        style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: fg),
       ),
     );
   }
@@ -564,10 +618,7 @@ class _DeleteConfirmDialog extends StatelessWidget {
               children: [
                 const Text(
                   'Confirm Delete',
-                  style: TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.w700,
-                  ),
+                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700),
                 ),
                 IconButton(
                   onPressed: () => Navigator.of(context).pop(false),
@@ -580,10 +631,7 @@ class _DeleteConfirmDialog extends StatelessWidget {
             const SizedBox(height: 16),
             Text(
               'Are you sure you want to delete this product?',
-              style: TextStyle(
-                fontSize: 14,
-                color: Colors.grey[700],
-              ),
+              style: TextStyle(fontSize: 14, color: Colors.grey[700]),
             ),
             if (productName.isNotEmpty) ...[
               const SizedBox(height: 8),
@@ -602,7 +650,10 @@ class _DeleteConfirmDialog extends StatelessWidget {
                 OutlinedButton(
                   onPressed: () => Navigator.of(context).pop(false),
                   style: OutlinedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 20,
+                      vertical: 12,
+                    ),
                     side: const BorderSide(color: Color(0xFFE5E7EB)),
                   ),
                   child: const Text(
@@ -616,7 +667,10 @@ class _DeleteConfirmDialog extends StatelessWidget {
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFF10B981),
                     foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 20,
+                      vertical: 12,
+                    ),
                   ),
                   child: const Text('Delete'),
                 ),

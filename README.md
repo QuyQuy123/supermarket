@@ -133,8 +133,24 @@ Sua `baseUrl`:
 static const String baseUrl = 'http://localhost:9090';
 ```
 
-> Neu chay tren Android emulator, thuong dung `10.0.2.2` thay cho `localhost`.
-> Vi du: `http://10.0.2.2:9090`
+> Frontend da ho tro `API_BASE_URL` qua `--dart-define` de chay mobile that.
+> Mac dinh:
+> - Android emulator: `http://10.0.2.2:8080`
+> - Web/Desktop: `http://localhost:8080`
+
+Vi du chay Android emulator:
+
+```bash
+flutter run -d emulator-5554 --dart-define=API_BASE_URL=http://10.0.2.2:8080
+```
+
+Vi du chay tren dien thoai that (cung wifi voi may chay backend):
+
+```bash
+flutter run --dart-define=API_BASE_URL=http://192.168.1.50:8080
+```
+
+> Thay `192.168.1.50` bang IP LAN cua may tinh chay Spring Boot.
 
 ## 7) Lenh kiem tra nhanh
 
@@ -152,4 +168,17 @@ cd supermarket_Manager_System
 flutter analyze
 flutter test
 ```
+
+## 8) SQLite local cho mobile
+
+Frontend da tich hop `sqflite` de luu session dang nhap local (table `session` trong file DB `supermarket_mobile.db`).
+
+Tac dung:
+- Dang nhap xong, app luu session vao SQLite.
+- Mo lai app tren mobile se tu restore session.
+- Logout se xoa session trong SQLite.
+
+Luu y:
+- Backend van dung MySQL (khong doi sang SQLite o Spring Boot).
+- SQLite chi dung cho local state/caching tren app mobile.
 
