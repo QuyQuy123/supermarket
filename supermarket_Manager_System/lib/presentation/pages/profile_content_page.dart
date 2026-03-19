@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:supermarket_manager_system/data/services/user_api_service.dart';
 import 'package:supermarket_manager_system/domain/models/user_detail.dart';
+import 'package:supermarket_manager_system/presentation/widgets/dashboard_header.dart';
 import 'package:supermarket_manager_system/presentation/widgets/change_password_dialog.dart';
 
 class ProfileViewContent extends StatefulWidget {
@@ -606,77 +607,14 @@ class _ProfileHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      height: 72,
-      padding: const EdgeInsets.symmetric(horizontal: 24),
-      decoration: const BoxDecoration(
-        color: Colors.white,
-        border: Border(bottom: BorderSide(color: Color(0xFFE8EAED))),
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          if (isCompact)
-            Builder(
-              builder: (context) => IconButton(
-                onPressed: () => Scaffold.of(context).openDrawer(),
-                icon: const Icon(Icons.menu),
-              ),
-            )
-          else
-            const Text(
-              'My Profile',
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700),
-            ),
-          Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 12,
-                  vertical: 8,
-                ),
-                decoration: BoxDecoration(
-                  color: const Color(0xFF4ECDC4),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Text(
-                  currentTimeText,
-                  style: const TextStyle(color: Colors.white),
-                ),
-              ),
-              const SizedBox(width: 16),
-              Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  Text(fullName.isEmpty ? 'Administrator' : fullName),
-                  const Text(
-                    'Administrator',
-                    style: TextStyle(color: Color(0xFF6B7280), fontSize: 12),
-                  ),
-                ],
-              ),
-              const SizedBox(width: 12),
-              Container(
-                width: 40,
-                height: 40,
-                alignment: Alignment.center,
-                decoration: BoxDecoration(
-                  color: const Color(0xFF1E293B),
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: Text(
-                  fullName.isNotEmpty ? fullName[0].toUpperCase() : 'A',
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
+    return DashboardHeader(
+      title: 'My Profile',
+      fullName: fullName,
+      roleLabel: 'Manager',
+      currentTimeText: currentTimeText,
+      isCompact: isCompact,
+      timeChipColor: const Color(0xFF4ECDC4),
+      avatarColor: const Color(0xFF1E293B),
     );
   }
 }

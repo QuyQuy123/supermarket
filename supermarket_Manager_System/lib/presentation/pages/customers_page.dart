@@ -5,6 +5,7 @@ import 'package:supermarket_manager_system/data/services/customer_api_service.da
 import 'package:supermarket_manager_system/domain/models/customer_detail.dart';
 import 'package:supermarket_manager_system/domain/models/customer_list_item.dart';
 import 'package:supermarket_manager_system/domain/models/order_list_item.dart';
+import 'package:supermarket_manager_system/presentation/widgets/dashboard_header.dart';
 
 /// CustomerListScreen: list customers with Add, Details, Edit, View History.
 class CustomersContent extends StatefulWidget {
@@ -197,7 +198,10 @@ class _CustomersContentState extends State<CustomersContent> {
               style: ElevatedButton.styleFrom(
                 backgroundColor: const Color(0xFF16A34A),
                 foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 20,
+                  vertical: 12,
+                ),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(10),
                 ),
@@ -254,105 +258,115 @@ class _CustomersContentState extends State<CustomersContent> {
                         child: SingleChildScrollView(
                           scrollDirection: Axis.horizontal,
                           child: ConstrainedBox(
-                            constraints: BoxConstraints(minWidth: constraints.maxWidth),
+                            constraints: BoxConstraints(
+                              minWidth: constraints.maxWidth,
+                            ),
                             child: DataTable(
-                          horizontalMargin: 20,
-                    columnSpacing: 24,
-                    headingRowColor: const WidgetStatePropertyAll(
-                      Color(0xFFF7F8FA),
-                    ),
-                    headingTextStyle: const TextStyle(
-                      fontWeight: FontWeight.w700,
-                      color: Color(0xFF4A5568),
-                      fontSize: 12,
-                    ),
-                    columns: const [
-                      DataColumn(
-                        label: SizedBox(width: 40, child: Center(child: Text('S/N'))),
-                      ),
-                      DataColumn(label: Text('CUSTOMER')),
-                      DataColumn(label: Text('PHONE')),
-                      DataColumn(label: Text('POINTS')),
-                      DataColumn(label: Text('PURCHASES')),
-                      DataColumn(label: Text('TOTAL AMOUNT')),
-                      DataColumn(label: Text('DISCOUNT')),
-                      DataColumn(label: Text('ACTIONS')),
-                    ],
-                    rows: customers.asMap().entries.map((entry) {
-                      final i = entry.key + 1;
-                      final c = entry.value;
-                      return DataRow(
-                        cells: [
-                          DataCell(
-                            SizedBox(width: 40, child: Center(child: Text(i.toString()))),
-                          ),
-                          DataCell(
-                            InkWell(
-                              onTap: () {
-                                _selectedCustomerPhone = c.phone;
-                                _showDetail(c.id);
-                              },
-                              child: Text(
-                                c.name,
-                                style: const TextStyle(
-                                  color: Color(0xFF1A1D21),
-                                  fontWeight: FontWeight.w500,
+                              horizontalMargin: 20,
+                              columnSpacing: 24,
+                              headingRowColor: const WidgetStatePropertyAll(
+                                Color(0xFFF7F8FA),
+                              ),
+                              headingTextStyle: const TextStyle(
+                                fontWeight: FontWeight.w700,
+                                color: Color(0xFF4A5568),
+                                fontSize: 12,
+                              ),
+                              columns: const [
+                                DataColumn(
+                                  label: SizedBox(
+                                    width: 40,
+                                    child: Center(child: Text('S/N')),
+                                  ),
                                 ),
-                              ),
+                                DataColumn(label: Text('CUSTOMER')),
+                                DataColumn(label: Text('PHONE')),
+                                DataColumn(label: Text('POINTS')),
+                                DataColumn(label: Text('PURCHASES')),
+                                DataColumn(label: Text('TOTAL AMOUNT')),
+                                DataColumn(label: Text('DISCOUNT')),
+                                DataColumn(label: Text('ACTIONS')),
+                              ],
+                              rows: customers.asMap().entries.map((entry) {
+                                final i = entry.key + 1;
+                                final c = entry.value;
+                                return DataRow(
+                                  cells: [
+                                    DataCell(
+                                      SizedBox(
+                                        width: 40,
+                                        child: Center(
+                                          child: Text(i.toString()),
+                                        ),
+                                      ),
+                                    ),
+                                    DataCell(
+                                      InkWell(
+                                        onTap: () {
+                                          _selectedCustomerPhone = c.phone;
+                                          _showDetail(c.id);
+                                        },
+                                        child: Text(
+                                          c.name,
+                                          style: const TextStyle(
+                                            color: Color(0xFF1A1D21),
+                                            fontWeight: FontWeight.w500,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                    DataCell(
+                                      InkWell(
+                                        onTap: () =>
+                                            _showHistory(c.id, phone: c.phone),
+                                        child: Text(
+                                          c.phone,
+                                          style: const TextStyle(
+                                            color: Color(0xFF3B82F6),
+                                            fontWeight: FontWeight.w600,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                    DataCell(Text(c.points.toString())),
+                                    DataCell(Text(c.totalPurchases.toString())),
+                                    DataCell(Text(_formatMoney(c.totalAmount))),
+                                    DataCell(
+                                      Container(
+                                        alignment: Alignment.centerRight,
+                                        child: const Text('—'),
+                                      ), // Discount placeholder
+                                    ),
+                                    DataCell(
+                                      Center(
+                                        child: _EditActionBtn(
+                                          onTap: () =>
+                                              _openEditCustomerDialog(c),
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                );
+                              }).toList(),
                             ),
                           ),
-                          DataCell(
-                            InkWell(
-                              onTap: () => _showHistory(c.id, phone: c.phone),
-                              child: Text(
-                                c.phone,
-                                style: const TextStyle(
-                                  color: Color(0xFF3B82F6),
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                            ),
-                          ),
-                          DataCell(Text(c.points.toString())),
-                          DataCell(Text(c.totalPurchases.toString())),
-                          DataCell(Text(_formatMoney(c.totalAmount))),
-                          DataCell(
-                            Container(
-                                alignment: Alignment.centerRight,
-                                child: const Text('—')), // Discount placeholder
-                          ),
-                          DataCell(
-                            Center(
-                              child: _EditActionBtn(
-                                onTap: () => _openEditCustomerDialog(c),
-                              ),
-                            ),
-                          ),
-                        ],
-                      );
-                    }).toList(),
                         ),
                       ),
-                    ),
-                  ),
-                );
-              },
-            ),
-          );
-        },
-      ),
-    ),
-  ],
-);
+                    );
+                  },
+                ),
+              );
+            },
+          ),
+        ),
+      ],
+    );
 
     if (!widget.isCompact && _selectedCustomerId != null) {
       return Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Expanded(
-            flex: 2,
-            child: listWidget,
-          ),
+          Expanded(flex: 2, child: listWidget),
           const SizedBox(width: 24),
           Expanded(
             flex: 1,
@@ -382,10 +396,12 @@ class _CustomersContentState extends State<CustomersContent> {
   }
 
   static String _formatMoney(double v) {
-    final fmt = v.toStringAsFixed(0).replaceAllMapped(
-      RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
-      (m) => '${m[1]},',
-    );
+    final fmt = v
+        .toStringAsFixed(0)
+        .replaceAllMapped(
+          RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
+          (m) => '${m[1]},',
+        );
     return '$fmtđ';
   }
 }
@@ -433,82 +449,17 @@ class _CustomersHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      height: 72,
-      padding: const EdgeInsets.symmetric(horizontal: 24),
-      decoration: const BoxDecoration(
-        color: Colors.white,
-        border: Border(bottom: BorderSide(color: Color(0xFFE8EAED))),
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          if (isCompact)
-            Builder(
-              builder: (context) => IconButton(
-                onPressed: () => Scaffold.of(context).openDrawer(),
-                icon: const Icon(Icons.menu),
-              ),
-            )
-          else
-            const SizedBox(width: 48),
-          Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 12,
-                  vertical: 8,
-                ),
-                decoration: BoxDecoration(
-                  color: const Color(0xFF667EEA),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Text(
-                  currentTimeText,
-                  style: const TextStyle(color: Colors.white),
-                ),
-              ),
-              const SizedBox(width: 16),
-              Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  Text(fullName.isEmpty ? 'User' : fullName),
-                  const Text(
-                    'Customer Management',
-                    style: TextStyle(color: Color(0xFF6B7280), fontSize: 12),
-                  ),
-                ],
-              ),
-              const SizedBox(width: 12),
-              InkWell(
-                onTap: onProfileTap,
-                borderRadius: BorderRadius.circular(10),
-                child: Container(
-                  width: 40,
-                  height: 40,
-                  alignment: Alignment.center,
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF667EEA),
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: Text(
-                    fullName.isNotEmpty ? fullName[0].toUpperCase() : 'U',
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
+    return DashboardHeader(
+      fullName: fullName,
+      roleLabel: 'Manager',
+      currentTimeText: currentTimeText,
+      isCompact: isCompact,
+      onProfileTap: onProfileTap,
+      timeChipColor: const Color(0xFF667EEA),
+      avatarColor: const Color(0xFF667EEA),
     );
   }
 }
-
 
 class _EditActionBtn extends StatelessWidget {
   const _EditActionBtn({required this.onTap});
@@ -576,7 +527,9 @@ class _AddCustomerDialogState extends State<_AddCustomerDialog> {
     if (!_formKey.currentState!.validate()) return;
     setState(() => _isSubmitting = true);
     try {
-      final amount = double.tryParse(_amountController.text.replaceAll(',', ''));
+      final amount = double.tryParse(
+        _amountController.text.replaceAll(',', ''),
+      );
       await widget.customerApiService.createCustomer(
         name: _nameController.text.trim(),
         phone: _phoneController.text.trim(),
@@ -624,14 +577,23 @@ class _AddCustomerDialogState extends State<_AddCustomerDialog> {
                 controller: _nameController,
                 decoration: InputDecoration(
                   hintText: 'e.g. Nguyen Van A',
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 12,
+                  ),
                 ),
                 autovalidateMode: AutovalidateMode.onUserInteraction,
                 validator: (v) {
                   if (v == null || v.trim().isEmpty) return 'Name is required';
-                  if (v.trim().length < 2) return 'Name must be at least 2 characters';
-                  if (!RegExp(r'^[a-zA-Z\s\u00C0-\u024F\u1E00-\u1EFF]+$').hasMatch(v.trim())) {
+                  if (v.trim().length < 2) {
+                    return 'Name must be at least 2 characters';
+                  }
+                  if (!RegExp(
+                    r'^[a-zA-Z\s\u00C0-\u024F\u1E00-\u1EFF]+$',
+                  ).hasMatch(v.trim())) {
                     return 'Name must only contain letters';
                   }
                   return null;
@@ -643,14 +605,21 @@ class _AddCustomerDialogState extends State<_AddCustomerDialog> {
                 controller: _phoneController,
                 decoration: InputDecoration(
                   hintText: 'e.g. 0901234567',
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 12,
+                  ),
                 ),
                 autovalidateMode: AutovalidateMode.onUserInteraction,
                 keyboardType: TextInputType.phone,
                 validator: (v) {
                   if (v == null || v.trim().isEmpty) return 'Phone is required';
-                  if (!RegExp(r'^(0|84)(3|5|7|8|9)([0-9]{8})$').hasMatch(v.trim())) {
+                  if (!RegExp(
+                    r'^(0|84)(3|5|7|8|9)([0-9]{8})$',
+                  ).hasMatch(v.trim())) {
                     return 'Invalid Vietnamese phone number format';
                   }
                   return null;
@@ -662,8 +631,13 @@ class _AddCustomerDialogState extends State<_AddCustomerDialog> {
                 controller: _amountController,
                 decoration: InputDecoration(
                   hintText: 'e.g. 1,000,000',
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 12,
+                  ),
                 ),
                 autovalidateMode: AutovalidateMode.onUserInteraction,
                 keyboardType: TextInputType.number,
@@ -697,13 +671,18 @@ class _AddCustomerDialogState extends State<_AddCustomerDialog> {
             backgroundColor: const Color(0xFFDC2626),
             foregroundColor: Colors.white,
             padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(8),
+            ),
             elevation: 0,
           ),
           onPressed: _isSubmitting
               ? null
               : () => Navigator.of(context).pop(false),
-          child: const Text('Cancel', style: TextStyle(fontWeight: FontWeight.w600)),
+          child: const Text(
+            'Cancel',
+            style: TextStyle(fontWeight: FontWeight.w600),
+          ),
         ),
         const SizedBox(width: 8),
         ElevatedButton(
@@ -711,11 +690,16 @@ class _AddCustomerDialogState extends State<_AddCustomerDialog> {
             backgroundColor: const Color(0xFF16A34A),
             foregroundColor: Colors.white,
             padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(8),
+            ),
             elevation: 0,
           ),
           onPressed: _isSubmitting ? null : _submit,
-          child: Text(_isSubmitting ? 'Submitting...' : 'Submit', style: const TextStyle(fontWeight: FontWeight.w600)),
+          child: Text(
+            _isSubmitting ? 'Submitting...' : 'Submit',
+            style: const TextStyle(fontWeight: FontWeight.w600),
+          ),
         ),
       ],
     );
@@ -766,7 +750,9 @@ class _EditCustomerDialogState extends State<_EditCustomerDialog> {
     super.initState();
     _nameController = TextEditingController(text: widget.customer.name);
     _phoneController = TextEditingController(text: widget.customer.phone);
-    _amountController = TextEditingController(text: widget.customer.totalAmount.toStringAsFixed(0));
+    _amountController = TextEditingController(
+      text: widget.customer.totalAmount.toStringAsFixed(0),
+    );
   }
 
   @override
@@ -782,7 +768,9 @@ class _EditCustomerDialogState extends State<_EditCustomerDialog> {
     if (!_formKey.currentState!.validate()) return;
     setState(() => _isSubmitting = true);
     try {
-      final amount = double.tryParse(_amountController.text.replaceAll(',', ''));
+      final amount = double.tryParse(
+        _amountController.text.replaceAll(',', ''),
+      );
       await widget.customerApiService.updateCustomer(
         customerId: widget.customer.id,
         name: _nameController.text.trim(),
@@ -829,14 +817,23 @@ class _EditCustomerDialogState extends State<_EditCustomerDialog> {
               TextFormField(
                 controller: _nameController,
                 decoration: InputDecoration(
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 12,
+                  ),
                 ),
                 autovalidateMode: AutovalidateMode.onUserInteraction,
                 validator: (v) {
                   if (v == null || v.trim().isEmpty) return 'Name is required';
-                  if (v.trim().length < 2) return 'Name must be at least 2 characters';
-                  if (!RegExp(r'^[a-zA-Z\s\u00C0-\u024F\u1E00-\u1EFF]+$').hasMatch(v.trim())) {
+                  if (v.trim().length < 2) {
+                    return 'Name must be at least 2 characters';
+                  }
+                  if (!RegExp(
+                    r'^[a-zA-Z\s\u00C0-\u024F\u1E00-\u1EFF]+$',
+                  ).hasMatch(v.trim())) {
                     return 'Name must only contain letters';
                   }
                   return null;
@@ -847,14 +844,21 @@ class _EditCustomerDialogState extends State<_EditCustomerDialog> {
               TextFormField(
                 controller: _phoneController,
                 decoration: InputDecoration(
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 12,
+                  ),
                 ),
                 autovalidateMode: AutovalidateMode.onUserInteraction,
                 keyboardType: TextInputType.phone,
                 validator: (v) {
                   if (v == null || v.trim().isEmpty) return 'Phone is required';
-                  if (!RegExp(r'^(0|84)(3|5|7|8|9)([0-9]{8})$').hasMatch(v.trim())) {
+                  if (!RegExp(
+                    r'^(0|84)(3|5|7|8|9)([0-9]{8})$',
+                  ).hasMatch(v.trim())) {
                     return 'Invalid Vietnamese phone number format';
                   }
                   return null;
@@ -866,8 +870,13 @@ class _EditCustomerDialogState extends State<_EditCustomerDialog> {
                 controller: _amountController,
                 decoration: InputDecoration(
                   hintText: 'e.g. 1,000,000',
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 12,
+                  ),
                 ),
                 autovalidateMode: AutovalidateMode.onUserInteraction,
                 keyboardType: TextInputType.number,
@@ -902,13 +911,18 @@ class _EditCustomerDialogState extends State<_EditCustomerDialog> {
             backgroundColor: const Color(0xFFDC2626),
             foregroundColor: Colors.white,
             padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(8),
+            ),
             elevation: 0,
           ),
           onPressed: _isSubmitting
               ? null
               : () => Navigator.of(context).pop(false),
-          child: const Text('Cancel', style: TextStyle(fontWeight: FontWeight.w600)),
+          child: const Text(
+            'Cancel',
+            style: TextStyle(fontWeight: FontWeight.w600),
+          ),
         ),
         const SizedBox(width: 8),
         ElevatedButton(
@@ -916,11 +930,16 @@ class _EditCustomerDialogState extends State<_EditCustomerDialog> {
             backgroundColor: const Color(0xFF16A34A),
             foregroundColor: Colors.white,
             padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(8),
+            ),
             elevation: 0,
           ),
           onPressed: _isSubmitting ? null : _submit,
-          child: Text(_isSubmitting ? 'Updating...' : 'Update', style: const TextStyle(fontWeight: FontWeight.w600)),
+          child: Text(
+            _isSubmitting ? 'Updating...' : 'Update',
+            style: const TextStyle(fontWeight: FontWeight.w600),
+          ),
         ),
       ],
     );
@@ -984,7 +1003,9 @@ class _AddCustomerScreenState extends State<AddCustomerScreen> {
     if (!_formKey.currentState!.validate()) return;
     setState(() => _isSubmitting = true);
     try {
-      final amount = double.tryParse(_amountController.text.replaceAll(',', ''));
+      final amount = double.tryParse(
+        _amountController.text.replaceAll(',', ''),
+      );
       await widget.customerApiService.createCustomer(
         name: _nameController.text.trim(),
         phone: _phoneController.text.trim(),
@@ -1010,99 +1031,100 @@ class _AddCustomerScreenState extends State<AddCustomerScreen> {
         controller: _scrollController,
         padding: const EdgeInsets.only(top: 8),
         children: [
-        TextButton.icon(
-          style: TextButton.styleFrom(
-            alignment: Alignment.centerLeft,
-            foregroundColor: const Color(0xFF667EEA),
-          ),
-          onPressed: widget.onCancel,
-          icon: const Icon(Icons.arrow_back, size: 20),
-          label: const Text(
-            'Back to Customer list',
-            style: TextStyle(fontWeight: FontWeight.w600),
-          ),
-        ),
-        const SizedBox(height: 16),
-        const Text(
-          'Add Customer',
-          style: TextStyle(fontSize: 24, fontWeight: FontWeight.w700),
-        ),
-        const SizedBox(height: 24),
-        Form(
-          key: _formKey,
-          child: Container(
-            padding: const EdgeInsets.all(24),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: const Color(0xFFE8EAED)),
+          TextButton.icon(
+            style: TextButton.styleFrom(
+              alignment: Alignment.centerLeft,
+              foregroundColor: const Color(0xFF667EEA),
             ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                TextFormField(
-                  controller: _nameController,
-                  decoration: const InputDecoration(
-                    labelText: 'Customer Name *',
-                    border: OutlineInputBorder(),
-                  ),
-                  validator: (v) =>
-                      v == null || v.trim().isEmpty ? 'Name is required' : null,
-                ),
-                const SizedBox(height: 16),
-                TextFormField(
-                  controller: _phoneController,
-                  decoration: const InputDecoration(
-                    labelText: 'Phone *',
-                    border: OutlineInputBorder(),
-                  ),
-                  keyboardType: TextInputType.phone,
-                  validator: (v) => v == null || v.trim().isEmpty
-                      ? 'Phone is required'
-                      : null,
-                ),
-                const SizedBox(height: 16),
-                TextFormField(
-                  controller: _amountController,
-                  decoration: const InputDecoration(
-                    labelText: 'Total Amount',
-                    border: OutlineInputBorder(),
-                  ),
-                  keyboardType: TextInputType.number,
-                ),
-                if (_errorText != null) ...[
-                  const SizedBox(height: 12),
-                  Text(
-                    _errorText!,
-                    style: const TextStyle(color: Color(0xFFDC2626)),
-                  ),
-                ],
-                const SizedBox(height: 24),
-                Row(
-                  children: [
-                    ElevatedButton(
-                      onPressed: _isSubmitting ? null : _submit,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF667EEA),
-                        foregroundColor: Colors.white,
-                      ),
-                      child: Text(_isSubmitting ? 'Saving...' : 'Save'),
+            onPressed: widget.onCancel,
+            icon: const Icon(Icons.arrow_back, size: 20),
+            label: const Text(
+              'Back to Customer list',
+              style: TextStyle(fontWeight: FontWeight.w600),
+            ),
+          ),
+          const SizedBox(height: 16),
+          const Text(
+            'Add Customer',
+            style: TextStyle(fontSize: 24, fontWeight: FontWeight.w700),
+          ),
+          const SizedBox(height: 24),
+          Form(
+            key: _formKey,
+            child: Container(
+              padding: const EdgeInsets.all(24),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: const Color(0xFFE8EAED)),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  TextFormField(
+                    controller: _nameController,
+                    decoration: const InputDecoration(
+                      labelText: 'Customer Name *',
+                      border: OutlineInputBorder(),
                     ),
-                    const SizedBox(width: 12),
-                    TextButton(
-                      onPressed: widget.onCancel,
-                      child: const Text('Cancel'),
+                    validator: (v) => v == null || v.trim().isEmpty
+                        ? 'Name is required'
+                        : null,
+                  ),
+                  const SizedBox(height: 16),
+                  TextFormField(
+                    controller: _phoneController,
+                    decoration: const InputDecoration(
+                      labelText: 'Phone *',
+                      border: OutlineInputBorder(),
+                    ),
+                    keyboardType: TextInputType.phone,
+                    validator: (v) => v == null || v.trim().isEmpty
+                        ? 'Phone is required'
+                        : null,
+                  ),
+                  const SizedBox(height: 16),
+                  TextFormField(
+                    controller: _amountController,
+                    decoration: const InputDecoration(
+                      labelText: 'Total Amount',
+                      border: OutlineInputBorder(),
+                    ),
+                    keyboardType: TextInputType.number,
+                  ),
+                  if (_errorText != null) ...[
+                    const SizedBox(height: 12),
+                    Text(
+                      _errorText!,
+                      style: const TextStyle(color: Color(0xFFDC2626)),
                     ),
                   ],
-                ),
-              ],
+                  const SizedBox(height: 24),
+                  Row(
+                    children: [
+                      ElevatedButton(
+                        onPressed: _isSubmitting ? null : _submit,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFF667EEA),
+                          foregroundColor: Colors.white,
+                        ),
+                        child: Text(_isSubmitting ? 'Saving...' : 'Save'),
+                      ),
+                      const SizedBox(width: 12),
+                      TextButton(
+                        onPressed: widget.onCancel,
+                        child: const Text('Cancel'),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
             ),
           ),
-        ),
-      ],
-    ),
-  );
-}
+        ],
+      ),
+    );
+  }
 }
 
 /// CustomerDetailContent: view one customer with Edit and View History.
@@ -1127,7 +1149,9 @@ class CustomerDetailContent extends StatefulWidget {
   final bool isSidePanel;
 
   static String _formatMoney(double v) {
-    final fmt = v.toStringAsFixed(0).replaceAllMapped(
+    final fmt = v
+        .toStringAsFixed(0)
+        .replaceAllMapped(
           RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
           (m) => '${m[1]},',
         );
@@ -1184,117 +1208,125 @@ class _CustomerDetailContentState extends State<CustomerDetailContent> {
           thumbVisibility: true,
           child: ListView(
             controller: _scrollController,
-            padding: widget.isSidePanel ? EdgeInsets.zero : const EdgeInsets.only(top: 8),
+            padding: widget.isSidePanel
+                ? EdgeInsets.zero
+                : const EdgeInsets.only(top: 8),
             children: [
-            if (!widget.isSidePanel && widget.onBack != null) ...[
-              TextButton.icon(
-                style: TextButton.styleFrom(
-                  alignment: Alignment.centerLeft,
-                  foregroundColor: const Color(0xFF667EEA),
+              if (!widget.isSidePanel && widget.onBack != null) ...[
+                TextButton.icon(
+                  style: TextButton.styleFrom(
+                    alignment: Alignment.centerLeft,
+                    foregroundColor: const Color(0xFF667EEA),
+                  ),
+                  onPressed: widget.onBack,
+                  icon: const Icon(Icons.arrow_back, size: 20),
+                  label: const Text(
+                    'Back to Customer list',
+                    style: TextStyle(fontWeight: FontWeight.w600),
+                  ),
                 ),
-                onPressed: widget.onBack,
-                icon: const Icon(Icons.arrow_back, size: 20),
-                label: const Text(
-                  'Back to Customer list',
-                  style: TextStyle(fontWeight: FontWeight.w600),
+                const SizedBox(height: 16),
+              ],
+              Container(
+                padding: const EdgeInsets.all(24),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: const Color(0xFFE8EAED)),
+                  boxShadow: const [
+                    BoxShadow(
+                      color: Color(0x14000000),
+                      blurRadius: 12,
+                      offset: Offset(0, 2),
+                    ),
+                  ],
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Text(
+                          'Customer Detail',
+                          style: TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                        if (widget.isSidePanel && widget.onClose != null)
+                          IconButton(
+                            icon: const Icon(Icons.close),
+                            onPressed: widget.onClose,
+                            tooltip: 'Close',
+                          ),
+                      ],
+                    ),
+                    const SizedBox(height: 20),
+                    const Divider(color: Color(0xFFE8EAED), height: 1),
+                    const SizedBox(height: 20),
+                    _DetailRow(label: 'ID', value: c.id.toString()),
+                    _DetailRow(label: 'Name', value: c.name),
+                    _DetailRow(label: 'Phone', value: c.phone),
+                    _DetailRow(label: 'Points', value: c.points.toString()),
+                    _DetailRow(
+                      label: 'Total Purchases',
+                      value: c.totalPurchases.toString(),
+                    ),
+                    _DetailRow(
+                      label: 'Total Amount',
+                      value: CustomerDetailContent._formatMoney(c.totalAmount),
+                    ),
+                    if (c.discountName.isNotEmpty && c.discountName != '—')
+                      _DetailRow(label: 'Discount', value: c.discountName),
+                    const SizedBox(height: 24),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: ElevatedButton.icon(
+                            onPressed: widget.onEdit,
+                            icon: const Icon(Icons.edit, size: 18),
+                            label: const Text('Edit'),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: const Color(0xFF667EEA),
+                              foregroundColor: Colors.white,
+                              padding: const EdgeInsets.symmetric(vertical: 12),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: OutlinedButton.icon(
+                            onPressed: widget.onViewHistory,
+                            icon: const Icon(Icons.history, size: 18),
+                            label: const Text(
+                              'History',
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                            style: OutlinedButton.styleFrom(
+                              padding: const EdgeInsets.symmetric(vertical: 12),
+                              side: const BorderSide(color: Color(0xFFD1D5DB)),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              foregroundColor: const Color(0xFF374151),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
                 ),
               ),
-              const SizedBox(height: 16),
             ],
-            Container(
-              padding: const EdgeInsets.all(24),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: const Color(0xFFE8EAED)),
-                boxShadow: const [
-                  BoxShadow(
-                    color: Color(0x14000000),
-                    blurRadius: 12,
-                    offset: Offset(0, 2),
-                  ),
-                ],
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      const Text(
-                        'Customer Detail',
-                        style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700),
-                      ),
-                      if (widget.isSidePanel && widget.onClose != null)
-                        IconButton(
-                          icon: const Icon(Icons.close),
-                          onPressed: widget.onClose,
-                          tooltip: 'Close',
-                        ),
-                    ],
-                  ),
-                  const SizedBox(height: 20),
-                  const Divider(color: Color(0xFFE8EAED), height: 1),
-                  const SizedBox(height: 20),
-                  _DetailRow(label: 'ID', value: c.id.toString()),
-                  _DetailRow(label: 'Name', value: c.name),
-                  _DetailRow(label: 'Phone', value: c.phone),
-                  _DetailRow(label: 'Points', value: c.points.toString()),
-                  _DetailRow(
-                    label: 'Total Purchases',
-                    value: c.totalPurchases.toString(),
-                  ),
-                  _DetailRow(
-                    label: 'Total Amount',
-                    value: CustomerDetailContent._formatMoney(c.totalAmount),
-                  ),
-                  if (c.discountName.isNotEmpty && c.discountName != '—')
-                    _DetailRow(label: 'Discount', value: c.discountName),
-                  const SizedBox(height: 24),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: ElevatedButton.icon(
-                          onPressed: widget.onEdit,
-                          icon: const Icon(Icons.edit, size: 18),
-                          label: const Text('Edit'),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFF667EEA),
-                            foregroundColor: Colors.white,
-                            padding: const EdgeInsets.symmetric(vertical: 12),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: OutlinedButton.icon(
-                          onPressed: widget.onViewHistory,
-                          icon: const Icon(Icons.history, size: 18),
-                          label: const Text('History', overflow: TextOverflow.ellipsis),
-                          style: OutlinedButton.styleFrom(
-                            padding: const EdgeInsets.symmetric(vertical: 12),
-                            side: const BorderSide(color: Color(0xFFD1D5DB)),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            foregroundColor: const Color(0xFF374151),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      );
-    },
-  );
-}
+          ),
+        );
+      },
+    );
+  }
 }
 
 class _DetailRow extends StatelessWidget {
@@ -1397,7 +1429,9 @@ class _UpdateCustomerScreenState extends State<UpdateCustomerScreen> {
     if (!_formKey.currentState!.validate()) return;
     setState(() => _isSubmitting = true);
     try {
-      final amount = double.tryParse(_amountController.text.replaceAll(',', ''));
+      final amount = double.tryParse(
+        _amountController.text.replaceAll(',', ''),
+      );
       await widget.customerApiService.updateCustomer(
         customerId: widget.customerId,
         name: _nameController.text.trim(),
@@ -1438,99 +1472,100 @@ class _UpdateCustomerScreenState extends State<UpdateCustomerScreen> {
         controller: _scrollController,
         padding: const EdgeInsets.only(top: 8),
         children: [
-        TextButton.icon(
-          style: TextButton.styleFrom(
-            alignment: Alignment.centerLeft,
-            foregroundColor: const Color(0xFF667EEA),
-          ),
-          onPressed: widget.onCancel,
-          icon: const Icon(Icons.arrow_back, size: 20),
-          label: const Text(
-            'Back to Detail',
-            style: TextStyle(fontWeight: FontWeight.w600),
-          ),
-        ),
-        const SizedBox(height: 16),
-        const Text(
-          'Update Customer',
-          style: TextStyle(fontSize: 24, fontWeight: FontWeight.w700),
-        ),
-        const SizedBox(height: 24),
-        Form(
-          key: _formKey,
-          child: Container(
-            padding: const EdgeInsets.all(24),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: const Color(0xFFE8EAED)),
+          TextButton.icon(
+            style: TextButton.styleFrom(
+              alignment: Alignment.centerLeft,
+              foregroundColor: const Color(0xFF667EEA),
             ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                TextFormField(
-                  controller: _nameController,
-                  decoration: const InputDecoration(
-                    labelText: 'Customer Name *',
-                    border: OutlineInputBorder(),
-                  ),
-                  validator: (v) =>
-                      v == null || v.trim().isEmpty ? 'Name is required' : null,
-                ),
-                const SizedBox(height: 16),
-                TextFormField(
-                  controller: _phoneController,
-                  decoration: const InputDecoration(
-                    labelText: 'Phone *',
-                    border: OutlineInputBorder(),
-                  ),
-                  keyboardType: TextInputType.phone,
-                  validator: (v) => v == null || v.trim().isEmpty
-                      ? 'Phone is required'
-                      : null,
-                ),
-                const SizedBox(height: 16),
-                TextFormField(
-                  controller: _amountController,
-                  decoration: const InputDecoration(
-                    labelText: 'Total Amount',
-                    border: OutlineInputBorder(),
-                  ),
-                  keyboardType: TextInputType.number,
-                ),
-                if (_errorText != null) ...[
-                  const SizedBox(height: 12),
-                  Text(
-                    _errorText!,
-                    style: const TextStyle(color: Color(0xFFDC2626)),
-                  ),
-                ],
-                const SizedBox(height: 24),
-                Row(
-                  children: [
-                    ElevatedButton(
-                      onPressed: _isSubmitting ? null : _submit,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF667EEA),
-                        foregroundColor: Colors.white,
-                      ),
-                      child: Text(_isSubmitting ? 'Saving...' : 'Save'),
+            onPressed: widget.onCancel,
+            icon: const Icon(Icons.arrow_back, size: 20),
+            label: const Text(
+              'Back to Detail',
+              style: TextStyle(fontWeight: FontWeight.w600),
+            ),
+          ),
+          const SizedBox(height: 16),
+          const Text(
+            'Update Customer',
+            style: TextStyle(fontSize: 24, fontWeight: FontWeight.w700),
+          ),
+          const SizedBox(height: 24),
+          Form(
+            key: _formKey,
+            child: Container(
+              padding: const EdgeInsets.all(24),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: const Color(0xFFE8EAED)),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  TextFormField(
+                    controller: _nameController,
+                    decoration: const InputDecoration(
+                      labelText: 'Customer Name *',
+                      border: OutlineInputBorder(),
                     ),
-                    const SizedBox(width: 12),
-                    TextButton(
-                      onPressed: widget.onCancel,
-                      child: const Text('Cancel'),
+                    validator: (v) => v == null || v.trim().isEmpty
+                        ? 'Name is required'
+                        : null,
+                  ),
+                  const SizedBox(height: 16),
+                  TextFormField(
+                    controller: _phoneController,
+                    decoration: const InputDecoration(
+                      labelText: 'Phone *',
+                      border: OutlineInputBorder(),
+                    ),
+                    keyboardType: TextInputType.phone,
+                    validator: (v) => v == null || v.trim().isEmpty
+                        ? 'Phone is required'
+                        : null,
+                  ),
+                  const SizedBox(height: 16),
+                  TextFormField(
+                    controller: _amountController,
+                    decoration: const InputDecoration(
+                      labelText: 'Total Amount',
+                      border: OutlineInputBorder(),
+                    ),
+                    keyboardType: TextInputType.number,
+                  ),
+                  if (_errorText != null) ...[
+                    const SizedBox(height: 12),
+                    Text(
+                      _errorText!,
+                      style: const TextStyle(color: Color(0xFFDC2626)),
                     ),
                   ],
-                ),
-              ],
+                  const SizedBox(height: 24),
+                  Row(
+                    children: [
+                      ElevatedButton(
+                        onPressed: _isSubmitting ? null : _submit,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFF667EEA),
+                          foregroundColor: Colors.white,
+                        ),
+                        child: Text(_isSubmitting ? 'Saving...' : 'Save'),
+                      ),
+                      const SizedBox(width: 12),
+                      TextButton(
+                        onPressed: widget.onCancel,
+                        child: const Text('Cancel'),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
             ),
           ),
-        ),
-      ],
-    ),
-  );
-}
+        ],
+      ),
+    );
+  }
 }
 
 /// ViewCustomerHistoryScreen: list orders for a customer.
@@ -1560,7 +1595,9 @@ class ViewCustomerHistoryScreen extends StatefulWidget {
   }
 
   static String _formatMoney(double v) {
-    final fmt = v.toStringAsFixed(0).replaceAllMapped(
+    final fmt = v
+        .toStringAsFixed(0)
+        .replaceAllMapped(
           RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
           (m) => '${m[1]},',
         );
@@ -1585,7 +1622,9 @@ class _ViewCustomerHistoryScreenState extends State<ViewCustomerHistoryScreen> {
   @override
   void initState() {
     super.initState();
-    _future = widget.customerApiService.getCustomerOrderHistory(widget.customerId);
+    _future = widget.customerApiService.getCustomerOrderHistory(
+      widget.customerId,
+    );
   }
 
   @override
@@ -1603,10 +1642,7 @@ class _ViewCustomerHistoryScreenState extends State<ViewCustomerHistoryScreen> {
               children: [
                 Text('Cannot load history: ${snapshot.error}'),
                 const SizedBox(height: 12),
-                TextButton(
-                  onPressed: widget.onBack,
-                  child: const Text('Back'),
-                ),
+                TextButton(onPressed: widget.onBack, child: const Text('Back')),
               ],
             ),
           );
@@ -1644,9 +1680,7 @@ class _ViewCustomerHistoryScreenState extends State<ViewCustomerHistoryScreen> {
                 children: [
                   TextSpan(
                     text: widget.phone,
-                    style: const TextStyle(
-                      color: Color(0xFF667EEA),
-                    ),
+                    style: const TextStyle(color: Color(0xFF667EEA)),
                   ),
                 ],
               ),
@@ -1710,12 +1744,20 @@ class _ViewCustomerHistoryScreenState extends State<ViewCustomerHistoryScreen> {
                                   (o) => DataRow(
                                     cells: [
                                       DataCell(Text(o.orderNo)),
-                                      DataCell(Text(
+                                      DataCell(
+                                        Text(
                                           ViewCustomerHistoryScreen._formatDateTime(
-                                              o.createdAt))),
-                                      DataCell(Text(
+                                            o.createdAt,
+                                          ),
+                                        ),
+                                      ),
+                                      DataCell(
+                                        Text(
                                           ViewCustomerHistoryScreen._formatMoney(
-                                              o.total))),
+                                            o.total,
+                                          ),
+                                        ),
+                                      ),
                                       DataCell(
                                         Center(
                                           child: Text(
@@ -1725,13 +1767,15 @@ class _ViewCustomerHistoryScreenState extends State<ViewCustomerHistoryScreen> {
                                           ),
                                         ),
                                       ),
-                                      DataCell(Text(
-                                          ViewCustomerHistoryScreen._formatMoney(
-                                              o.payable))),
-                                      DataCell(Text(o.paymentMethod)),
                                       DataCell(
-                                        _StatusBadge(status: o.status),
+                                        Text(
+                                          ViewCustomerHistoryScreen._formatMoney(
+                                            o.payable,
+                                          ),
+                                        ),
                                       ),
+                                      DataCell(Text(o.paymentMethod)),
+                                      DataCell(_StatusBadge(status: o.status)),
                                       DataCell(
                                         _ViewOrderActionBtn(
                                           onTap: () {

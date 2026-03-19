@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:supermarket_manager_system/data/services/order_api_service.dart';
 import 'package:supermarket_manager_system/domain/models/dashboard_summary.dart';
 import 'package:supermarket_manager_system/domain/models/dashboard_transaction.dart';
+import 'package:supermarket_manager_system/presentation/widgets/dashboard_header.dart';
 
 class DashboardContent extends StatefulWidget {
   final String fullName;
@@ -39,12 +40,15 @@ class _DashboardContentState extends State<DashboardContent> {
   List<DashboardTransaction> get _filteredTransactions {
     final q = _searchCtrl.text.toLowerCase();
     if (q.isEmpty) return _transactions;
-    return _transactions.where((t) =>
-      t.orderNo.toLowerCase().contains(q) ||
-      t.cashierName.toLowerCase().contains(q) ||
-      t.paymentMethod.toLowerCase().contains(q) ||
-      t.status.toLowerCase().contains(q)
-    ).toList();
+    return _transactions
+        .where(
+          (t) =>
+              t.orderNo.toLowerCase().contains(q) ||
+              t.cashierName.toLowerCase().contains(q) ||
+              t.paymentMethod.toLowerCase().contains(q) ||
+              t.status.toLowerCase().contains(q),
+        )
+        .toList();
   }
 
   List<DashboardTransaction> get _pagedTransactions {
@@ -71,18 +75,36 @@ class _DashboardContentState extends State<DashboardContent> {
   Future<void> _loadSummary() async {
     try {
       final s = await _service.getDashboardSummary();
-      if (mounted) setState(() { _summary = s; _loadingSummary = false; });
+      if (mounted) {
+        setState(() {
+          _summary = s;
+          _loadingSummary = false;
+        });
+      }
     } catch (_) {
-      if (mounted) setState(() { _loadingSummary = false; });
+      if (mounted) {
+        setState(() {
+          _loadingSummary = false;
+        });
+      }
     }
   }
 
   Future<void> _loadTransactions() async {
     try {
       final t = await _service.getTodayTransactions();
-      if (mounted) setState(() { _transactions = t; _loadingTransactions = false; });
+      if (mounted) {
+        setState(() {
+          _transactions = t;
+          _loadingTransactions = false;
+        });
+      }
     } catch (e) {
-      if (mounted) setState(() { _loadingTransactions = false; });
+      if (mounted) {
+        setState(() {
+          _loadingTransactions = false;
+        });
+      }
     }
   }
 
@@ -119,67 +141,23 @@ class _DashboardContentState extends State<DashboardContent> {
   }
 
   Widget _buildTopBar() {
-    return Container(
-      height: 72,
-      padding: const EdgeInsets.symmetric(horizontal: 24),
-      decoration: const BoxDecoration(
-        color: Colors.white,
-        border: Border(bottom: BorderSide(color: Color(0xFFE8EAED))),
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          if (widget.isCompact)
-            Builder(builder: (ctx) => IconButton(
-              onPressed: () => Scaffold.of(ctx).openDrawer(),
-              icon: const Icon(Icons.menu),
-            ))
-          else
-            const SizedBox(width: 4),
-          Row(children: [
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-              decoration: BoxDecoration(
-                color: const Color(0xFF16A34A),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Text(widget.currentTimeText, style: const TextStyle(color: Colors.white)),
-            ),
-            const SizedBox(width: 16),
-            Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.end,
-              children: [
-                Text(widget.fullName.isEmpty ? widget.roleLabel : widget.fullName,
-                    style: const TextStyle(fontWeight: FontWeight.w600)),
-                Text(widget.roleLabel, style: const TextStyle(color: Color(0xFF6B7280), fontSize: 12)),
-              ],
-            ),
-            const SizedBox(width: 12),
-            GestureDetector(
-              onTap: widget.onProfileTap,
-              child: Container(
-                width: 40, height: 40,
-                alignment: Alignment.center,
-                decoration: BoxDecoration(
-                  color: const Color(0xFF1E293B),
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: Text(
-                  widget.fullName.isNotEmpty ? widget.fullName[0].toUpperCase() : widget.roleLabel[0].toUpperCase(),
-                  style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700),
-                ),
-              ),
-            ),
-          ]),
-        ],
-      ),
+    return DashboardHeader(
+      fullName: widget.fullName,
+      roleLabel: widget.roleLabel,
+      currentTimeText: widget.currentTimeText,
+      isCompact: widget.isCompact,
+      onProfileTap: widget.onProfileTap,
+      timeChipColor: const Color(0xFF16A34A),
+      avatarColor: const Color(0xFF1E293B),
     );
   }
 
   Widget _buildColorCards() {
     if (_loadingSummary) {
-      return const SizedBox(height: 100, child: Center(child: CircularProgressIndicator()));
+      return const SizedBox(
+        height: 100,
+        child: Center(child: CircularProgressIndicator()),
+      );
     }
     final s = _summary;
     final cards = [
@@ -210,106 +188,221 @@ class _DashboardContentState extends State<DashboardContent> {
       ),
     ];
 
-    return LayoutBuilder(builder: (ctx, constraints) {
-      final w = constraints.maxWidth;
-      final cols = w >= 1200 ? 4 : (w >= 700 ? 2 : 1);
-      final cw = (w - (cols - 1) * 12) / cols;
-      return Wrap(
-        spacing: 12, runSpacing: 12,
-        children: cards.map((c) => SizedBox(width: cw, child: _ColorCard(data: c))).toList(),
-      );
-    });
+    return LayoutBuilder(
+      builder: (ctx, constraints) {
+        final w = constraints.maxWidth;
+        final cols = w >= 1200 ? 4 : (w >= 700 ? 2 : 1);
+        final cw = (w - (cols - 1) * 12) / cols;
+        return Wrap(
+          spacing: 12,
+          runSpacing: 12,
+          children: cards
+              .map(
+                (c) => SizedBox(
+                  width: cw,
+                  child: _ColorCard(data: c),
+                ),
+              )
+              .toList(),
+        );
+      },
+    );
   }
 
   Widget _buildStatsGrid() {
     if (_loadingSummary) return const SizedBox.shrink();
     final s = _summary;
     final items = [
-      ('Suppliers', s != null ? s.supplierCount.toString() : '—', '👤', const Color(0xFFFED7AA), const Color(0xFFC2410C)),
-      ('Invoices', s != null ? s.invoiceCount.toString() : '—', '🛒', const Color(0xFFE9D5FF), const Color(0xFF6B21A8)),
-      ('Current Month Sales', s != null ? _fmtMoney(s.currentMonthSales) : '—', '%', const Color(0xFFFDE68A), const Color(0xFFB45309)),
-      ('Last 3 Month Record', s != null ? _fmtMoney(s.last3MonthSales) : '—', '🧮', const Color(0xFFFBCFE8), const Color(0xFF9D174D)),
-      ('Last 6 Month Record Sales', s != null ? _fmtMoney(s.last6MonthSales) : '—', '▦', const Color(0xFFBFDBFE), const Color(0xFF1D4ED8)),
-      ('Users', s != null ? s.userCount.toString() : '—', '👥', const Color(0xFFBBF7D0), const Color(0xFF166534)),
-      ('Available Products', s != null ? s.availableProductsCount.toString() : '—', '🛍', const Color(0xFFFED7AA), const Color(0xFFC2410C)),
-      ('Current Year Revenue', s != null ? _fmtMoney(s.currentYearRevenue) : '—', '⭐', const Color(0xFFFEF08A), const Color(0xFFA16207)),
+      (
+        'Suppliers',
+        s != null ? s.supplierCount.toString() : '—',
+        '👤',
+        const Color(0xFFFED7AA),
+        const Color(0xFFC2410C),
+      ),
+      (
+        'Invoices',
+        s != null ? s.invoiceCount.toString() : '—',
+        '🛒',
+        const Color(0xFFE9D5FF),
+        const Color(0xFF6B21A8),
+      ),
+      (
+        'Current Month Sales',
+        s != null ? _fmtMoney(s.currentMonthSales) : '—',
+        '%',
+        const Color(0xFFFDE68A),
+        const Color(0xFFB45309),
+      ),
+      (
+        'Last 3 Month Record',
+        s != null ? _fmtMoney(s.last3MonthSales) : '—',
+        '🧮',
+        const Color(0xFFFBCFE8),
+        const Color(0xFF9D174D),
+      ),
+      (
+        'Last 6 Month Record Sales',
+        s != null ? _fmtMoney(s.last6MonthSales) : '—',
+        '▦',
+        const Color(0xFFBFDBFE),
+        const Color(0xFF1D4ED8),
+      ),
+      (
+        'Users',
+        s != null ? s.userCount.toString() : '—',
+        '👥',
+        const Color(0xFFBBF7D0),
+        const Color(0xFF166534),
+      ),
+      (
+        'Available Products',
+        s != null ? s.availableProductsCount.toString() : '—',
+        '🛍',
+        const Color(0xFFFED7AA),
+        const Color(0xFFC2410C),
+      ),
+      (
+        'Current Year Revenue',
+        s != null ? _fmtMoney(s.currentYearRevenue) : '—',
+        '⭐',
+        const Color(0xFFFEF08A),
+        const Color(0xFFA16207),
+      ),
     ];
 
-    return LayoutBuilder(builder: (ctx, constraints) {
-      final w = constraints.maxWidth;
-      final cols = w >= 1200 ? 3 : (w >= 800 ? 2 : 1);
-      final cw = (w - (cols - 1) * 12) / cols;
-      return Wrap(
-        spacing: 12, runSpacing: 12,
-        children: items.map((item) => SizedBox(
-          width: cw,
-          child: Container(
-            padding: const EdgeInsets.all(20),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: const Color(0xFFE8EAED)),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.04),
-                  blurRadius: 10,
-                  offset: const Offset(0, 2),
+    return LayoutBuilder(
+      builder: (ctx, constraints) {
+        final w = constraints.maxWidth;
+        final cols = w >= 1200 ? 3 : (w >= 800 ? 2 : 1);
+        final cw = (w - (cols - 1) * 12) / cols;
+        return Wrap(
+          spacing: 12,
+          runSpacing: 12,
+          children: items
+              .map(
+                (item) => SizedBox(
+                  width: cw,
+                  child: Container(
+                    padding: const EdgeInsets.all(20),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: const Color(0xFFE8EAED)),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.04),
+                          blurRadius: 10,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
+                    ),
+                    child: Row(
+                      children: [
+                        Container(
+                          width: 44,
+                          height: 44,
+                          alignment: Alignment.center,
+                          decoration: BoxDecoration(
+                            color: item.$4,
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          child: Text(
+                            item.$3,
+                            style: TextStyle(
+                              color: item.$5,
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                item.$1,
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.w600,
+                                  fontSize: 13,
+                                  color: Color(0xFF374151),
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                item.$2,
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.w800,
+                                  fontSize: 20,
+                                  color: Color(0xFF1A1D21),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
                 ),
-              ],
-            ),
-            child: Row(children: [
-              Container(
-                width: 44, height: 44,
-                alignment: Alignment.center,
-                decoration: BoxDecoration(
-                  color: item.$4,
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: Text(item.$3, style: TextStyle(color: item.$5, fontSize: 18, fontWeight: FontWeight.bold)),
-              ),
-              const SizedBox(width: 16),
-              Expanded(child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(item.$1, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13, color: Color(0xFF374151))),
-                  const SizedBox(height: 4),
-                  Text(item.$2, style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 20, color: Color(0xFF1A1D21))),
-                ],
-              )),
-            ]),
-          ),
-        )).toList(),
-      );
-    });
+              )
+              .toList(),
+        );
+      },
+    );
   }
 
   Widget _buildChartRow() {
-    return LayoutBuilder(builder: (ctx, constraints) {
-      if (constraints.maxWidth < 900) {
-        return Column(children: [
-          _SalesLineChartCard(transactions: _transactions),
-          const SizedBox(height: 16),
-          _TopProductsPieChart(topProducts: _summary?.topProducts ?? []),
-        ]);
-      }
-      return Row(children: [
-        Expanded(child: _SalesLineChartCard(transactions: _transactions)),
-        const SizedBox(width: 16),
-        Expanded(child: _TopProductsPieChart(topProducts: _summary?.topProducts ?? [])),
-      ]);
-    });
+    return LayoutBuilder(
+      builder: (ctx, constraints) {
+        if (constraints.maxWidth < 900) {
+          return Column(
+            children: [
+              _SalesLineChartCard(transactions: _transactions),
+              const SizedBox(height: 16),
+              _TopProductsPieChart(topProducts: _summary?.topProducts ?? []),
+            ],
+          );
+        }
+        return Row(
+          children: [
+            Expanded(child: _SalesLineChartCard(transactions: _transactions)),
+            const SizedBox(width: 16),
+            Expanded(
+              child: _TopProductsPieChart(
+                topProducts: _summary?.topProducts ?? [],
+              ),
+            ),
+          ],
+        );
+      },
+    );
   }
 
   Widget _buildTransactionsTable() {
     final today = DateTime.now();
-    final weekdays = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
-    final months = ['January','February','March','April','May','June',
-      'July','August','September','October','November','December'];
-    final dayLabel = '${weekdays[today.weekday - 1]} ${today.day}th ${months[today.month - 1]}, ${today.year}';
+    final weekdays = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+    final months = [
+      'January',
+      'February',
+      'March',
+      'April',
+      'May',
+      'June',
+      'July',
+      'August',
+      'September',
+      'October',
+      'November',
+      'December',
+    ];
+    final dayLabel =
+        '${weekdays[today.weekday - 1]} ${today.day}th ${months[today.month - 1]}, ${today.year}';
 
     final filtered = _filteredTransactions;
     final paged = _pagedTransactions;
     final totalPages = (filtered.length / _pageSize).ceil();
+    final isCompact = widget.isCompact;
 
     return Container(
       decoration: BoxDecoration(
@@ -324,7 +417,11 @@ class _DashboardContentState extends State<DashboardContent> {
             padding: const EdgeInsets.fromLTRB(16, 20, 16, 16),
             child: RichText(
               text: TextSpan(
-                style: const TextStyle(fontSize: 18, color: Color(0xFF1A1D21), fontWeight: FontWeight.w700),
+                style: const TextStyle(
+                  fontSize: 18,
+                  color: Color(0xFF1A1D21),
+                  fontWeight: FontWeight.w700,
+                ),
                 children: [
                   const TextSpan(text: "Today's ("),
                   TextSpan(
@@ -332,113 +429,312 @@ class _DashboardContentState extends State<DashboardContent> {
                     style: const TextStyle(color: Color(0xFF16A34A)),
                   ),
                   const TextSpan(text: ") "),
-                  const TextSpan(text: "Transactions", style: TextStyle(color: Color(0xFF92400E))),
+                  const TextSpan(
+                    text: "Transactions",
+                    style: TextStyle(color: Color(0xFF92400E)),
+                  ),
                 ],
               ),
             ),
           ),
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
-            child: Row(children: [
-              const Text('Show ', style: TextStyle(fontSize: 13)),
-              DropdownButton<int>(
-                value: _pageSize,
-                isDense: true,
-                items: [5, 10, 25, 50]
-                    .map((n) => DropdownMenuItem(value: n, child: Text('$n')))
-                    .toList(),
-                onChanged: (v) { if (v != null) setState(() { _pageSize = v; _currentPage = 0; }); },
-              ),
-              const Text(' entries', style: TextStyle(fontSize: 13)),
-              const Spacer(),
-              const Text('Search: ', style: TextStyle(fontSize: 13)),
-              SizedBox(
-                width: 200,
-                child: TextField(
-                  controller: _searchCtrl,
-                  decoration: InputDecoration(
-                    isDense: true,
-                    contentPadding: const EdgeInsets.symmetric(vertical: 8, horizontal: 10),
-                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(6)),
-                    hintText: 'Search...',
+            child: isCompact
+                ? Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Text('Show ', style: TextStyle(fontSize: 13)),
+                          DropdownButton<int>(
+                            value: _pageSize,
+                            isDense: true,
+                            items: [5, 10, 25, 50]
+                                .map(
+                                  (n) => DropdownMenuItem(
+                                    value: n,
+                                    child: Text('$n'),
+                                  ),
+                                )
+                                .toList(),
+                            onChanged: (v) {
+                              if (v != null) {
+                                setState(() {
+                                  _pageSize = v;
+                                  _currentPage = 0;
+                                });
+                              }
+                            },
+                          ),
+                          const Text(
+                            ' entries',
+                            style: TextStyle(fontSize: 13),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 10),
+                      TextField(
+                        controller: _searchCtrl,
+                        decoration: InputDecoration(
+                          isDense: true,
+                          prefixIcon: const Icon(Icons.search, size: 18),
+                          contentPadding: const EdgeInsets.symmetric(
+                            vertical: 10,
+                            horizontal: 10,
+                          ),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                          hintText: 'Search...',
+                        ),
+                      ),
+                    ],
+                  )
+                : Row(
+                    children: [
+                      const Text('Show ', style: TextStyle(fontSize: 13)),
+                      DropdownButton<int>(
+                        value: _pageSize,
+                        isDense: true,
+                        items: [5, 10, 25, 50]
+                            .map(
+                              (n) =>
+                                  DropdownMenuItem(value: n, child: Text('$n')),
+                            )
+                            .toList(),
+                        onChanged: (v) {
+                          if (v != null) {
+                            setState(() {
+                              _pageSize = v;
+                              _currentPage = 0;
+                            });
+                          }
+                        },
+                      ),
+                      const Text(' entries', style: TextStyle(fontSize: 13)),
+                      const Spacer(),
+                      const Text('Search: ', style: TextStyle(fontSize: 13)),
+                      SizedBox(
+                        width: 200,
+                        child: TextField(
+                          controller: _searchCtrl,
+                          decoration: InputDecoration(
+                            isDense: true,
+                            contentPadding: const EdgeInsets.symmetric(
+                              vertical: 8,
+                              horizontal: 10,
+                            ),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(6),
+                            ),
+                            hintText: 'Search...',
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
-                ),
-              ),
-            ]),
           ),
           if (_loadingTransactions)
-            const Padding(padding: EdgeInsets.all(24), child: Center(child: CircularProgressIndicator()))
+            const Padding(
+              padding: EdgeInsets.all(24),
+              child: Center(child: CircularProgressIndicator()),
+            )
           else
             SingleChildScrollView(
               scrollDirection: Axis.horizontal,
               child: DataTable(
-                headingRowColor: WidgetStateProperty.all(const Color(0xFFF7F8FA)),
+                headingRowColor: WidgetStateProperty.all(
+                  const Color(0xFFF7F8FA),
+                ),
                 dataRowMinHeight: 56,
                 dataRowMaxHeight: 56,
                 headingRowHeight: 48,
                 horizontalMargin: 20,
                 columnSpacing: 24,
                 columns: const [
-                  DataColumn(label: Text('ORDER ID', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 12, color: Color(0xFF4A5568), letterSpacing: 0.03))),
-                  DataColumn(label: Text('PAYMENT', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 12, color: Color(0xFF4A5568), letterSpacing: 0.03))),
-                  DataColumn(label: Text('AMOUNT', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 12, color: Color(0xFF4A5568), letterSpacing: 0.03))),
-                  DataColumn(label: Text('ATTENDANT', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 12, color: Color(0xFF4A5568), letterSpacing: 0.03))),
-                  DataColumn(label: Text('STATUS', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 12, color: Color(0xFF4A5568), letterSpacing: 0.03))),
+                  DataColumn(
+                    label: Text(
+                      'ORDER ID',
+                      style: TextStyle(
+                        fontWeight: FontWeight.w600,
+                        fontSize: 12,
+                        color: Color(0xFF4A5568),
+                        letterSpacing: 0.03,
+                      ),
+                    ),
+                  ),
+                  DataColumn(
+                    label: Text(
+                      'PAYMENT',
+                      style: TextStyle(
+                        fontWeight: FontWeight.w600,
+                        fontSize: 12,
+                        color: Color(0xFF4A5568),
+                        letterSpacing: 0.03,
+                      ),
+                    ),
+                  ),
+                  DataColumn(
+                    label: Text(
+                      'AMOUNT',
+                      style: TextStyle(
+                        fontWeight: FontWeight.w600,
+                        fontSize: 12,
+                        color: Color(0xFF4A5568),
+                        letterSpacing: 0.03,
+                      ),
+                    ),
+                  ),
+                  DataColumn(
+                    label: Text(
+                      'ATTENDANT',
+                      style: TextStyle(
+                        fontWeight: FontWeight.w600,
+                        fontSize: 12,
+                        color: Color(0xFF4A5568),
+                        letterSpacing: 0.03,
+                      ),
+                    ),
+                  ),
+                  DataColumn(
+                    label: Text(
+                      'STATUS',
+                      style: TextStyle(
+                        fontWeight: FontWeight.w600,
+                        fontSize: 12,
+                        color: Color(0xFF4A5568),
+                        letterSpacing: 0.03,
+                      ),
+                    ),
+                  ),
                 ],
                 rows: paged.map((t) {
                   final isPaid = t.status.toLowerCase() == 'paid';
                   final isLink = t.paymentMethod.toLowerCase() == 'transfer';
-                  return DataRow(cells: [
-                    DataCell(Text(t.orderNo, style: const TextStyle(color: Color(0xFF667EEA), fontWeight: FontWeight.w500))),
-                    DataCell(
-                      isLink
-                          ? Text(t.paymentMethod, style: const TextStyle(color: Color(0xFF667EEA)))
-                          : Text(t.paymentMethod),
-                    ),
-                    DataCell(Text(_fmtMoney(t.totalPayable),
-                        style: const TextStyle(color: Color(0xFF667EEA)))),
-                    DataCell(Text(t.cashierName)),
-                    DataCell(Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                      decoration: BoxDecoration(
-                        color: isPaid ? const Color(0xFFDCFCE7) : const Color(0xFFFEF3C7),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Text(
-                        t.status,
-                        style: TextStyle(
-                          color: isPaid ? const Color(0xFF166534) : const Color(0xFF92400E),
-                          fontWeight: FontWeight.w600,
-                          fontSize: 12,
+                  return DataRow(
+                    cells: [
+                      DataCell(
+                        Text(
+                          t.orderNo,
+                          style: const TextStyle(
+                            color: Color(0xFF667EEA),
+                            fontWeight: FontWeight.w500,
+                          ),
                         ),
                       ),
-                    )),
-                  ]);
+                      DataCell(
+                        isLink
+                            ? Text(
+                                t.paymentMethod,
+                                style: const TextStyle(
+                                  color: Color(0xFF667EEA),
+                                ),
+                              )
+                            : Text(t.paymentMethod),
+                      ),
+                      DataCell(
+                        Text(
+                          _fmtMoney(t.totalPayable),
+                          style: const TextStyle(color: Color(0xFF667EEA)),
+                        ),
+                      ),
+                      DataCell(Text(t.cashierName)),
+                      DataCell(
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 10,
+                            vertical: 4,
+                          ),
+                          decoration: BoxDecoration(
+                            color: isPaid
+                                ? const Color(0xFFDCFCE7)
+                                : const Color(0xFFFEF3C7),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Text(
+                            t.status,
+                            style: TextStyle(
+                              color: isPaid
+                                  ? const Color(0xFF166534)
+                                  : const Color(0xFF92400E),
+                              fontWeight: FontWeight.w600,
+                              fontSize: 12,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  );
                 }).toList(),
               ),
             ),
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
-            child: Row(children: [
-              Text(
-                filtered.isEmpty
-                    ? 'No entries found'
-                    : 'Showing ${_currentPage * _pageSize + 1} to ${min((_currentPage + 1) * _pageSize, filtered.length)} of ${filtered.length} entries',
-                style: const TextStyle(fontSize: 13, color: Color(0xFF6B7280)),
-              ),
-              const Spacer(),
-              Row(children: [
-                TextButton(
-                  onPressed: _currentPage > 0 ? () => setState(() => _currentPage--) : null,
-                  child: const Text('Previous'),
-                ),
-                const SizedBox(width: 8),
-                TextButton(
-                  onPressed: _currentPage < totalPages - 1 ? () => setState(() => _currentPage++) : null,
-                  child: const Text('Next'),
-                ),
-              ]),
-            ]),
+            child: isCompact
+                ? Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        filtered.isEmpty
+                            ? 'No entries found'
+                            : 'Showing ${_currentPage * _pageSize + 1} to ${min((_currentPage + 1) * _pageSize, filtered.length)} of ${filtered.length} entries',
+                        style: const TextStyle(
+                          fontSize: 13,
+                          color: Color(0xFF6B7280),
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Row(
+                        children: [
+                          TextButton(
+                            onPressed: _currentPage > 0
+                                ? () => setState(() => _currentPage--)
+                                : null,
+                            child: const Text('Previous'),
+                          ),
+                          const SizedBox(width: 8),
+                          TextButton(
+                            onPressed: _currentPage < totalPages - 1
+                                ? () => setState(() => _currentPage++)
+                                : null,
+                            child: const Text('Next'),
+                          ),
+                        ],
+                      ),
+                    ],
+                  )
+                : Row(
+                    children: [
+                      Text(
+                        filtered.isEmpty
+                            ? 'No entries found'
+                            : 'Showing ${_currentPage * _pageSize + 1} to ${min((_currentPage + 1) * _pageSize, filtered.length)} of ${filtered.length} entries',
+                        style: const TextStyle(
+                          fontSize: 13,
+                          color: Color(0xFF6B7280),
+                        ),
+                      ),
+                      const Spacer(),
+                      Row(
+                        children: [
+                          TextButton(
+                            onPressed: _currentPage > 0
+                                ? () => setState(() => _currentPage--)
+                                : null,
+                            child: const Text('Previous'),
+                          ),
+                          const SizedBox(width: 8),
+                          TextButton(
+                            onPressed: _currentPage < totalPages - 1
+                                ? () => setState(() => _currentPage++)
+                                : null,
+                            child: const Text('Next'),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
           ),
         ],
       ),
@@ -455,8 +751,11 @@ class _ColorCardData {
   final String iconText;
   final bool darkText;
   const _ColorCardData({
-    required this.color, required this.title, required this.value,
-    required this.iconText, this.darkText = false,
+    required this.color,
+    required this.title,
+    required this.value,
+    required this.iconText,
+    this.darkText = false,
   });
 }
 
@@ -480,33 +779,65 @@ class _ColorCard extends StatelessWidget {
           ),
         ],
       ),
-      child: Row(children: [
-        Container(
-          width: 48, height: 48,
-          alignment: Alignment.center,
-          decoration: BoxDecoration(
-            color: data.darkText ? Colors.black.withValues(alpha: 0.15) : Colors.white.withValues(alpha: 0.3),
-            borderRadius: BorderRadius.circular(10),
+      child: Row(
+        children: [
+          Container(
+            width: 48,
+            height: 48,
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+              color: data.darkText
+                  ? Colors.black.withValues(alpha: 0.15)
+                  : Colors.white.withValues(alpha: 0.3),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Text(
+              data.iconText,
+              style: TextStyle(
+                color: fg,
+                fontSize: 24,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
           ),
-          child: Text(data.iconText, style: TextStyle(color: fg, fontSize: 24, fontWeight: FontWeight.bold)),
-        ),
-        const SizedBox(width: 16),
-        Expanded(child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(data.title, style: TextStyle(color: fg, fontWeight: FontWeight.w600, fontSize: 14)),
-            const SizedBox(height: 4),
-            Text(data.value,
-                style: TextStyle(color: fg, fontWeight: FontWeight.w800, fontSize: 22)),
-            const SizedBox(height: 4),
-            Text('View', style: TextStyle(
-              color: fg.withValues(alpha: 0.9), decoration: TextDecoration.underline,
-              fontSize: 13, fontWeight: FontWeight.w600,
-            )),
-          ],
-        )),
-      ]),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  data.title,
+                  style: TextStyle(
+                    color: fg,
+                    fontWeight: FontWeight.w600,
+                    fontSize: 14,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  data.value,
+                  style: TextStyle(
+                    color: fg,
+                    fontWeight: FontWeight.w800,
+                    fontSize: 22,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  'View',
+                  style: TextStyle(
+                    color: fg.withValues(alpha: 0.9),
+                    decoration: TextDecoration.underline,
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
@@ -522,7 +853,9 @@ class _SalesLineChartCard extends StatelessWidget {
     // Group by date from createdAt
     final Map<String, double> dailyMap = {};
     for (final t in transactions) {
-      final key = t.createdAt.length >= 10 ? t.createdAt.substring(0, 10) : t.createdAt;
+      final key = t.createdAt.length >= 10
+          ? t.createdAt.substring(0, 10)
+          : t.createdAt;
       dailyMap[key] = (dailyMap[key] ?? 0) + t.totalPayable;
     }
     // Add today if no data
@@ -546,13 +879,21 @@ class _SalesLineChartCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Row(children: [
-            Icon(Icons.square, color: Color(0xFF93C5FD), size: 14),
-            SizedBox(width: 4),
-            Text('Daily Sales', style: TextStyle(fontSize: 12, color: Color(0xFF6B7280))),
-          ]),
+          const Row(
+            children: [
+              Icon(Icons.square, color: Color(0xFF93C5FD), size: 14),
+              SizedBox(width: 4),
+              Text(
+                'Daily Sales',
+                style: TextStyle(fontSize: 12, color: Color(0xFF6B7280)),
+              ),
+            ],
+          ),
           const SizedBox(height: 4),
-          const Text('Sales Overview', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
+          const Text(
+            'Sales Overview',
+            style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
+          ),
           const SizedBox(height: 16),
           SizedBox(
             height: 200,
@@ -576,7 +917,11 @@ class _LineChartPainter extends CustomPainter {
   final List<String> labels;
   final double maxValue;
 
-  _LineChartPainter({required this.values, required this.labels, required this.maxValue});
+  _LineChartPainter({
+    required this.values,
+    required this.labels,
+    required this.maxValue,
+  });
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -591,7 +936,10 @@ class _LineChartPainter extends CustomPainter {
       ..style = PaintingStyle.stroke;
     final fillPaint = Paint()
       ..shader = LinearGradient(
-        colors: [const Color(0xFF3B82F6).withValues(alpha: 0.3), Colors.transparent],
+        colors: [
+          const Color(0xFF3B82F6).withValues(alpha: 0.3),
+          Colors.transparent,
+        ],
         begin: Alignment.topCenter,
         end: Alignment.bottomCenter,
       ).createShader(Rect.fromLTWH(0, 0, size.width, size.height))
@@ -607,14 +955,21 @@ class _LineChartPainter extends CustomPainter {
     // Grid lines
     for (int i = 0; i <= 4; i++) {
       final y = padTop + chartH * (1 - i / 4);
-      canvas.drawLine(Offset(padLeft, y), Offset(padLeft + chartW, y), gridPaint);
+      canvas.drawLine(
+        Offset(padLeft, y),
+        Offset(padLeft + chartW, y),
+        gridPaint,
+      );
       // Y label
       final labelVal = (maxValue * i / 4);
       final String yLabel = labelVal >= 1000
           ? '${(labelVal / 1000).toStringAsFixed(0)},000'
           : labelVal.toStringAsFixed(0);
       final tp = TextPainter(
-        text: TextSpan(text: yLabel, style: const TextStyle(fontSize: 9, color: Color(0xFF9CA3AF))),
+        text: TextSpan(
+          text: yLabel,
+          style: const TextStyle(fontSize: 9, color: Color(0xFF9CA3AF)),
+        ),
         textDirection: TextDirection.ltr,
       )..layout();
       tp.paint(canvas, Offset(0, y - tp.height / 2));
@@ -623,7 +978,9 @@ class _LineChartPainter extends CustomPainter {
     // Points
     final pts = <Offset>[];
     for (int i = 0; i < values.length; i++) {
-      final x = padLeft + (values.length == 1 ? chartW / 2 : i * chartW / (values.length - 1));
+      final x =
+          padLeft +
+          (values.length == 1 ? chartW / 2 : i * chartW / (values.length - 1));
       final y = padTop + chartH * (1 - values[i] / maxValue);
       pts.add(Offset(x, y));
     }
@@ -631,7 +988,9 @@ class _LineChartPainter extends CustomPainter {
     // Fill area
     if (pts.length >= 2) {
       final fillPath = Path()..moveTo(pts.first.dx, size.height - padBottom);
-      for (final p in pts) { fillPath.lineTo(p.dx, p.dy); }
+      for (final p in pts) {
+        fillPath.lineTo(p.dx, p.dy);
+      }
       fillPath.lineTo(pts.last.dx, size.height - padBottom);
       fillPath.close();
       canvas.drawPath(fillPath, fillPaint);
@@ -640,7 +999,9 @@ class _LineChartPainter extends CustomPainter {
     // Line
     if (pts.length >= 2) {
       final linePath = Path()..moveTo(pts.first.dx, pts.first.dy);
-      for (int i = 1; i < pts.length; i++) { linePath.lineTo(pts[i].dx, pts[i].dy); }
+      for (int i = 1; i < pts.length; i++) {
+        linePath.lineTo(pts[i].dx, pts[i].dy);
+      }
       canvas.drawPath(linePath, linePaint);
     }
 
@@ -649,10 +1010,16 @@ class _LineChartPainter extends CustomPainter {
       canvas.drawCircle(pts[i], 4, dotPaint);
       final label = labels[i].length >= 10 ? labels[i].substring(5) : labels[i];
       final tp = TextPainter(
-        text: TextSpan(text: label, style: const TextStyle(fontSize: 9, color: Color(0xFF9CA3AF))),
+        text: TextSpan(
+          text: label,
+          style: const TextStyle(fontSize: 9, color: Color(0xFF9CA3AF)),
+        ),
         textDirection: TextDirection.ltr,
       )..layout();
-      tp.paint(canvas, Offset(pts[i].dx - tp.width / 2, size.height - padBottom + 4));
+      tp.paint(
+        canvas,
+        Offset(pts[i].dx - tp.width / 2, size.height - padBottom + 4),
+      );
     }
   }
 
@@ -677,7 +1044,10 @@ class _TopProductsPieChart extends StatelessWidget {
           borderRadius: BorderRadius.circular(12),
           border: Border.all(color: const Color(0xFFE8EAED)),
         ),
-        child: const Text('No product data', style: TextStyle(color: Color(0xFF6B7280))),
+        child: const Text(
+          'No product data',
+          style: TextStyle(color: Color(0xFF6B7280)),
+        ),
       );
     }
 
@@ -709,17 +1079,38 @@ class _TopProductsPieChart extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Legend
-          Row(children: items.map((item) => Padding(
-            padding: const EdgeInsets.only(right: 12),
-            child: Row(mainAxisSize: MainAxisSize.min, children: [
-              Container(width: 12, height: 4, color: item.color),
-              const SizedBox(width: 4),
-              Text(item.label, style: const TextStyle(fontSize: 11, color: Color(0xFF6B7280))),
-            ]),
-          )).toList()),
+          Wrap(
+            spacing: 12,
+            runSpacing: 8,
+            children: items
+                .map(
+                  (item) => Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Container(width: 12, height: 4, color: item.color),
+                      const SizedBox(width: 4),
+                      ConstrainedBox(
+                        constraints: const BoxConstraints(maxWidth: 110),
+                        child: Text(
+                          item.label,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                            fontSize: 11,
+                            color: Color(0xFF6B7280),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                )
+                .toList(),
+          ),
           const SizedBox(height: 4),
-          const Text('Top Selling Products', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
+          const Text(
+            'Top Selling Products',
+            style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
+          ),
           const SizedBox(height: 16),
           SizedBox(
             height: 200,
@@ -754,9 +1145,16 @@ class _PieChartPainter extends CustomPainter {
 
     for (final item in items) {
       final sweep = 2 * pi * item.ratio;
-      final paint = Paint()..color = item.color..style = PaintingStyle.fill;
-      canvas.drawArc(Rect.fromCircle(center: Offset(cx, cy), radius: r),
-          startAngle, sweep, true, paint);
+      final paint = Paint()
+        ..color = item.color
+        ..style = PaintingStyle.fill;
+      canvas.drawArc(
+        Rect.fromCircle(center: Offset(cx, cy), radius: r),
+        startAngle,
+        sweep,
+        true,
+        paint,
+      );
       startAngle += sweep;
     }
   }
