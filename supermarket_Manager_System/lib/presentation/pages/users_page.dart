@@ -152,7 +152,7 @@ class _UsersContentState extends State<UsersContent> {
                                   borderRadius: BorderRadius.circular(12),
                                   child: ListView.separated(
                                     itemCount: users.length,
-                                    separatorBuilder: (_, __) => const Divider(
+                                    separatorBuilder: (_, _) => const Divider(
                                       height: 1,
                                       color: Color(0xFFE8EAED),
                                     ),
