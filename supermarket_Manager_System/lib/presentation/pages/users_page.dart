@@ -700,7 +700,10 @@ class _AddUserDialogState extends State<_AddUserDialog> {
       backgroundColor: Colors.transparent,
       insetPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
       child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 520),
+        constraints: BoxConstraints(
+          maxWidth: 520,
+          maxHeight: MediaQuery.of(context).size.height * 0.85,
+        ),
         child: Container(
           decoration: BoxDecoration(
             color: Colors.white,
@@ -745,239 +748,243 @@ class _AddUserDialogState extends State<_AddUserDialog> {
                 ),
               ),
               const Divider(height: 1, color: Color(0xFFF3F4F6)),
-              SingleChildScrollView(
-                padding: const EdgeInsets.fromLTRB(24, 20, 24, 16),
-                child: Form(
-                  key: _formKey,
-                  child: Column(
-                    children: [
-                      _buildTextField(
-                        controller: _fullnameController,
-                        label: 'Fullname',
-                        hint: 'Enter name',
-                        validator: (v) => (v == null || v.trim().isEmpty)
-                            ? 'Fullname is required'
-                            : null,
-                      ),
-                      _buildTextField(
-                        controller: _usernameController,
-                        label: 'Username',
-                        hint: 'Enter Username',
-                        validator: (v) => (v == null || v.trim().isEmpty)
-                            ? 'Username is required'
-                            : null,
-                      ),
-                      _buildTextField(
-                        controller: _emailController,
-                        label: 'e-Mail',
-                        hint: 'Enter e-mail...',
-                        keyboardType: TextInputType.emailAddress,
-                        validator: (v) {
-                          if (v == null || v.trim().isEmpty) {
-                            return 'Email is required';
-                          }
-                          if (!v.contains('@')) {
-                            return 'Email must contain @';
-                          }
-                          return null;
-                        },
-                      ),
-                      _buildTextField(
-                        controller: _passwordController,
-                        label: 'Password',
-                        hint: 'Enter password',
-                        obscureText: !_showPassword,
-                        validator: (v) {
-                          if (v == null || v.isEmpty) {
-                            return 'Password is required';
-                          }
-                          if (v.length < 8) {
-                            return 'Must be at least 8 characters';
-                          }
-                          if (!v.contains(RegExp(r'[A-Z]'))) {
-                            return 'Must contain at least 1 uppercase letter';
-                          }
-                          if (!v.contains(RegExp(r'[a-z]'))) {
-                            return 'Must contain at least 1 lowercase letter';
-                          }
-                          if (!v.contains(RegExp(r'[0-9]'))) {
-                            return 'Must contain at least 1 number';
-                          }
-                          if (!v.contains(RegExp(r'[!@#$%^&*(),.?":{}|<>]'))) {
-                            return 'Must contain at least 1 special character';
-                          }
-                          return null;
-                        },
-                      ),
-                      const SizedBox(height: 8),
-                      Align(
-                        alignment: Alignment.centerLeft,
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            SizedBox(
-                              width: 24,
-                              height: 24,
-                              child: Checkbox(
-                                value: _showPassword,
-                                onChanged: _isSubmitting
-                                    ? null
-                                    : (value) => setState(
-                                        () => _showPassword = value ?? false,
-                                      ),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(4),
-                                ),
-                                side: const BorderSide(
-                                  color: Color(0xFF9CA3AF),
-                                ),
-                              ),
-                            ),
-                            const SizedBox(width: 8),
-                            const Text(
-                              'Show password',
-                              style: TextStyle(
-                                color: Color(0xFF6B7280),
-                                fontSize: 13,
-                              ),
-                            ),
-                          ],
+              Flexible(
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.fromLTRB(24, 20, 24, 16),
+                  child: Form(
+                    key: _formKey,
+                    child: Column(
+                      children: [
+                        _buildTextField(
+                          controller: _fullnameController,
+                          label: 'Fullname',
+                          hint: 'Enter name',
+                          validator: (v) => (v == null || v.trim().isEmpty)
+                              ? 'Fullname is required'
+                              : null,
                         ),
-                      ),
-                      const SizedBox(height: 16),
-                      _buildTextField(
-                        controller: _idCardController,
-                        labelWidget: RichText(
-                          text: const TextSpan(
-                            text: 'ID Card ',
-                            style: TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w700,
-                              color: Color(0xFF4B5563),
-                              fontFamily: 'Inter',
-                            ),
-                            children: [
-                              TextSpan(
-                                text: '(có thể để trống)',
-                                style: TextStyle(
-                                  fontSize: 13,
-                                  fontWeight: FontWeight.w400,
-                                  color: Color(0xFF9CA3AF),
-                                ),
-                              ),
-                            ],
-                          ),
+                        _buildTextField(
+                          controller: _usernameController,
+                          label: 'Username',
+                          hint: 'Enter Username',
+                          validator: (v) => (v == null || v.trim().isEmpty)
+                              ? 'Username is required'
+                              : null,
                         ),
-                        hint: 'Enter ID card (optional)',
-                      ),
-                      if (_isLoadingRoles)
-                        const Padding(
-                          padding: EdgeInsets.symmetric(vertical: 10),
-                          child: LinearProgressIndicator(),
-                        )
-                      else
-                        Padding(
-                          padding: const EdgeInsets.only(bottom: 16),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              const Padding(
-                                padding: EdgeInsets.only(bottom: 8),
-                                child: Text(
-                                  'User Role',
-                                  style: TextStyle(
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.w700,
-                                    color: Color(0xFF4B5563),
-                                  ),
-                                ),
-                              ),
-                              DropdownButtonFormField<String>(
-                                initialValue: _selectedRole.isEmpty
-                                    ? null
-                                    : _selectedRole,
-                                items: _roles
-                                    .map(
-                                      (role) => DropdownMenuItem(
-                                        value: role.name,
-                                        child: Text(
-                                          _formatRoleLabel(role.name),
-                                        ),
-                                      ),
-                                    )
-                                    .toList(),
-                                onChanged: (_isSubmitting || _roles.isEmpty)
-                                    ? null
-                                    : (value) => setState(
-                                        () => _selectedRole = value ?? '',
-                                      ),
-                                decoration: InputDecoration(
-                                  hintText: 'Choose User Role..',
-                                  hintStyle: const TextStyle(
-                                    color: Color(0xFF9CA3AF),
-                                    fontSize: 14,
-                                  ),
-                                  filled: true,
-                                  fillColor: Colors.white,
-                                  contentPadding: const EdgeInsets.symmetric(
-                                    horizontal: 16,
-                                    vertical: 14,
-                                  ),
-                                  border: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(8),
-                                  ),
-                                  enabledBorder: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(8),
-                                    borderSide: const BorderSide(
-                                      color: Color(0xFFD1D5DB),
-                                    ),
-                                  ),
-                                  focusedBorder: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(8),
-                                    borderSide: const BorderSide(
-                                      color: Color(0xFF14B8A6),
-                                    ),
-                                  ),
-                                ),
-                                icon: const Icon(
-                                  Icons.keyboard_arrow_down,
-                                  color: Color(0xFF6B7280),
-                                ),
-                                validator: (value) =>
-                                    (value == null || value.isEmpty)
-                                    ? 'User role is required'
-                                    : null,
-                              ),
-                            ],
-                          ),
+                        _buildTextField(
+                          controller: _emailController,
+                          label: 'e-Mail',
+                          hint: 'Enter e-mail...',
+                          keyboardType: TextInputType.emailAddress,
+                          validator: (v) {
+                            if (v == null || v.trim().isEmpty) {
+                              return 'Email is required';
+                            }
+                            if (!v.contains('@')) {
+                              return 'Email must contain @';
+                            }
+                            return null;
+                          },
                         ),
-                      if (_rolesErrorText != null) ...[
+                        _buildTextField(
+                          controller: _passwordController,
+                          label: 'Password',
+                          hint: 'Enter password',
+                          obscureText: !_showPassword,
+                          validator: (v) {
+                            if (v == null || v.isEmpty) {
+                              return 'Password is required';
+                            }
+                            if (v.length < 8) {
+                              return 'Must be at least 8 characters';
+                            }
+                            if (!v.contains(RegExp(r'[A-Z]'))) {
+                              return 'Must contain at least 1 uppercase letter';
+                            }
+                            if (!v.contains(RegExp(r'[a-z]'))) {
+                              return 'Must contain at least 1 lowercase letter';
+                            }
+                            if (!v.contains(RegExp(r'[0-9]'))) {
+                              return 'Must contain at least 1 number';
+                            }
+                            if (!v.contains(
+                              RegExp(r'[!@#$%^&*(),.?":{}|<>]'),
+                            )) {
+                              return 'Must contain at least 1 special character';
+                            }
+                            return null;
+                          },
+                        ),
                         const SizedBox(height: 8),
-                        Row(
-                          children: [
-                            Expanded(
-                              child: Text(
-                                _rolesErrorText!,
-                                style: const TextStyle(
-                                  color: Color(0xFFB91C1C),
+                        Align(
+                          alignment: Alignment.centerLeft,
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              SizedBox(
+                                width: 24,
+                                height: 24,
+                                child: Checkbox(
+                                  value: _showPassword,
+                                  onChanged: _isSubmitting
+                                      ? null
+                                      : (value) => setState(
+                                          () => _showPassword = value ?? false,
+                                        ),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(4),
+                                  ),
+                                  side: const BorderSide(
+                                    color: Color(0xFF9CA3AF),
+                                  ),
                                 ),
                               ),
-                            ),
-                            TextButton(
-                              onPressed: _isSubmitting ? null : _loadRoles,
-                              child: const Text('Retry roles'),
-                            ),
-                          ],
+                              const SizedBox(width: 8),
+                              const Text(
+                                'Show password',
+                                style: TextStyle(
+                                  color: Color(0xFF6B7280),
+                                  fontSize: 13,
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
-                      ],
-                      if (_errorText != null) ...[
-                        const SizedBox(height: 12),
-                        Text(
-                          _errorText!,
-                          style: const TextStyle(color: Color(0xFFB91C1C)),
+                        const SizedBox(height: 16),
+                        _buildTextField(
+                          controller: _idCardController,
+                          labelWidget: RichText(
+                            text: const TextSpan(
+                              text: 'ID Card ',
+                              style: TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w700,
+                                color: Color(0xFF4B5563),
+                                fontFamily: 'Inter',
+                              ),
+                              children: [
+                                TextSpan(
+                                  text: '(có thể để trống)',
+                                  style: TextStyle(
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.w400,
+                                    color: Color(0xFF9CA3AF),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          hint: 'Enter ID card (optional)',
                         ),
+                        if (_isLoadingRoles)
+                          const Padding(
+                            padding: EdgeInsets.symmetric(vertical: 10),
+                            child: LinearProgressIndicator(),
+                          )
+                        else
+                          Padding(
+                            padding: const EdgeInsets.only(bottom: 16),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const Padding(
+                                  padding: EdgeInsets.only(bottom: 8),
+                                  child: Text(
+                                    'User Role',
+                                    style: TextStyle(
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w700,
+                                      color: Color(0xFF4B5563),
+                                    ),
+                                  ),
+                                ),
+                                DropdownButtonFormField<String>(
+                                  initialValue: _selectedRole.isEmpty
+                                      ? null
+                                      : _selectedRole,
+                                  items: _roles
+                                      .map(
+                                        (role) => DropdownMenuItem(
+                                          value: role.name,
+                                          child: Text(
+                                            _formatRoleLabel(role.name),
+                                          ),
+                                        ),
+                                      )
+                                      .toList(),
+                                  onChanged: (_isSubmitting || _roles.isEmpty)
+                                      ? null
+                                      : (value) => setState(
+                                          () => _selectedRole = value ?? '',
+                                        ),
+                                  decoration: InputDecoration(
+                                    hintText: 'Choose User Role..',
+                                    hintStyle: const TextStyle(
+                                      color: Color(0xFF9CA3AF),
+                                      fontSize: 14,
+                                    ),
+                                    filled: true,
+                                    fillColor: Colors.white,
+                                    contentPadding: const EdgeInsets.symmetric(
+                                      horizontal: 16,
+                                      vertical: 14,
+                                    ),
+                                    border: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
+                                    enabledBorder: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(8),
+                                      borderSide: const BorderSide(
+                                        color: Color(0xFFD1D5DB),
+                                      ),
+                                    ),
+                                    focusedBorder: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(8),
+                                      borderSide: const BorderSide(
+                                        color: Color(0xFF14B8A6),
+                                      ),
+                                    ),
+                                  ),
+                                  icon: const Icon(
+                                    Icons.keyboard_arrow_down,
+                                    color: Color(0xFF6B7280),
+                                  ),
+                                  validator: (value) =>
+                                      (value == null || value.isEmpty)
+                                      ? 'User role is required'
+                                      : null,
+                                ),
+                              ],
+                            ),
+                          ),
+                        if (_rolesErrorText != null) ...[
+                          const SizedBox(height: 8),
+                          Row(
+                            children: [
+                              Expanded(
+                                child: Text(
+                                  _rolesErrorText!,
+                                  style: const TextStyle(
+                                    color: Color(0xFFB91C1C),
+                                  ),
+                                ),
+                              ),
+                              TextButton(
+                                onPressed: _isSubmitting ? null : _loadRoles,
+                                child: const Text('Retry roles'),
+                              ),
+                            ],
+                          ),
+                        ],
+                        if (_errorText != null) ...[
+                          const SizedBox(height: 12),
+                          Text(
+                            _errorText!,
+                            style: const TextStyle(color: Color(0xFFB91C1C)),
+                          ),
+                        ],
                       ],
-                    ],
+                    ),
                   ),
                 ),
               ),
@@ -1277,7 +1284,10 @@ class _EditUserDialogState extends State<_EditUserDialog> {
       backgroundColor: Colors.transparent,
       insetPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
       child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 520),
+        constraints: BoxConstraints(
+          maxWidth: 520,
+          maxHeight: MediaQuery.of(context).size.height * 0.85,
+        ),
         child: Container(
           decoration: BoxDecoration(
             color: Colors.white,
@@ -1325,259 +1335,263 @@ class _EditUserDialogState extends State<_EditUserDialog> {
                 ),
               ),
               const Divider(height: 1, color: Color(0xFFF3F4F6)),
-              SingleChildScrollView(
-                padding: const EdgeInsets.fromLTRB(24, 20, 24, 16),
-                child: Form(
-                  key: _formKey,
-                  child: Column(
-                    children: [
-                      _buildTextField(
-                        controller: _fullnameController,
-                        label: 'Fullname',
-                        hint: 'Enter name',
-                        validator: (v) => (v == null || v.trim().isEmpty)
-                            ? 'Fullname is required'
-                            : null,
-                      ),
-                      _buildTextField(
-                        controller: _usernameController,
-                        label: 'Username',
-                        hint: 'Enter Username',
-                        validator: (v) => (v == null || v.trim().isEmpty)
-                            ? 'Username is required'
-                            : null,
-                      ),
-                      _buildTextField(
-                        controller: _emailController,
-                        label: 'e-Mail',
-                        hint: 'Enter e-mail...',
-                        keyboardType: TextInputType.emailAddress,
-                        validator: (v) {
-                          if (v == null || v.trim().isEmpty) {
-                            return 'Email is required';
-                          }
-                          if (!v.contains('@')) {
-                            return 'Email must contain @';
-                          }
-                          return null;
-                        },
-                      ),
-                      _buildTextField(
-                        controller: _passwordController,
-                        labelWidget: RichText(
-                          text: const TextSpan(
-                            text: 'Password ',
-                            style: TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w700,
-                              color: Color(0xFF4B5563),
-                              fontFamily: 'Inter',
-                            ),
-                            children: [
-                              TextSpan(
-                                text: '(có thể để trống)',
-                                style: TextStyle(
-                                  fontSize: 13,
-                                  fontWeight: FontWeight.w400,
-                                  color: Color(0xFF9CA3AF),
-                                ),
-                              ),
-                            ],
-                          ),
+              Flexible(
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.fromLTRB(24, 20, 24, 16),
+                  child: Form(
+                    key: _formKey,
+                    child: Column(
+                      children: [
+                        _buildTextField(
+                          controller: _fullnameController,
+                          label: 'Fullname',
+                          hint: 'Enter name',
+                          validator: (v) => (v == null || v.trim().isEmpty)
+                              ? 'Fullname is required'
+                              : null,
                         ),
-                        hint: 'Leave blank to keep current',
-                        obscureText: !_showPassword,
-                        validator: (v) {
-                          if (v == null || v.isEmpty) {
+                        _buildTextField(
+                          controller: _usernameController,
+                          label: 'Username',
+                          hint: 'Enter Username',
+                          validator: (v) => (v == null || v.trim().isEmpty)
+                              ? 'Username is required'
+                              : null,
+                        ),
+                        _buildTextField(
+                          controller: _emailController,
+                          label: 'e-Mail',
+                          hint: 'Enter e-mail...',
+                          keyboardType: TextInputType.emailAddress,
+                          validator: (v) {
+                            if (v == null || v.trim().isEmpty) {
+                              return 'Email is required';
+                            }
+                            if (!v.contains('@')) {
+                              return 'Email must contain @';
+                            }
                             return null;
-                          }
-                          if (v.length < 8) {
-                            return 'Must be at least 8 characters';
-                          }
-                          if (!v.contains(RegExp(r'[A-Z]'))) {
-                            return 'Must contain at least 1 uppercase letter';
-                          }
-                          if (!v.contains(RegExp(r'[a-z]'))) {
-                            return 'Must contain at least 1 lowercase letter';
-                          }
-                          if (!v.contains(RegExp(r'[0-9]'))) {
-                            return 'Must contain at least 1 number';
-                          }
-                          if (!v.contains(RegExp(r'[!@#$%^&*(),.?":{}|<>]'))) {
-                            return 'Must contain at least 1 special character';
-                          }
-                          return null;
-                        },
-                      ),
-                      const SizedBox(height: 8),
-                      Align(
-                        alignment: Alignment.centerLeft,
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            SizedBox(
-                              width: 24,
-                              height: 24,
-                              child: Checkbox(
-                                value: _showPassword,
-                                onChanged: _isSubmitting
-                                    ? null
-                                    : (value) => setState(
-                                        () => _showPassword = value ?? false,
-                                      ),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(4),
-                                ),
-                                side: const BorderSide(
-                                  color: Color(0xFF9CA3AF),
-                                ),
-                              ),
-                            ),
-                            const SizedBox(width: 8),
-                            const Text(
-                              'Show password',
+                          },
+                        ),
+                        _buildTextField(
+                          controller: _passwordController,
+                          labelWidget: RichText(
+                            text: const TextSpan(
+                              text: 'Password ',
                               style: TextStyle(
-                                color: Color(0xFF6B7280),
-                                fontSize: 13,
+                                fontSize: 14,
+                                fontWeight: FontWeight.w700,
+                                color: Color(0xFF4B5563),
+                                fontFamily: 'Inter',
                               ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-                      _buildTextField(
-                        controller: _idCardController,
-                        labelWidget: RichText(
-                          text: const TextSpan(
-                            text: 'ID Card ',
-                            style: TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w700,
-                              color: Color(0xFF4B5563),
-                              fontFamily: 'Inter',
-                            ),
-                            children: [
-                              TextSpan(
-                                text: '(có thể để trống)',
-                                style: TextStyle(
-                                  fontSize: 13,
-                                  fontWeight: FontWeight.w400,
-                                  color: Color(0xFF9CA3AF),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        hint: 'Enter ID card (optional)',
-                      ),
-                      if (_isLoadingRoles)
-                        const Padding(
-                          padding: EdgeInsets.symmetric(vertical: 10),
-                          child: LinearProgressIndicator(),
-                        )
-                      else
-                        Padding(
-                          padding: const EdgeInsets.only(bottom: 16),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              const Padding(
-                                padding: EdgeInsets.only(bottom: 8),
-                                child: Text(
-                                  'User Role',
+                              children: [
+                                TextSpan(
+                                  text: '(có thể để trống)',
                                   style: TextStyle(
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.w700,
-                                    color: Color(0xFF4B5563),
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.w400,
+                                    color: Color(0xFF9CA3AF),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          hint: 'Leave blank to keep current',
+                          obscureText: !_showPassword,
+                          validator: (v) {
+                            if (v == null || v.isEmpty) {
+                              return null;
+                            }
+                            if (v.length < 8) {
+                              return 'Must be at least 8 characters';
+                            }
+                            if (!v.contains(RegExp(r'[A-Z]'))) {
+                              return 'Must contain at least 1 uppercase letter';
+                            }
+                            if (!v.contains(RegExp(r'[a-z]'))) {
+                              return 'Must contain at least 1 lowercase letter';
+                            }
+                            if (!v.contains(RegExp(r'[0-9]'))) {
+                              return 'Must contain at least 1 number';
+                            }
+                            if (!v.contains(
+                              RegExp(r'[!@#$%^&*(),.?":{}|<>]'),
+                            )) {
+                              return 'Must contain at least 1 special character';
+                            }
+                            return null;
+                          },
+                        ),
+                        const SizedBox(height: 8),
+                        Align(
+                          alignment: Alignment.centerLeft,
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              SizedBox(
+                                width: 24,
+                                height: 24,
+                                child: Checkbox(
+                                  value: _showPassword,
+                                  onChanged: _isSubmitting
+                                      ? null
+                                      : (value) => setState(
+                                          () => _showPassword = value ?? false,
+                                        ),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(4),
+                                  ),
+                                  side: const BorderSide(
+                                    color: Color(0xFF9CA3AF),
                                   ),
                                 ),
                               ),
-                              DropdownButtonFormField<String>(
-                                initialValue: _selectedRole.isEmpty
-                                    ? null
-                                    : _selectedRole,
-                                items: _roles
-                                    .map(
-                                      (role) => DropdownMenuItem(
-                                        value: role.name,
-                                        child: Text(
-                                          _formatRoleLabel(role.name),
-                                        ),
-                                      ),
-                                    )
-                                    .toList(),
-                                onChanged: (_isSubmitting || _roles.isEmpty)
-                                    ? null
-                                    : (value) => setState(
-                                        () => _selectedRole = value ?? '',
-                                      ),
-                                decoration: InputDecoration(
-                                  hintText: 'Choose User Role..',
-                                  hintStyle: const TextStyle(
-                                    color: Color(0xFF9CA3AF),
-                                    fontSize: 14,
-                                  ),
-                                  filled: true,
-                                  fillColor: Colors.white,
-                                  contentPadding: const EdgeInsets.symmetric(
-                                    horizontal: 16,
-                                    vertical: 14,
-                                  ),
-                                  border: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(8),
-                                  ),
-                                  enabledBorder: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(8),
-                                    borderSide: const BorderSide(
-                                      color: Color(0xFFD1D5DB),
-                                    ),
-                                  ),
-                                  focusedBorder: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(8),
-                                    borderSide: const BorderSide(
-                                      color: Color(0xFF14B8A6),
-                                    ),
-                                  ),
-                                ),
-                                icon: const Icon(
-                                  Icons.keyboard_arrow_down,
+                              const SizedBox(width: 8),
+                              const Text(
+                                'Show password',
+                                style: TextStyle(
                                   color: Color(0xFF6B7280),
+                                  fontSize: 13,
                                 ),
-                                validator: (value) =>
-                                    (value == null || value.isEmpty)
-                                    ? 'User role is required'
-                                    : null,
                               ),
                             ],
                           ),
                         ),
-                      if (_rolesErrorText != null) ...[
-                        const SizedBox(height: 8),
-                        Row(
-                          children: [
-                            Expanded(
-                              child: Text(
-                                _rolesErrorText!,
-                                style: const TextStyle(
-                                  color: Color(0xFFB91C1C),
+                        const SizedBox(height: 16),
+                        _buildTextField(
+                          controller: _idCardController,
+                          labelWidget: RichText(
+                            text: const TextSpan(
+                              text: 'ID Card ',
+                              style: TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w700,
+                                color: Color(0xFF4B5563),
+                                fontFamily: 'Inter',
+                              ),
+                              children: [
+                                TextSpan(
+                                  text: '(có thể để trống)',
+                                  style: TextStyle(
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.w400,
+                                    color: Color(0xFF9CA3AF),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          hint: 'Enter ID card (optional)',
+                        ),
+                        if (_isLoadingRoles)
+                          const Padding(
+                            padding: EdgeInsets.symmetric(vertical: 10),
+                            child: LinearProgressIndicator(),
+                          )
+                        else
+                          Padding(
+                            padding: const EdgeInsets.only(bottom: 16),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const Padding(
+                                  padding: EdgeInsets.only(bottom: 8),
+                                  child: Text(
+                                    'User Role',
+                                    style: TextStyle(
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w700,
+                                      color: Color(0xFF4B5563),
+                                    ),
+                                  ),
+                                ),
+                                DropdownButtonFormField<String>(
+                                  initialValue: _selectedRole.isEmpty
+                                      ? null
+                                      : _selectedRole,
+                                  items: _roles
+                                      .map(
+                                        (role) => DropdownMenuItem(
+                                          value: role.name,
+                                          child: Text(
+                                            _formatRoleLabel(role.name),
+                                          ),
+                                        ),
+                                      )
+                                      .toList(),
+                                  onChanged: (_isSubmitting || _roles.isEmpty)
+                                      ? null
+                                      : (value) => setState(
+                                          () => _selectedRole = value ?? '',
+                                        ),
+                                  decoration: InputDecoration(
+                                    hintText: 'Choose User Role..',
+                                    hintStyle: const TextStyle(
+                                      color: Color(0xFF9CA3AF),
+                                      fontSize: 14,
+                                    ),
+                                    filled: true,
+                                    fillColor: Colors.white,
+                                    contentPadding: const EdgeInsets.symmetric(
+                                      horizontal: 16,
+                                      vertical: 14,
+                                    ),
+                                    border: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
+                                    enabledBorder: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(8),
+                                      borderSide: const BorderSide(
+                                        color: Color(0xFFD1D5DB),
+                                      ),
+                                    ),
+                                    focusedBorder: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(8),
+                                      borderSide: const BorderSide(
+                                        color: Color(0xFF14B8A6),
+                                      ),
+                                    ),
+                                  ),
+                                  icon: const Icon(
+                                    Icons.keyboard_arrow_down,
+                                    color: Color(0xFF6B7280),
+                                  ),
+                                  validator: (value) =>
+                                      (value == null || value.isEmpty)
+                                      ? 'User role is required'
+                                      : null,
+                                ),
+                              ],
+                            ),
+                          ),
+                        if (_rolesErrorText != null) ...[
+                          const SizedBox(height: 8),
+                          Row(
+                            children: [
+                              Expanded(
+                                child: Text(
+                                  _rolesErrorText!,
+                                  style: const TextStyle(
+                                    color: Color(0xFFB91C1C),
+                                  ),
                                 ),
                               ),
-                            ),
-                            TextButton(
-                              onPressed: _isSubmitting ? null : _loadRoles,
-                              child: const Text('Retry roles'),
-                            ),
-                          ],
-                        ),
+                              TextButton(
+                                onPressed: _isSubmitting ? null : _loadRoles,
+                                child: const Text('Retry roles'),
+                              ),
+                            ],
+                          ),
+                        ],
+                        if (_errorText != null) ...[
+                          const SizedBox(height: 12),
+                          Text(
+                            _errorText!,
+                            style: const TextStyle(color: Color(0xFFB91C1C)),
+                          ),
+                        ],
                       ],
-                      if (_errorText != null) ...[
-                        const SizedBox(height: 12),
-                        Text(
-                          _errorText!,
-                          style: const TextStyle(color: Color(0xFFB91C1C)),
-                        ),
-                      ],
-                    ],
+                    ),
                   ),
                 ),
               ),
