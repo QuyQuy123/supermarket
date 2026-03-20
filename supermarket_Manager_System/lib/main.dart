@@ -23,7 +23,7 @@ Future<void> main() async {
     usePathUrlStrategy();
   }
   await initDatabase();
-  await AppSession.instance.hydrateFromLocal();
+  AppSession.instance.clear();
   runApp(const SupermarketManagerApp());
 }
 
@@ -97,7 +97,10 @@ class SupermarketManagerApp extends StatelessWidget {
       ),
       GoRoute(
         path: '/verify-otp',
-        builder: (context, state) => const VerifyOtpPage(),
+        builder: (context, state) {
+          final email = state.uri.queryParameters['email'];
+          return VerifyOtpPage(email: email);
+        },
       ),
       GoRoute(
         path: '/set-new-password',

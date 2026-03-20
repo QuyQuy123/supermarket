@@ -4,7 +4,9 @@ import 'package:go_router/go_router.dart';
 import 'package:supermarket_manager_system/data/services/auth_api_service.dart';
 
 class VerifyOtpPage extends StatefulWidget {
-  const VerifyOtpPage({super.key});
+  const VerifyOtpPage({super.key, this.email});
+
+  final String? email;
 
   @override
   State<VerifyOtpPage> createState() => _VerifyOtpPageState();
@@ -17,6 +19,7 @@ class _VerifyOtpPageState extends State<VerifyOtpPage> {
   );
   final List<FocusNode> _focusNodes = List.generate(6, (_) => FocusNode());
   bool _isLoading = false;
+  bool _isResending = false;
   final AuthApiService _authApiService = AuthApiService();
 
   @override
@@ -60,11 +63,33 @@ class _VerifyOtpPageState extends State<VerifyOtpPage> {
   }
 
   void _onResendOtp() async {
-    // For resend, we need the email, but since it's not stored, perhaps navigate back or something.
-    // For now, just show a message.
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Please go back and enter email again')),
-    );
+    final email = widget.email;
+    if (email == null || email.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please go back and enter email again')),
+      );
+      return;
+    }
+    setState(() => _isResending = true);
+    try {
+      await _authApiService.forgotPassword(email);
+      if (!mounted) return;
+      // Clear OTP fields
+      for (var c in _controllers) {
+        c.clear();
+      }
+      _focusNodes[0].requestFocus();
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('OTP resent to your email')));
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Error: $e')));
+    } finally {
+      if (mounted) setState(() => _isResending = false);
+    }
   }
 
   @override
@@ -206,21 +231,30 @@ class _VerifyOtpPageState extends State<VerifyOtpPage> {
                       style: TextStyle(fontSize: 15, color: Color(0xFF666666)),
                     ),
                     TextButton(
-                      onPressed: _onResendOtp,
+                      onPressed: _isResending ? null : _onResendOtp,
                       style: TextButton.styleFrom(
                         padding: EdgeInsets.zero,
                         minimumSize: Size.zero,
                         tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                         foregroundColor: const Color(0xFF667EEA),
                       ),
-                      child: const Text(
-                        'Resend OTP',
-                        style: TextStyle(
-                          fontSize: 15,
-                          fontWeight: FontWeight.w600,
-                          decoration: TextDecoration.underline,
-                        ),
-                      ),
+                      child: _isResending
+                          ? const SizedBox(
+                              width: 16,
+                              height: 16,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: Color(0xFF667EEA),
+                              ),
+                            )
+                          : const Text(
+                              'Resend OTP',
+                              style: TextStyle(
+                                fontSize: 15,
+                                fontWeight: FontWeight.w600,
+                                decoration: TextDecoration.underline,
+                              ),
+                            ),
                     ),
                   ],
                 ),
