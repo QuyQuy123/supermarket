@@ -8,6 +8,7 @@ import 'package:supermarket_manager_system/presentation/pages/orders_page.dart';
 import 'package:supermarket_manager_system/presentation/pages/profile_content_page.dart';
 import 'package:supermarket_manager_system/presentation/pages/discount.dart';
 import 'package:supermarket_manager_system/presentation/pages/suppliers_page.dart';
+import 'package:supermarket_manager_system/presentation/pages/supplier_detail_page.dart';
 import 'package:supermarket_manager_system/presentation/pages/products_page.dart';
 import 'package:supermarket_manager_system/presentation/pages/expiration_page.dart';
 import 'package:supermarket_manager_system/presentation/pages/product_detail_page.dart';
@@ -18,6 +19,7 @@ enum _ManagerTab {
   customers,
   discount,
   suppliers,
+  supplierDetail,
   products,
   expired,
   profile,
@@ -49,6 +51,7 @@ class _ManagerDashboardPageState extends State<ManagerDashboardPage> {
   _ManagerTab _selectedTab = _ManagerTab.dashboard;
   UserDetail? _editingProfile;
   int? _selectedProductId;
+  int? _selectedSupplierId;
   late DateTime _now;
   Timer? _clockTimer;
 
@@ -73,6 +76,7 @@ class _ManagerDashboardPageState extends State<ManagerDashboardPage> {
       _ManagerTab.customers => '/manager/customers',
       _ManagerTab.discount => '/manager/discount',
       _ManagerTab.suppliers => '/manager/suppliers',
+      _ManagerTab.supplierDetail => '/manager/suppliers',
       _ManagerTab.products => '/manager/products',
       _ManagerTab.expired => '/manager/expired',
       _ManagerTab.productDetail => '/manager/expired',
@@ -137,6 +141,20 @@ class _ManagerDashboardPageState extends State<ManagerDashboardPage> {
   void _closeProductDetail() {
     setState(() {
       _selectedTab = _ManagerTab.expired; // Go back to expired tab
+    });
+  }
+
+  void _openSupplierDetail(int supplierId) {
+    setState(() {
+      _selectedSupplierId = supplierId;
+      _selectedTab = _ManagerTab.supplierDetail;
+    });
+  }
+
+  void _closeSupplierDetail() {
+    setState(() {
+      _selectedSupplierId = null;
+      _selectedTab = _ManagerTab.suppliers;
     });
   }
 
@@ -257,7 +275,15 @@ class _ManagerDashboardPageState extends State<ManagerDashboardPage> {
                       currentTimeText: _formatClock(_now),
                       onProfileTap: () => _selectTab(_ManagerTab.profile),
                       basePath: 'manager',
+                      onSupplierDetailTap: _openSupplierDetail,
                     ),
+                    _ManagerTab.supplierDetail => _selectedSupplierId != null
+                        ? SupplierDetailPage(
+                            supplierId: _selectedSupplierId!,
+                            basePath: 'manager',
+                            onBack: _closeSupplierDetail,
+                          )
+                        : Container(),
                     _ManagerTab.products => ProductsContent(
                       fullName: widget.fullName,
                       isCompact: isCompact,
@@ -385,7 +411,8 @@ class _ManagerSidebar extends StatelessWidget {
                     ),
                     _ManagerSidebarItem(
                       label: 'Suppliers',
-                      active: selectedTab == _ManagerTab.suppliers,
+                      active: selectedTab == _ManagerTab.suppliers ||
+                          selectedTab == _ManagerTab.supplierDetail,
                       onTap: onSuppliersTap,
                     ),
                     const _ManagerSidebarItem(label: 'Category'),

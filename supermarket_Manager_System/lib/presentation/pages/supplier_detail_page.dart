@@ -8,10 +8,12 @@ class SupplierDetailPage extends StatefulWidget {
     super.key,
     required this.supplierId,
     required this.basePath,
+    this.onBack,
   });
 
   final int supplierId;
   final String basePath;
+  final VoidCallback? onBack;
 
   @override
   State<SupplierDetailPage> createState() => _SupplierDetailPageState();
@@ -34,7 +36,13 @@ class _SupplierDetailPageState extends State<SupplierDetailPage> {
       appBar: AppBar(
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
-          onPressed: () => context.pop(),
+          onPressed: () {
+            if (widget.onBack != null) {
+              widget.onBack!();
+              return;
+            }
+            context.pop();
+          },
         ),
         title: const Text('Supplier Detail'),
         backgroundColor: const Color(0xFF667EEA),
@@ -57,7 +65,13 @@ class _SupplierDetailPageState extends State<SupplierDetailPage> {
                   ),
                   const SizedBox(height: 16),
                   ElevatedButton(
-                    onPressed: () => context.pop(),
+                    onPressed: () {
+                      if (widget.onBack != null) {
+                        widget.onBack!();
+                        return;
+                      }
+                      context.pop();
+                    },
                     child: const Text('Back to list'),
                   ),
                 ],
@@ -117,7 +131,13 @@ class _SupplierDetailPageState extends State<SupplierDetailPage> {
                           ),
                         const SizedBox(height: 24),
                         OutlinedButton.icon(
-                          onPressed: () => context.pop(),
+                          onPressed: () {
+                            if (widget.onBack != null) {
+                              widget.onBack!();
+                              return;
+                            }
+                            context.pop();
+                          },
                           icon: const Icon(Icons.list),
                           label: const Text('Back to list'),
                           style: OutlinedButton.styleFrom(

@@ -12,6 +12,7 @@ class SuppliersContent extends StatefulWidget {
     required this.currentTimeText,
     required this.onProfileTap,
     this.basePath = 'admin',
+    this.onSupplierDetailTap,
   });
 
   final String fullName;
@@ -19,6 +20,7 @@ class SuppliersContent extends StatefulWidget {
   final String currentTimeText;
   final VoidCallback onProfileTap;
   final String basePath;
+  final ValueChanged<int>? onSupplierDetailTap;
 
   @override
   State<SuppliersContent> createState() => _SuppliersContentState();
@@ -27,6 +29,10 @@ class SuppliersContent extends StatefulWidget {
 class _SuppliersContentState extends State<SuppliersContent> {
   final _supplierApiService = SupplierApiService();
   late Future<List<SupplierListItem>> _suppliersFuture;
+
+  int? _selectedSupplierId;
+  Future<SupplierListItem>? _selectedSupplierFuture;
+  bool _isUpdatingStatus = false;
 
   @override
   void initState() {
@@ -38,6 +44,22 @@ class _SuppliersContentState extends State<SuppliersContent> {
     setState(() {
       _suppliersFuture = _supplierApiService.getSuppliers();
     });
+  }
+
+  void _openSupplierDetail(SupplierListItem supplier) {
+    setState(() {
+      _selectedSupplierId = supplier.id;
+      _selectedSupplierFuture = _supplierApiService.getSupplierById(supplier.id);
+    });
+  }
+
+  void _closeSupplierDetail() {
+    setState(() {
+      _selectedSupplierId = null;
+      _selectedSupplierFuture = null;
+      _isUpdatingStatus = false;
+    });
+    _reloadSuppliers();
   }
 
   Future<void> _openAddSupplierDialog() async {
@@ -88,7 +110,11 @@ class _SuppliersContentState extends State<SuppliersContent> {
     try {
       await _supplierApiService.deleteSupplier(supplier.id);
       if (!mounted) return;
-      _reloadSuppliers();
+      if (_selectedSupplierId == supplier.id) {
+        _closeSupplierDetail();
+      } else {
+        _reloadSuppliers();
+      }
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Supplier deleted successfully')),
       );
@@ -119,9 +145,51 @@ class _SuppliersContentState extends State<SuppliersContent> {
 
     if (updated == true) {
       _reloadSuppliers();
+      if (_selectedSupplierId == supplier.id) {
+        _selectedSupplierFuture =
+            _supplierApiService.getSupplierById(supplier.id);
+      }
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Supplier updated successfully')),
       );
+    }
+  }
+
+  Future<void> _setSupplierStatus(SupplierListItem supplier, String newStatus) async {
+    setState(() => _isUpdatingStatus = true);
+    try {
+      await _supplierApiService.updateSupplier(
+        id: supplier.id,
+        supplierName: supplier.supplierName,
+        companyName: supplier.companyName.trim().isEmpty ? null : supplier.companyName,
+        email: supplier.email.trim().isEmpty ? null : supplier.email,
+        phone: supplier.phone.trim().isEmpty ? null : supplier.phone,
+        address: supplier.address.trim().isEmpty ? null : supplier.address,
+        status: newStatus,
+      );
+      if (!mounted) return;
+      if (_selectedSupplierId == supplier.id) {
+        _selectedSupplierFuture =
+            _supplierApiService.getSupplierById(supplier.id);
+      }
+      _reloadSuppliers();
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Supplier status updated to ${newStatus.toUpperCase()}',
+          ),
+        ),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(e.toString().replaceFirst('Exception: ', '')),
+          backgroundColor: Colors.red,
+        ),
+      );
+    } finally {
+      if (mounted) setState(() => _isUpdatingStatus = false);
     }
   }
 
@@ -146,146 +214,344 @@ class _SuppliersContentState extends State<SuppliersContent> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      const Text(
-                        'List Supplier',
-                        style: TextStyle(
+                      Text(
+                        _selectedSupplierId == null
+                            ? 'List Supplier'
+                            : 'Supplier Detail',
+                        style: const TextStyle(
                           fontSize: 28,
                           fontWeight: FontWeight.w700,
                         ),
                       ),
-                      DecoratedBox(
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(10),
-                          gradient: const LinearGradient(
-                            colors: [Color(0xFF667EEA), Color(0xFF764BA2)],
+                      if (_selectedSupplierId == null)
+                        DecoratedBox(
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(10),
+                            gradient: const LinearGradient(
+                              colors: [Color(0xFF667EEA), Color(0xFF764BA2)],
+                            ),
                           ),
-                        ),
-                        child: TextButton(
-                          onPressed: _openAddSupplierDialog,
-                          child: const Text(
-                            '+ Add Supplier',
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontWeight: FontWeight.w600,
+                          child: TextButton(
+                            onPressed: _openAddSupplierDialog,
+                            child: const Text(
+                              '+ Add Supplier',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.w600,
+                              ),
                             ),
                           ),
                         ),
-                      ),
                     ],
                   ),
                   const SizedBox(height: 20),
                   Expanded(
-                    child: FutureBuilder<List<SupplierListItem>>(
-                      future: _suppliersFuture,
-                      builder: (context, snapshot) {
-                        if (snapshot.connectionState ==
-                            ConnectionState.waiting) {
-                          return const Center(
-                            child: CircularProgressIndicator(),
-                          );
-                        }
-                        if (snapshot.hasError) {
-                          return Center(
-                            child: Column(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Text(
-                                  'Cannot load suppliers: ${snapshot.error}',
-                                  textAlign: TextAlign.center,
-                                ),
-                                const SizedBox(height: 12),
-                                ElevatedButton(
-                                  onPressed: _reloadSuppliers,
-                                  child: const Text('Retry'),
-                                ),
-                              ],
-                            ),
-                          );
-                        }
+                    child: _selectedSupplierId == null
+                        ? FutureBuilder<List<SupplierListItem>>(
+                            future: _suppliersFuture,
+                            builder: (context, snapshot) {
+                              if (snapshot.connectionState ==
+                                  ConnectionState.waiting) {
+                                return const Center(
+                                  child: CircularProgressIndicator(),
+                                );
+                              }
+                              if (snapshot.hasError) {
+                                return Center(
+                                  child: Column(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Text(
+                                        'Cannot load suppliers: ${snapshot.error}',
+                                        textAlign: TextAlign.center,
+                                      ),
+                                      const SizedBox(height: 12),
+                                      ElevatedButton(
+                                        onPressed: _reloadSuppliers,
+                                        child: const Text('Retry'),
+                                      ),
+                                    ],
+                                  ),
+                                );
+                              }
 
-                        final suppliers = snapshot.data ?? [];
-                        return Container(
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(12),
-                            border: Border.all(color: const Color(0xFFE8EAED)),
+                              final suppliers = snapshot.data ?? [];
+
+                              return Container(
+                                decoration: BoxDecoration(
+                                  color: Colors.white,
+                                  borderRadius: BorderRadius.circular(12),
+                                  border: Border.all(
+                                    color: const Color(0xFFE8EAED),
+                                  ),
+                                ),
+                                padding: const EdgeInsets.all(16),
+                                child: ListView.separated(
+                                  itemCount: suppliers.length,
+                                  separatorBuilder: (_, _) =>
+                                      const SizedBox(height: 12),
+                                  itemBuilder: (context, idx) {
+                                    final s = suppliers[idx];
+                                    final normalizedStatus = s.status.toLowerCase();
+                                    final isActive = normalizedStatus == 'active';
+
+                                    return InkWell(
+                                      onTap: () => _openSupplierDetail(s),
+                                      borderRadius: BorderRadius.circular(14),
+                                      child: Container(
+                                        padding: const EdgeInsets.all(14),
+                                        decoration: BoxDecoration(
+                                          color: Colors.white,
+                                          borderRadius:
+                                              BorderRadius.circular(14),
+                                          border: Border.all(
+                                            color: const Color(0xFFE8EAED),
+                                          ),
+                                        ),
+                                        child: Row(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
+                                          children: [
+                                            Expanded(
+                                              child: Column(
+                                                mainAxisSize: MainAxisSize.min,
+                                                crossAxisAlignment:
+                                                    CrossAxisAlignment.start,
+                                                children: [
+                                                  Text(
+                                                    s.supplierName.isEmpty
+                                                        ? '—'
+                                                        : s.supplierName,
+                                                    style: const TextStyle(
+                                                      fontWeight: FontWeight.w800,
+                                                      fontSize: 14,
+                                                    ),
+                                                    maxLines: 1,
+                                                    overflow:
+                                                        TextOverflow.ellipsis,
+                                                  ),
+                                                  const SizedBox(height: 4),
+                                                  Text(
+                                                    s.companyName.isEmpty
+                                                        ? 'Company: —'
+                                                        : 'Company: ${s.companyName}',
+                                                    style: TextStyle(
+                                                      color:
+                                                          const Color(0xFF6B7280),
+                                                      fontSize: 12,
+                                                      fontWeight: FontWeight.w600,
+                                                    ),
+                                                    maxLines: 1,
+                                                    overflow:
+                                                        TextOverflow.ellipsis,
+                                                  ),
+                                                  const SizedBox(height: 4),
+                                                  Text(
+                                                    s.email.isEmpty ? 'Email: —' : s.email,
+                                                    style: const TextStyle(
+                                                      fontSize: 12,
+                                                      color: Color(0xFF374151),
+                                                    ),
+                                                    maxLines: 1,
+                                                    overflow:
+                                                        TextOverflow.ellipsis,
+                                                  ),
+                                                  const SizedBox(height: 4),
+                                                  Text(
+                                                    s.phone.isEmpty ? 'Phone: —' : s.phone,
+                                                    style: const TextStyle(
+                                                      fontSize: 12,
+                                                      color: Color(0xFF374151),
+                                                    ),
+                                                    maxLines: 1,
+                                                    overflow:
+                                                        TextOverflow.ellipsis,
+                                                  ),
+                                                ],
+                                              ),
+                                            ),
+                                            const SizedBox(width: 12),
+                                            Column(
+                                              mainAxisAlignment:
+                                                  MainAxisAlignment.center,
+                                              crossAxisAlignment:
+                                                  CrossAxisAlignment.end,
+                                              children: [
+                                                _StatusChip(status: s.status),
+                                                const SizedBox(height: 10),
+                                                Icon(
+                                                  isActive
+                                                      ? Icons
+                                                          .keyboard_arrow_right_rounded
+                                                      : Icons.arrow_right_alt_rounded,
+                                                  size: 20,
+                                                  color: const Color(0xFF667EEA),
+                                                ),
+                                              ],
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    );
+                                  },
+                                ),
+                              );
+                            },
+                          )
+                        : FutureBuilder<SupplierListItem>(
+                            future: _selectedSupplierFuture,
+                            builder: (context, snapshot) {
+                              if (snapshot.connectionState ==
+                                  ConnectionState.waiting) {
+                                return const Center(
+                                  child: CircularProgressIndicator(),
+                                );
+                              }
+                              if (snapshot.hasError) {
+                                return Center(
+                                  child: Column(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Text(
+                                        'Cannot load supplier detail: ${snapshot.error}',
+                                        textAlign: TextAlign.center,
+                                      ),
+                                      const SizedBox(height: 12),
+                                      ElevatedButton(
+                                        onPressed: _closeSupplierDetail,
+                                        child: const Text('Back'),
+                                      ),
+                                    ],
+                                  ),
+                                );
+                              }
+
+                              final s = snapshot.data!;
+                              final normalizedStatus = s.status.toLowerCase();
+                              final canDelete = normalizedStatus != 'deactive';
+
+                              return Container(
+                                decoration: BoxDecoration(
+                                  color: Colors.white,
+                                  borderRadius: BorderRadius.circular(12),
+                                  border: Border.all(
+                                    color: const Color(0xFFE8EAED),
+                                  ),
+                                ),
+                                padding: const EdgeInsets.all(16),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                                  children: [
+                                    Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.spaceBetween,
+                                      children: [
+                                        Row(
+                                          children: [
+                                            IconButton(
+                                              onPressed: _closeSupplierDetail,
+                                              icon: const Icon(Icons.arrow_back),
+                                              tooltip: 'Back',
+                                            ),
+                                            const SizedBox(width: 6),
+                                            Text(
+                                              s.supplierName.isEmpty ? '—' : s.supplierName,
+                                              style: const TextStyle(
+                                                fontSize: 22,
+                                                fontWeight: FontWeight.w800,
+                                              ),
+                                              maxLines: 1,
+                                              overflow: TextOverflow.ellipsis,
+                                            ),
+                                          ],
+                                        ),
+                                        _StatusChip(status: s.status),
+                                      ],
+                                    ),
+                                    const SizedBox(height: 10),
+                                    const Divider(color: Color(0xFFE8EAED), thickness: 1),
+                                    const SizedBox(height: 14),
+                                    _DetailLine(label: 'Company', value: s.companyName),
+                                    _DetailLine(label: 'Email', value: s.email),
+                                    _DetailLine(label: 'Phone', value: s.phone),
+                                    _DetailLine(label: 'Address', value: s.address),
+                                    if (s.createdAt != null && s.createdAt!.isNotEmpty)
+                                      _DetailLine(label: 'Created', value: s.createdAt!),
+                                    const SizedBox(height: 18),
+                                    Wrap(
+                                      spacing: 12,
+                                      runSpacing: 12,
+                                      children: [
+                                        OutlinedButton.icon(
+                                          onPressed: () =>
+                                              _openUpdateSupplierDialog(s),
+                                          icon: const Icon(Icons.edit_outlined),
+                                          label: const Text('Edit'),
+                                          style: OutlinedButton.styleFrom(
+                                            foregroundColor:
+                                                const Color(0xFF667EEA),
+                                            side: const BorderSide(
+                                              color: Color(0xFF667EEA),
+                                            ),
+                                            padding: const EdgeInsets.symmetric(
+                                              horizontal: 14,
+                                              vertical: 10,
+                                            ),
+                                          ),
+                                        ),
+                                        OutlinedButton.icon(
+                                          onPressed: _isUpdatingStatus
+                                              ? null
+                                              : () {
+                                                  final targetActive = normalizedStatus != 'active';
+                                                  _setSupplierStatus(
+                                                    s,
+                                                    targetActive ? 'active' : 'deactive',
+                                                  );
+                                                },
+                                          icon: Icon(
+                                            normalizedStatus == 'active'
+                                                ? Icons.toggle_off_outlined
+                                                : Icons.toggle_on_outlined,
+                                          ),
+                                          label: Text(
+                                            normalizedStatus == 'active'
+                                                ? 'Set Deactive'
+                                                : 'Set Active',
+                                          ),
+                                          style: OutlinedButton.styleFrom(
+                                            foregroundColor: const Color(0xFF667EEA),
+                                            side: const BorderSide(
+                                              color: Color(0xFF667EEA),
+                                            ),
+                                            padding: const EdgeInsets.symmetric(
+                                              horizontal: 14,
+                                              vertical: 10,
+                                            ),
+                                          ),
+                                        ),
+                                        if (canDelete)
+                                          OutlinedButton.icon(
+                                            onPressed: () =>
+                                                _openDeleteSupplierPopup(s),
+                                            icon: const Icon(Icons.delete_outline),
+                                            label: const Text('Delete'),
+                                            style: OutlinedButton.styleFrom(
+                                              foregroundColor: Colors.red,
+                                              side: const BorderSide(color: Colors.red),
+                                              padding: const EdgeInsets.symmetric(
+                                                horizontal: 14,
+                                                vertical: 10,
+                                              ),
+                                            ),
+                                          ),
+                                      ],
+                                    ),
+                                  ],
+                                ),
+                              );
+                            },
                           ),
-                          child: SingleChildScrollView(
-                            scrollDirection: Axis.horizontal,
-                            child: DataTable(
-                              horizontalMargin: 16,
-                              columnSpacing: 16,
-                              headingRowColor: const WidgetStatePropertyAll(
-                                Color(0xFFF7F8FA),
-                              ),
-                              headingTextStyle: const TextStyle(
-                                fontWeight: FontWeight.w700,
-                                color: Color(0xFF4A5568),
-                                fontSize: 12,
-                              ),
-                              columns: const [
-                                DataColumn(
-                                  label: SizedBox(
-                                    width: 28,
-                                    child: Text('S/N'),
-                                  ),
-                                ),
-                                DataColumn(
-                                  label: SizedBox(
-                                    width: 100,
-                                    child: Text('SUPPLIER NAME'),
-                                  ),
-                                ),
-                                DataColumn(
-                                  label: SizedBox(
-                                    width: 90,
-                                    child: Text('COMPANY'),
-                                  ),
-                                ),
-                                DataColumn(
-                                  label: SizedBox(
-                                    width: 110,
-                                    child: Text('EMAIL'),
-                                  ),
-                                ),
-                                DataColumn(
-                                  label: SizedBox(
-                                    width: 80,
-                                    child: Text('PHONE'),
-                                  ),
-                                ),
-                                DataColumn(
-                                  label: SizedBox(
-                                    width: 90,
-                                    child: Text('ADDRESS'),
-                                  ),
-                                ),
-                                DataColumn(
-                                  label: SizedBox(
-                                    width: 70,
-                                    child: Text('STATUS'),
-                                  ),
-                                ),
-                                DataColumn(
-                                  label: SizedBox(
-                                    width: 280,
-                                    child: Text('ACTIONS'),
-                                  ),
-                                ),
-                              ],
-                              rows: suppliers
-                                  .asMap()
-                                  .entries
-                                  .map(
-                                    (entry) =>
-                                        _buildRow(entry.key + 1, entry.value),
-                                  )
-                                  .toList(),
-                            ),
-                          ),
-                        );
-                      },
-                    ),
                   ),
                 ],
               ),
@@ -296,7 +562,12 @@ class _SuppliersContentState extends State<SuppliersContent> {
     );
   }
 
+  // Simple detail line for inline detail view.
+  // ignore: unused_element
   DataRow _buildRow(int index, SupplierListItem supplier) {
+    final normalizedStatus = supplier.status.toLowerCase();
+    final canDelete = normalizedStatus != 'deactive';
+
     return DataRow(
       cells: [
         DataCell(SizedBox(width: 28, child: Text(index.toString()))),
@@ -313,7 +584,7 @@ class _SuppliersContentState extends State<SuppliersContent> {
         ),
         DataCell(
           SizedBox(
-            width: 90,
+            width: 80,
             child: Text(
               supplier.companyName.isEmpty ? '-' : supplier.companyName,
               overflow: TextOverflow.ellipsis,
@@ -323,7 +594,7 @@ class _SuppliersContentState extends State<SuppliersContent> {
         ),
         DataCell(
           SizedBox(
-            width: 110,
+            width: 100,
             child: Text(
               supplier.email.isEmpty ? '-' : supplier.email,
               overflow: TextOverflow.ellipsis,
@@ -333,7 +604,7 @@ class _SuppliersContentState extends State<SuppliersContent> {
         ),
         DataCell(
           SizedBox(
-            width: 80,
+            width: 70,
             child: Text(
               supplier.phone.isEmpty ? '-' : supplier.phone,
               overflow: TextOverflow.ellipsis,
@@ -343,7 +614,7 @@ class _SuppliersContentState extends State<SuppliersContent> {
         ),
         DataCell(
           SizedBox(
-            width: 90,
+            width: 80,
             child: Text(
               supplier.address.isEmpty ? '-' : supplier.address,
               overflow: TextOverflow.ellipsis,
@@ -356,19 +627,25 @@ class _SuppliersContentState extends State<SuppliersContent> {
         ),
         DataCell(
           SizedBox(
-            width: 280,
+            width: 220,
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
                 OutlinedButton.icon(
-                  onPressed: () => context.push(
-                    '/${widget.basePath}/supplier-detail/${supplier.id}',
-                  ),
+                  onPressed: () {
+                    final id = supplier.id;
+                    if (widget.onSupplierDetailTap != null) {
+                      widget.onSupplierDetailTap!(id);
+                      return;
+                    }
+                    // Fallback: route navigation (when not embedded in dashboard)
+                    context.push('/${widget.basePath}/supplier-detail/$id');
+                  },
                   icon: const Icon(Icons.visibility_outlined, size: 18),
                   label: const Text('View'),
                   style: OutlinedButton.styleFrom(
                     padding: const EdgeInsets.symmetric(
-                      horizontal: 8,
+                      horizontal: 6,
                       vertical: 6,
                     ),
                     foregroundColor: const Color(0xFF667EEA),
@@ -382,32 +659,75 @@ class _SuppliersContentState extends State<SuppliersContent> {
                   label: const Text('Edit'),
                   style: OutlinedButton.styleFrom(
                     padding: const EdgeInsets.symmetric(
-                      horizontal: 8,
+                      horizontal: 6,
                       vertical: 6,
                     ),
                     foregroundColor: const Color(0xFF667EEA),
                     side: const BorderSide(color: Color(0xFF667EEA)),
                   ),
                 ),
-                const SizedBox(width: 6),
-                OutlinedButton.icon(
-                  onPressed: () => _openDeleteSupplierPopup(supplier),
-                  icon: const Icon(Icons.delete_outline, size: 18),
-                  label: const Text('Delete'),
-                  style: OutlinedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 8,
-                      vertical: 6,
+                if (canDelete) const SizedBox(width: 6),
+                if (canDelete)
+                  OutlinedButton.icon(
+                    onPressed: () => _openDeleteSupplierPopup(supplier),
+                    icon: const Icon(Icons.delete_outline, size: 18),
+                    label: const Text('Delete'),
+                    style: OutlinedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 6,
+                        vertical: 6,
+                      ),
+                      foregroundColor: Colors.red,
+                      side: const BorderSide(color: Colors.red),
                     ),
-                    foregroundColor: Colors.red,
-                    side: const BorderSide(color: Colors.red),
                   ),
-                ),
               ],
             ),
           ),
         ),
       ],
+    );
+  }
+}
+
+class _DetailLine extends StatelessWidget {
+  const _DetailLine({required this.label, required this.value});
+
+  final String label;
+  final String value;
+
+  @override
+  Widget build(BuildContext context) {
+    final v = value.trim().isEmpty ? '—' : value;
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 10),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SizedBox(
+            width: 120,
+            child: Text(
+              label,
+              style: const TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w700,
+                color: Color(0xFF6B7280),
+              ),
+            ),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              v,
+              style: const TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+                color: Color(0xFF0F172A),
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

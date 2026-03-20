@@ -13,6 +13,7 @@ import 'package:supermarket_manager_system/presentation/pages/revenue_report_pag
 import 'package:supermarket_manager_system/presentation/pages/users_page.dart';
 import 'package:supermarket_manager_system/presentation/pages/discount.dart';
 import 'package:supermarket_manager_system/presentation/pages/suppliers_page.dart';
+import 'package:supermarket_manager_system/presentation/pages/supplier_detail_page.dart';
 import 'package:supermarket_manager_system/presentation/pages/products_page.dart';
 import 'package:supermarket_manager_system/presentation/pages/expiration_page.dart';
 import 'package:supermarket_manager_system/presentation/pages/product_detail_page.dart';
@@ -25,6 +26,7 @@ enum _AdminTab {
   customers,
   discount,
   suppliers,
+  supplierDetail,
   products,
   expired,
   profile,
@@ -58,6 +60,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
   _AdminTab _selectedTab = _AdminTab.dashboard;
   UserDetail? _editingProfile;
   int? _selectedProductId;
+  int? _selectedSupplierId;
   late DateTime _now;
   Timer? _clockTimer;
 
@@ -85,6 +88,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
       _AdminTab.customers => '/admin/customers',
       _AdminTab.discount => '/admin/discount',
       _AdminTab.suppliers => '/admin/suppliers',
+      _AdminTab.supplierDetail => '/admin/suppliers',
       _AdminTab.products => '/admin/products',
       _AdminTab.expired => '/admin/expired',
       _AdminTab.productDetail => '/admin/expired',
@@ -154,6 +158,20 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
   void _closeProductDetail() {
     setState(() {
       _selectedTab = _AdminTab.expired; // Go back to expired tab
+    });
+  }
+
+  void _openSupplierDetail(int supplierId) {
+    setState(() {
+      _selectedSupplierId = supplierId;
+      _selectedTab = _AdminTab.supplierDetail;
+    });
+  }
+
+  void _closeSupplierDetail() {
+    setState(() {
+      _selectedSupplierId = null;
+      _selectedTab = _AdminTab.suppliers;
     });
   }
 
@@ -281,7 +299,15 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                           currentTimeText: _formatClock(_now),
                           onProfileTap: () => _selectTab(_AdminTab.profile),
                           basePath: 'admin',
+                          onSupplierDetailTap: _openSupplierDetail,
                         ),
+                        _AdminTab.supplierDetail => _selectedSupplierId != null
+                            ? SupplierDetailPage(
+                                supplierId: _selectedSupplierId!,
+                                basePath: 'admin',
+                                onBack: _closeSupplierDetail,
+                              )
+                            : Container(),
                         _AdminTab.products => ProductsContent(
                           fullName: widget.fullName,
                           isCompact: isCompact,
@@ -426,7 +452,8 @@ class _SidebarMenu extends StatelessWidget {
                     ),
                     _SidebarItem(
                       label: 'Suppliers',
-                      active: selectedTab == _AdminTab.suppliers,
+                      active: selectedTab == _AdminTab.suppliers ||
+                          selectedTab == _AdminTab.supplierDetail,
                       onTap: () => onSelectTab(_AdminTab.suppliers),
                     ),
                     const _SidebarItem(label: 'Category'),
