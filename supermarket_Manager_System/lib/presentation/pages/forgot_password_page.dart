@@ -36,7 +36,7 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(const SnackBar(content: Text('OTP sent to your email')));
-      context.push('/verify-otp');
+      context.push('/verify-otp?email=${Uri.encodeComponent(email)}');
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(
