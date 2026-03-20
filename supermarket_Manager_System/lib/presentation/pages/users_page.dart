@@ -148,45 +148,18 @@ class _UsersContentState extends State<UsersContent> {
                                     color: const Color(0xFFE8EAED),
                                   ),
                                 ),
-                                child: SingleChildScrollView(
-                                  scrollDirection: Axis.horizontal,
-                                  child: DataTable(
-                                    horizontalMargin: 20,
-                                    columnSpacing: 38,
-                                    headingRowColor:
-                                        const WidgetStatePropertyAll(
-                                          Color(0xFFF7F8FA),
-                                        ),
-                                    headingTextStyle: const TextStyle(
-                                      fontWeight: FontWeight.w700,
-                                      color: Color(0xFF4A5568),
-                                      fontSize: 12,
+                                child: ClipRRect(
+                                  borderRadius: BorderRadius.circular(12),
+                                  child: ListView.separated(
+                                    itemCount: users.length,
+                                    separatorBuilder: (_, __) => const Divider(
+                                      height: 1,
+                                      color: Color(0xFFE8EAED),
                                     ),
-                                    columns: const [
-                                      DataColumn(
-                                        label: SizedBox(
-                                          width: 28,
-                                          child: Text('S/N'),
-                                        ),
-                                      ),
-                                      DataColumn(label: Text('NAME')),
-                                      DataColumn(label: Text('USERNAME')),
-                                      DataColumn(label: Text('E-MAIL')),
-                                      DataColumn(label: Text('ROLE')),
-                                      DataColumn(label: Text('STATUS')),
-                                      DataColumn(label: Text('ID CARD')),
-                                      DataColumn(label: Text('ACTIONS')),
-                                    ],
-                                    rows: users
-                                        .asMap()
-                                        .entries
-                                        .map(
-                                          (entry) => _buildRow(
-                                            entry.key + 1,
-                                            entry.value,
-                                          ),
-                                        )
-                                        .toList(),
+                                    itemBuilder: (context, index) {
+                                      final user = users[index];
+                                      return _buildUserCard(index + 1, user);
+                                    },
                                   ),
                                 ),
                               );
@@ -207,66 +180,143 @@ class _UsersContentState extends State<UsersContent> {
     );
   }
 
-  DataRow _buildRow(int index, UserListItem user) {
-    return DataRow(
-      cells: [
-        DataCell(SizedBox(width: 28, child: Text(index.toString()))),
-        DataCell(
-          Text(
-            user.fullname.isEmpty ? '-' : user.fullname,
-            style: const TextStyle(
-              color: Color(0xFF667EEA),
-              fontWeight: FontWeight.w500,
-            ),
-          ),
-        ),
-        DataCell(
-          InkWell(
-            onTap: () => _openUserDetails(user.id),
-            child: Text(
-              user.username,
-              style: const TextStyle(
-                color: Color(0xFF667EEA),
-                fontWeight: FontWeight.w600,
-                decoration: TextDecoration.underline,
-              ),
-            ),
-          ),
-        ),
-        DataCell(Text(user.email)),
-        DataCell(_RoleBadge(role: user.role)),
-        DataCell(_StatusBadge(status: user.status)),
-        DataCell(Text(user.idCard.isEmpty ? '-' : user.idCard)),
-        DataCell(
+  Widget _buildUserCard(int index, UserListItem user) {
+    return Container(
+      color: Colors.white,
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
           Row(
             children: [
-              _ActionButton(
-                label: 'Details',
-                color: const Color(0xFF14B8A6),
-                onTap: () => _openUserDetails(user.id),
+              Container(
+                width: 28,
+                height: 28,
+                alignment: Alignment.center,
+                decoration: BoxDecoration(
+                  color: const Color(0xFFF0F2F5),
+                  borderRadius: BorderRadius.circular(6),
+                ),
+                child: Text(
+                  '$index',
+                  style: const TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                    color: Color(0xFF4A5568),
+                  ),
+                ),
               ),
-              const SizedBox(width: 8),
-              _ActionButton(
-                label: 'Edit',
-                color: const Color(0xFF667EEA),
-                onTap: () => _openEditUserDialog(user),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      user.fullname.isEmpty ? '-' : user.fullname,
+                      style: const TextStyle(
+                        color: Color(0xFF667EEA),
+                        fontWeight: FontWeight.w600,
+                        fontSize: 15,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    GestureDetector(
+                      onTap: () => _openUserDetails(user.id),
+                      child: Text(
+                        user.username,
+                        style: const TextStyle(
+                          color: Color(0xFF667EEA),
+                          fontWeight: FontWeight.w500,
+                          fontSize: 13,
+                          decoration: TextDecoration.underline,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
               ),
+              _RoleBadge(role: user.role),
               const SizedBox(width: 8),
-              _ActionButton(
-                label: _statusLoadingUserId == user.id
-                    ? '...'
-                    : (_isActiveStatus(user.status) ? 'Active' : 'Deactive'),
-                color: _isActiveStatus(user.status)
-                    ? const Color(0xFF14B8A6)
-                    : const Color(0xFFDC2626),
-                onTap: _statusLoadingUserId == user.id
-                    ? () {}
-                    : () => _confirmToggleUserStatus(user),
+              _StatusBadge(status: user.status),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Row(
+            children: [
+              const Icon(
+                Icons.email_outlined,
+                size: 14,
+                color: Color(0xFF9CA3AF),
+              ),
+              const SizedBox(width: 4),
+              Expanded(
+                child: Text(
+                  user.email,
+                  style: const TextStyle(
+                    fontSize: 13,
+                    color: Color(0xFF4A5568),
+                  ),
+                  overflow: TextOverflow.ellipsis,
+                ),
               ),
             ],
           ),
-        ),
-      ],
+          if (user.idCard.isNotEmpty) ...[
+            const SizedBox(height: 4),
+            Row(
+              children: [
+                const Icon(
+                  Icons.badge_outlined,
+                  size: 14,
+                  color: Color(0xFF9CA3AF),
+                ),
+                const SizedBox(width: 4),
+                Text(
+                  user.idCard,
+                  style: const TextStyle(
+                    fontSize: 13,
+                    color: Color(0xFF4A5568),
+                  ),
+                ),
+              ],
+            ),
+          ],
+          const SizedBox(height: 10),
+          Row(
+            children: [
+              Expanded(
+                child: _ActionButton(
+                  label: 'Details',
+                  color: const Color(0xFF14B8A6),
+                  onTap: () => _openUserDetails(user.id),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: _ActionButton(
+                  label: 'Edit',
+                  color: const Color(0xFF667EEA),
+                  onTap: () => _openEditUserDialog(user),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: _ActionButton(
+                  label: _statusLoadingUserId == user.id
+                      ? '...'
+                      : (_isActiveStatus(user.status) ? 'Active' : 'Deactive'),
+                  color: _isActiveStatus(user.status)
+                      ? const Color(0xFF14B8A6)
+                      : const Color(0xFFDC2626),
+                  onTap: _statusLoadingUserId == user.id
+                      ? () {}
+                      : () => _confirmToggleUserStatus(user),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
     );
   }
 
