@@ -28,6 +28,14 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
       ).showSnackBar(const SnackBar(content: Text('Please enter your email')));
       return;
     }
+    if (!RegExp(r'^[\w.+-]+@[\w-]+\.[a-zA-Z]{2,}$').hasMatch(email)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Invalid email address. Please enter a valid email.'),
+        ),
+      );
+      return;
+    }
 
     setState(() => _isLoading = true);
     try {
@@ -39,9 +47,17 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
       context.push('/verify-otp?email=${Uri.encodeComponent(email)}');
     } catch (e) {
       if (!mounted) return;
+      final msg = e.toString();
+      final displayMsg =
+          (msg.contains('Invalid Addresses') ||
+              msg.contains('valid RFC') ||
+              msg.contains('SMTPAddressFailed') ||
+              msg.contains('SendFailed'))
+          ? 'Invalid email address. Please enter a valid email.'
+          : 'Failed to send OTP. Please try again.';
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(SnackBar(content: Text('Error: $e')));
+      ).showSnackBar(SnackBar(content: Text(displayMsg)));
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
