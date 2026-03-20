@@ -9,6 +9,7 @@ import 'package:supermarket_manager_system/presentation/pages/profile_content_pa
 import 'package:supermarket_manager_system/presentation/pages/discount.dart';
 import 'package:supermarket_manager_system/presentation/pages/suppliers_page.dart';
 import 'package:supermarket_manager_system/presentation/pages/supplier_detail_page.dart';
+import 'package:supermarket_manager_system/presentation/pages/list_category_screen.dart';
 import 'package:supermarket_manager_system/presentation/pages/products_page.dart';
 import 'package:supermarket_manager_system/presentation/pages/expiration_page.dart';
 import 'package:supermarket_manager_system/presentation/pages/product_detail_page.dart';
@@ -19,6 +20,7 @@ enum _ManagerTab {
   customers,
   discount,
   suppliers,
+  categories,
   supplierDetail,
   products,
   expired,
@@ -62,6 +64,7 @@ class _ManagerDashboardPageState extends State<ManagerDashboardPage> {
       'customers' => _ManagerTab.customers,
       'discount' => _ManagerTab.discount,
       'suppliers' => _ManagerTab.suppliers,
+      'categories' => _ManagerTab.categories,
       'products' => _ManagerTab.products,
       'expired' => _ManagerTab.expired,
       'profile-edit' => _ManagerTab.profileEdit,
@@ -76,6 +79,7 @@ class _ManagerDashboardPageState extends State<ManagerDashboardPage> {
       _ManagerTab.customers => '/manager/customers',
       _ManagerTab.discount => '/manager/discount',
       _ManagerTab.suppliers => '/manager/suppliers',
+      _ManagerTab.categories => '/manager/categories',
       _ManagerTab.supplierDetail => '/manager/suppliers',
       _ManagerTab.products => '/manager/products',
       _ManagerTab.expired => '/manager/expired',
@@ -218,6 +222,7 @@ class _ManagerDashboardPageState extends State<ManagerDashboardPage> {
                     onCustomersTap: () => _selectTab(_ManagerTab.customers),
                     onDiscountTap: () => _selectTab(_ManagerTab.discount),
                     onSuppliersTap: () => _selectTab(_ManagerTab.suppliers),
+                    onCategoriesTap: () => _selectTab(_ManagerTab.categories),
                     onProductsTap: () => _selectTab(_ManagerTab.products),
                     onExpiredTap: () => _selectTab(_ManagerTab.expired),
                   ),
@@ -237,6 +242,7 @@ class _ManagerDashboardPageState extends State<ManagerDashboardPage> {
                       onCustomersTap: () => _selectTab(_ManagerTab.customers),
                       onDiscountTap: () => _selectTab(_ManagerTab.discount),
                       onSuppliersTap: () => _selectTab(_ManagerTab.suppliers),
+                      onCategoriesTap: () => _selectTab(_ManagerTab.categories),
                       onProductsTap: () => _selectTab(_ManagerTab.products),
                       onExpiredTap: () => _selectTab(_ManagerTab.expired),
                     ),
@@ -276,6 +282,12 @@ class _ManagerDashboardPageState extends State<ManagerDashboardPage> {
                       onProfileTap: () => _selectTab(_ManagerTab.profile),
                       basePath: 'manager',
                       onSupplierDetailTap: _openSupplierDetail,
+                    ),
+                    _ManagerTab.categories => ListCategoryScreen(
+                      fullName: widget.fullName,
+                      isCompact: isCompact,
+                      currentTimeText: _formatClock(_now),
+                      onProfileTap: () => _selectTab(_ManagerTab.profile),
                     ),
                     _ManagerTab.supplierDetail => _selectedSupplierId != null
                         ? SupplierDetailPage(
@@ -339,6 +351,7 @@ class _ManagerSidebar extends StatelessWidget {
     required this.onCustomersTap,
     required this.onDiscountTap,
     required this.onSuppliersTap,
+    required this.onCategoriesTap,
     required this.onProductsTap,
     required this.onExpiredTap,
   });
@@ -350,6 +363,7 @@ class _ManagerSidebar extends StatelessWidget {
   final VoidCallback onCustomersTap;
   final VoidCallback onDiscountTap;
   final VoidCallback onSuppliersTap;
+  final VoidCallback onCategoriesTap;
   final VoidCallback onProductsTap;
   final VoidCallback onExpiredTap;
 
@@ -415,7 +429,11 @@ class _ManagerSidebar extends StatelessWidget {
                           selectedTab == _ManagerTab.supplierDetail,
                       onTap: onSuppliersTap,
                     ),
-                    const _ManagerSidebarItem(label: 'Category'),
+                    _ManagerSidebarItem(
+                      label: 'Category',
+                      active: selectedTab == _ManagerTab.categories,
+                      onTap: onCategoriesTap,
+                    ),
                     _ManagerSidebarItem(
                       label: 'Products',
                       active: selectedTab == _ManagerTab.products,

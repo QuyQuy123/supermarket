@@ -317,6 +317,7 @@ class SupermarketManagerApp extends StatelessWidget {
     if (section == 'customers') return 'customers';
     if (section == 'discount') return 'discount';
     if (section == 'suppliers') return 'suppliers';
+    if (section == 'categories') return 'categories';
     if (section == 'products') return 'products';
     if (section == 'expired') return 'expired';
     if (section == 'reports') return 'reports';
@@ -404,6 +405,7 @@ class SupermarketManagerApp extends StatelessWidget {
     if (section == 'customers') return 'customers';
     if (section == 'discount') return 'discount';
     if (section == 'suppliers') return 'suppliers';
+    if (section == 'categories') return 'categories';
     if (section == 'products') return 'products';
     if (section == 'expired') return 'expired';
     if (section == 'reports') return 'reports';
