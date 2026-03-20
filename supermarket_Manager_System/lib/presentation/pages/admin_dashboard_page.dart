@@ -14,6 +14,7 @@ import 'package:supermarket_manager_system/presentation/pages/users_page.dart';
 import 'package:supermarket_manager_system/presentation/pages/discount.dart';
 import 'package:supermarket_manager_system/presentation/pages/suppliers_page.dart';
 import 'package:supermarket_manager_system/presentation/pages/supplier_detail_page.dart';
+import 'package:supermarket_manager_system/presentation/pages/list_category_screen.dart';
 import 'package:supermarket_manager_system/presentation/pages/products_page.dart';
 import 'package:supermarket_manager_system/presentation/pages/expiration_page.dart';
 import 'package:supermarket_manager_system/presentation/pages/product_detail_page.dart';
@@ -26,6 +27,7 @@ enum _AdminTab {
   customers,
   discount,
   suppliers,
+  categories,
   supplierDetail,
   products,
   expired,
@@ -71,6 +73,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
       'customers' => _AdminTab.customers,
       'discount' => _AdminTab.discount,
       'suppliers' => _AdminTab.suppliers,
+      'categories' => _AdminTab.categories,
       'products' => _AdminTab.products,
       'expired' => _AdminTab.expired,
       'profile' => _AdminTab.profile,
@@ -88,6 +91,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
       _AdminTab.customers => '/admin/customers',
       _AdminTab.discount => '/admin/discount',
       _AdminTab.suppliers => '/admin/suppliers',
+      _AdminTab.categories => '/admin/categories',
       _AdminTab.supplierDetail => '/admin/suppliers',
       _AdminTab.products => '/admin/products',
       _AdminTab.expired => '/admin/expired',
@@ -301,6 +305,12 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                           basePath: 'admin',
                           onSupplierDetailTap: _openSupplierDetail,
                         ),
+                        _AdminTab.categories => ListCategoryScreen(
+                          fullName: widget.fullName,
+                          isCompact: isCompact,
+                          currentTimeText: _formatClock(_now),
+                          onProfileTap: () => _selectTab(_AdminTab.profile),
+                        ),
                         _AdminTab.supplierDetail => _selectedSupplierId != null
                             ? SupplierDetailPage(
                                 supplierId: _selectedSupplierId!,
@@ -456,7 +466,11 @@ class _SidebarMenu extends StatelessWidget {
                           selectedTab == _AdminTab.supplierDetail,
                       onTap: () => onSelectTab(_AdminTab.suppliers),
                     ),
-                    const _SidebarItem(label: 'Category'),
+                    _SidebarItem(
+                      label: 'Category',
+                      active: selectedTab == _AdminTab.categories,
+                      onTap: () => onSelectTab(_AdminTab.categories),
+                    ),
                     _SidebarItem(
                       label: 'Products',
                       active: selectedTab == _AdminTab.products,
