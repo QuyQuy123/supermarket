@@ -174,10 +174,12 @@ class _UpdateProductDialogState extends State<UpdateProductDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final dialogWidth = screenWidth < 640 ? screenWidth - 24 : 600.0;
     return Dialog(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: Container(
-        width: 600,
+        width: dialogWidth,
         constraints: const BoxConstraints(maxHeight: 700),
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -228,6 +230,7 @@ class _UpdateProductDialogState extends State<UpdateProductDialog> {
   }
 
   Widget _buildForm() {
+    final isCompactLayout = MediaQuery.of(context).size.width < 440;
     return Form(
       key: _formKey,
       child: Column(
@@ -252,26 +255,20 @@ class _UpdateProductDialogState extends State<UpdateProductDialog> {
             maxLines: 3,
           ),
           const SizedBox(height: 16),
-          Row(
-            children: [
-              Expanded(
-                child: _buildTextField(
-                  label: 'Cost Price',
-                  controller: _costPriceController,
-                  required: false,
-                  keyboardType: TextInputType.number,
-                ),
-              ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: _buildTextField(
-                  label: 'Selling Price',
-                  controller: _sellingPriceController,
-                  required: true,
-                  keyboardType: TextInputType.number,
-                ),
-              ),
-            ],
+          _buildResponsivePair(
+            isCompactLayout: isCompactLayout,
+            first: _buildTextField(
+              label: 'Cost Price',
+              controller: _costPriceController,
+              required: false,
+              keyboardType: TextInputType.number,
+            ),
+            second: _buildTextField(
+              label: 'Selling Price',
+              controller: _sellingPriceController,
+              required: true,
+              keyboardType: TextInputType.number,
+            ),
           ),
           const SizedBox(height: 16),
           _buildTextField(
@@ -281,20 +278,16 @@ class _UpdateProductDialogState extends State<UpdateProductDialog> {
             keyboardType: TextInputType.number,
           ),
           const SizedBox(height: 16),
-          Row(
-            children: [
-              Expanded(child: _buildSupplierDropdown()),
-              const SizedBox(width: 16),
-              Expanded(child: _buildCategoryDropdown()),
-            ],
+          _buildResponsivePair(
+            isCompactLayout: isCompactLayout,
+            first: _buildSupplierDropdown(),
+            second: _buildCategoryDropdown(),
           ),
           const SizedBox(height: 16),
-          Row(
-            children: [
-              Expanded(child: _buildDateField('MFT Date', _mftDateController)),
-              const SizedBox(width: 16),
-              Expanded(child: _buildDateField('Expiry Date', _expiryDateController)),
-            ],
+          _buildResponsivePair(
+            isCompactLayout: isCompactLayout,
+            first: _buildDateField('MFT Date', _mftDateController),
+            second: _buildDateField('Expiry Date', _expiryDateController),
           ),
           const SizedBox(height: 24),
           Row(
@@ -380,14 +373,30 @@ class _UpdateProductDialogState extends State<UpdateProductDialog> {
         const SizedBox(height: 8),
         DropdownButtonFormField<int>(
           initialValue: _selectedSupplierId,
+          isExpanded: true,
           decoration: const InputDecoration(
             border: OutlineInputBorder(),
             hintText: 'Choose...',
           ),
+          selectedItemBuilder: (context) {
+            return _suppliers
+                .map(
+                  (s) => Text(
+                    s.supplierName,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                )
+                .toList();
+          },
           items: _suppliers
-              .map((s) => DropdownMenuItem(
+              .map((s) => DropdownMenuItem<int>(
                     value: s.id,
-                    child: Text(s.supplierName),
+                    child: Text(
+                      s.supplierName,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
                   ))
               .toList(),
           onChanged: (value) => setState(() => _selectedSupplierId = value),
@@ -407,14 +416,30 @@ class _UpdateProductDialogState extends State<UpdateProductDialog> {
         const SizedBox(height: 8),
         DropdownButtonFormField<int>(
           initialValue: _selectedCategoryId,
+          isExpanded: true,
           decoration: const InputDecoration(
             border: OutlineInputBorder(),
             hintText: 'Choose...',
           ),
+          selectedItemBuilder: (context) {
+            return _categories
+                .map(
+                  (c) => Text(
+                    c.name,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                )
+                .toList();
+          },
           items: _categories
-              .map((c) => DropdownMenuItem(
+              .map((c) => DropdownMenuItem<int>(
                     value: c.id,
-                    child: Text(c.name),
+                    child: Text(
+                      c.name,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
                   ))
               .toList(),
           onChanged: (value) => setState(() => _selectedCategoryId = value),
@@ -435,6 +460,7 @@ class _UpdateProductDialogState extends State<UpdateProductDialog> {
         TextFormField(
           controller: controller,
           readOnly: true,
+          maxLines: 1,
           decoration: InputDecoration(
             border: const OutlineInputBorder(),
             hintText: 'Select date',
@@ -442,6 +468,30 @@ class _UpdateProductDialogState extends State<UpdateProductDialog> {
           ),
           onTap: () => _selectDate(controller),
         ),
+      ],
+    );
+  }
+
+  Widget _buildResponsivePair({
+    required bool isCompactLayout,
+    required Widget first,
+    required Widget second,
+  }) {
+    if (isCompactLayout) {
+      return Column(
+        children: [
+          first,
+          const SizedBox(height: 16),
+          second,
+        ],
+      );
+    }
+
+    return Row(
+      children: [
+        Expanded(child: first),
+        const SizedBox(width: 16),
+        Expanded(child: second),
       ],
     );
   }

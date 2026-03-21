@@ -183,7 +183,7 @@ class _RevenueReportPageState extends State<RevenueReportPage> {
     return Stack(
       children: [
         Container(
-          color: const Color(0xFFF0F2F5),
+          color: const Color(0xFFF4F7FC),
           child: Column(
             children: [
               _buildHeader(),
@@ -243,6 +243,7 @@ class _RevenueReportPageState extends State<RevenueReportPage> {
                             _buildTable(),
                             const SizedBox(height: 16),
                             _buildTotalBanner(),
+                            SizedBox(height: widget.isCompact ? 84 : 24),
                           ],
                         ),
                       ),
@@ -812,6 +813,10 @@ class _RevenueReportPageState extends State<RevenueReportPage> {
   }
 
   Widget _buildTable() {
+    if (widget.isCompact) {
+      return _buildMobileOrdersList();
+    }
+
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
@@ -886,6 +891,75 @@ class _RevenueReportPageState extends State<RevenueReportPage> {
           );
         },
       ),
+    );
+  }
+
+  Widget _buildMobileOrdersList() {
+    return ListView.separated(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      itemCount: _filteredOrders.length,
+      separatorBuilder: (_, _) => const SizedBox(height: 10),
+      itemBuilder: (context, index) {
+        final o = _filteredOrders[index];
+        return Container(
+          padding: const EdgeInsets.all(14),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: const Color(0xFFE5EAF4)),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(
+                    child: Text(
+                      o.orderNo,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w700,
+                        color: Color(0xFF111827),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  _CompactStatusBadge(status: o.status.isEmpty ? '—' : o.status),
+                ],
+              ),
+              const SizedBox(height: 8),
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: [
+                  _ReportInfoChip(label: 'Phone', value: o.customerPhone),
+                  _ReportInfoChip(
+                    label: 'Total',
+                    value: _formatMoney(o.total),
+                  ),
+                  _ReportInfoChip(
+                    label: 'Payable',
+                    value: _formatMoney(o.payable),
+                    valueColor: const Color(0xFF166534),
+                  ),
+                  _ReportInfoChip(
+                    label: 'Payment',
+                    value: o.paymentMethod.isEmpty ? '—' : o.paymentMethod,
+                  ),
+                  _ReportInfoChip(
+                    label: 'Cashier',
+                    value: o.cashierName.isEmpty ? '—' : o.cashierName,
+                  ),
+                ],
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 
@@ -1091,6 +1165,92 @@ class _RevenueReportPageState extends State<RevenueReportPage> {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _ReportInfoChip extends StatelessWidget {
+  const _ReportInfoChip({
+    required this.label,
+    required this.value,
+    this.valueColor,
+  });
+
+  final String label;
+  final String value;
+  final Color? valueColor;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF8FAFF),
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: const Color(0xFFE4EBF8)),
+      ),
+      child: RichText(
+        text: TextSpan(
+          style: const TextStyle(color: Color(0xFF111827)),
+          children: [
+            TextSpan(
+              text: '$label: ',
+              style: const TextStyle(
+                fontSize: 12,
+                color: Color(0xFF64748B),
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            TextSpan(
+              text: value,
+              style: TextStyle(
+                fontSize: 12.5,
+                fontWeight: FontWeight.w700,
+                color: valueColor ?? const Color(0xFF111827),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _CompactStatusBadge extends StatelessWidget {
+  const _CompactStatusBadge({required this.status});
+
+  final String status;
+
+  @override
+  Widget build(BuildContext context) {
+    final normalized = status.toLowerCase();
+    final isPaid = normalized == 'paid';
+    final isPending = normalized == 'pending';
+    final bg = isPaid
+        ? const Color(0xFFD1FAE5)
+        : isPending
+        ? const Color(0xFFFEF3C7)
+        : const Color(0xFFE5E7EB);
+    final fg = isPaid
+        ? const Color(0xFF065F46)
+        : isPending
+        ? const Color(0xFF92400E)
+        : const Color(0xFF374151);
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: bg,
+        borderRadius: BorderRadius.circular(999),
+      ),
+      child: Text(
+        status,
+        style: TextStyle(
+          fontSize: 11,
+          fontWeight: FontWeight.w600,
+          color: fg,
+        ),
       ),
     );
   }

@@ -110,7 +110,7 @@ class _ExpirationContentState extends State<ExpirationContent> {
   @override
   Widget build(BuildContext context) {
     return Container(
-      color: const Color(0xFFF0F2F5),
+      color: const Color(0xFFF4F7FC),
       child: Column(
         children: [
           _ExpirationHeader(
@@ -203,7 +203,9 @@ class _ExpirationContentState extends State<ExpirationContent> {
                         if (products.isEmpty) {
                           return const Center(child: Text('No products found'));
                         }
-                        return _buildProductsTable(products);
+                        return widget.isCompact
+                            ? _buildProductsMobileList(products)
+                            : _buildProductsTable(products);
                       },
                     ),
                   ),
@@ -330,6 +332,123 @@ class _ExpirationContentState extends State<ExpirationContent> {
             ),
           );
         },
+      ),
+    );
+  }
+
+  Widget _buildProductsMobileList(List<ExpirationProduct> products) {
+    return ListView.separated(
+      physics: const BouncingScrollPhysics(),
+      itemCount: products.length,
+      separatorBuilder: (_, _) => const SizedBox(height: 12),
+      itemBuilder: (context, index) => _buildMobileProductCard(products[index]),
+    );
+  }
+
+  Widget _buildMobileProductCard(ExpirationProduct product) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: const Color(0xFFE7ECF5)),
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x10213A63),
+            blurRadius: 18,
+            offset: Offset(0, 8),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                child: Text(
+                  product.productName.isEmpty ? '-' : product.productName,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w700,
+                    color: Color(0xFF111827),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 10),
+              _StatusBadge(status: product.status),
+            ],
+          ),
+          const SizedBox(height: 10),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              _ExpirationInfoChip(
+                label: 'Stock',
+                value: product.inStock.toString(),
+              ),
+              _ExpirationInfoChip(
+                label: 'Supplier',
+                value: product.supplierName.isEmpty ? '-' : product.supplierName,
+              ),
+              _ExpirationInfoChip(
+                label: 'Expiry',
+                value: product.expiryDate.isEmpty ? '-' : product.expiryDate,
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              Expanded(
+                child: OutlinedButton(
+                  onPressed: () {
+                    if (widget.onProductDetailTap != null) {
+                      widget.onProductDetailTap!(product.id);
+                    } else {
+                      final basePath = _basePathFromLocation(context);
+                      context.push('$basePath/products/detail/${product.id}');
+                    }
+                  },
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: const Color(0xFF1E40AF),
+                    side: const BorderSide(color: Color(0xFFD6E3F8)),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  child: const Text(
+                    'View',
+                    style: TextStyle(fontWeight: FontWeight.w600),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: ElevatedButton(
+                  onPressed: () =>
+                      _confirmDeleteProduct(product.id, product.productName),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFFDC2626),
+                    foregroundColor: Colors.white,
+                    elevation: 0,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  child: const Text(
+                    'Delete',
+                    style: TextStyle(fontWeight: FontWeight.w600),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }
@@ -704,6 +823,44 @@ class _DeleteConfirmDialog extends StatelessWidget {
                   child: const Text('Delete'),
                 ),
               ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _ExpirationInfoChip extends StatelessWidget {
+  const _ExpirationInfoChip({required this.label, required this.value});
+
+  final String label;
+  final String value;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF8FAFF),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: const Color(0xFFE4EBF8)),
+      ),
+      child: RichText(
+        text: TextSpan(
+          style: const TextStyle(color: Color(0xFF111827)),
+          children: [
+            TextSpan(
+              text: '$label: ',
+              style: const TextStyle(
+                fontSize: 12,
+                color: Color(0xFF64748B),
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            TextSpan(
+              text: value,
+              style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700),
             ),
           ],
         ),

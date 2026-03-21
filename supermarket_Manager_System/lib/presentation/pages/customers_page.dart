@@ -129,8 +129,9 @@ class _CustomersContentState extends State<CustomersContent> {
 
   @override
   Widget build(BuildContext context) {
+    final pagePadding = widget.isCompact ? 16.0 : 24.0;
     return Container(
-      color: const Color(0xFFF0F2F5),
+      color: const Color(0xFFF4F7FC),
       child: Column(
         children: [
           if (widget.showHeader)
@@ -144,7 +145,7 @@ class _CustomersContentState extends State<CustomersContent> {
             _SimpleBackBar(onBack: widget.onBack!),
           Expanded(
             child: Padding(
-              padding: const EdgeInsets.all(24),
+              padding: EdgeInsets.all(pagePadding),
               child: switch (_view) {
                 _CustomerView.list => _buildListContent(),
                 _CustomerView.detail => CustomerDetailContent(
@@ -179,41 +180,76 @@ class _CustomersContentState extends State<CustomersContent> {
     final listWidget = Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            const Text(
-              'Customer List',
-              style: TextStyle(
-                fontSize: 24,
-                fontWeight: FontWeight.w700,
-                color: Color(0xFF1A1D21),
-                letterSpacing: -0.02,
-              ),
-            ),
-            ElevatedButton.icon(
-              onPressed: _openAddCustomerDialog,
-              icon: const Icon(Icons.add, size: 18),
-              label: const Text('Add Customer'),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF16A34A),
-                foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 20,
-                  vertical: 12,
-                ),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                elevation: 0,
-                textStyle: const TextStyle(
-                  fontWeight: FontWeight.w600,
-                  fontSize: 14,
+        if (widget.isCompact)
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              const Text(
+                'Customer List',
+                style: TextStyle(
+                  fontSize: 28,
+                  fontWeight: FontWeight.w800,
+                  color: Color(0xFF111827),
+                  letterSpacing: -0.3,
                 ),
               ),
-            ),
-          ],
-        ),
+              const SizedBox(height: 12),
+              ElevatedButton.icon(
+                onPressed: _openAddCustomerDialog,
+                icon: const Icon(Icons.person_add_alt_1_rounded, size: 18),
+                label: const Text('Add Customer'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF2563EB),
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(vertical: 13),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                  elevation: 0,
+                  textStyle: const TextStyle(
+                    fontWeight: FontWeight.w700,
+                    fontSize: 14,
+                  ),
+                ),
+              ),
+            ],
+          )
+        else
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Text(
+                'Customer List',
+                style: TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.w700,
+                  color: Color(0xFF1A1D21),
+                  letterSpacing: -0.02,
+                ),
+              ),
+              ElevatedButton.icon(
+                onPressed: _openAddCustomerDialog,
+                icon: const Icon(Icons.add, size: 18),
+                label: const Text('Add Customer'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF2563EB),
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 20,
+                    vertical: 12,
+                  ),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  elevation: 0,
+                  textStyle: const TextStyle(
+                    fontWeight: FontWeight.w600,
+                    fontSize: 14,
+                  ),
+                ),
+              ),
+            ],
+          ),
         const SizedBox(height: 20),
         Expanded(
           child: FutureBuilder<List<CustomerListItem>>(
@@ -241,6 +277,46 @@ class _CustomersContentState extends State<CustomersContent> {
                 );
               }
               final customers = snapshot.data ?? [];
+              if (customers.isEmpty) {
+                return Container(
+                  padding: const EdgeInsets.all(28),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(24),
+                    border: Border.all(color: const Color(0xFFE3EAF6)),
+                  ),
+                  child: const Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        Icons.person_search_rounded,
+                        size: 42,
+                        color: Color(0xFF94A3B8),
+                      ),
+                      SizedBox(height: 10),
+                      Text(
+                        'No customers found',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w700,
+                          color: Color(0xFF1F2937),
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              }
+              if (widget.isCompact) {
+                return ListView.separated(
+                  physics: const BouncingScrollPhysics(),
+                  itemCount: customers.length,
+                  separatorBuilder: (_, _) => const SizedBox(height: 14),
+                  itemBuilder: (context, index) {
+                    final c = customers[index];
+                    return _buildMobileCustomerCard(c);
+                  },
+                );
+              }
               return Container(
                 decoration: BoxDecoration(
                   color: Colors.white,
@@ -404,6 +480,108 @@ class _CustomersContentState extends State<CustomersContent> {
         );
     return '$fmtđ';
   }
+
+  Widget _buildMobileCustomerCard(CustomerListItem customer) {
+    return Container(
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: const Color(0xFFE7ECF5)),
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x10213A63),
+            blurRadius: 20,
+            offset: Offset(0, 8),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                width: 46,
+                height: 46,
+                alignment: Alignment.center,
+                decoration: const BoxDecoration(
+                  color: Color(0xFFEFF4FF),
+                  shape: BoxShape.circle,
+                ),
+                child: Text(
+                  customer.name.trim().isEmpty
+                      ? '?'
+                      : customer.name.trim()[0].toUpperCase(),
+                  style: const TextStyle(
+                    fontWeight: FontWeight.w700,
+                    fontSize: 18,
+                    color: Color(0xFF1E40AF),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    GestureDetector(
+                      onTap: () {
+                        _selectedCustomerPhone = customer.phone;
+                        _showDetail(customer.id);
+                      },
+                      child: Text(
+                        customer.name,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          fontSize: 17,
+                          fontWeight: FontWeight.w700,
+                          color: Color(0xFF111827),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    GestureDetector(
+                      onTap: () => _showHistory(customer.id, phone: customer.phone),
+                      child: Text(
+                        customer.phone,
+                        style: const TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                          color: Color(0xFF2563EB),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              _EditActionBtn(onTap: () => _openEditCustomerDialog(customer)),
+            ],
+          ),
+          const SizedBox(height: 14),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              _CustomerMetricChip(
+                label: 'Points',
+                value: customer.points.toString(),
+              ),
+              _CustomerMetricChip(
+                label: 'Purchases',
+                value: customer.totalPurchases.toString(),
+              ),
+              _CustomerMetricChip(
+                label: 'Total',
+                value: _formatMoney(customer.totalAmount),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
 }
 
 class _SimpleBackBar extends StatelessWidget {
@@ -470,9 +648,7 @@ class _EditActionBtn extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(8),
-        gradient: const LinearGradient(
-          colors: [Color(0xFF667EEA), Color(0xFF764BA2)],
-        ),
+        color: const Color(0xFFEFF4FF),
       ),
       child: Material(
         color: Colors.transparent,
@@ -484,12 +660,50 @@ class _EditActionBtn extends StatelessWidget {
             child: Text(
               'Edit',
               style: TextStyle(
-                color: Colors.white,
+                color: Color(0xFF1E40AF),
                 fontSize: 13,
                 fontWeight: FontWeight.w600,
               ),
             ),
           ),
+        ),
+      ),
+    );
+  }
+}
+
+class _CustomerMetricChip extends StatelessWidget {
+  const _CustomerMetricChip({required this.label, required this.value});
+
+  final String label;
+  final String value;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF8FAFF),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: const Color(0xFFE4EBF8)),
+      ),
+      child: RichText(
+        text: TextSpan(
+          style: const TextStyle(color: Color(0xFF111827)),
+          children: [
+            TextSpan(
+              text: '$label: ',
+              style: const TextStyle(
+                fontSize: 12,
+                color: Color(0xFF64748B),
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            TextSpan(
+              text: value,
+              style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700),
+            ),
+          ],
         ),
       ),
     );
