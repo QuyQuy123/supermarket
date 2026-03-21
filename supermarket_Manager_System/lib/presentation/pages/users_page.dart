@@ -24,14 +24,24 @@ class UsersContent extends StatefulWidget {
 
 class _UsersContentState extends State<UsersContent> {
   final _userApiService = UserApiService();
+  final _searchController = TextEditingController();
   late Future<List<UserListItem>> _usersFuture;
   int? _selectedUserId;
   int? _statusLoadingUserId;
+  String _searchQuery = '';
+  String _selectedStatusFilter = 'all';
+  String _selectedRoleFilter = 'all';
 
   @override
   void initState() {
     super.initState();
     _usersFuture = _userApiService.getUsers();
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
   }
 
   void _reloadUsers() {
@@ -61,8 +71,9 @@ class _UsersContentState extends State<UsersContent> {
 
   @override
   Widget build(BuildContext context) {
+    final horizontalPadding = widget.isCompact ? 16.0 : 24.0;
     return Container(
-      color: const Color(0xFFF0F2F5),
+      color: const Color(0xFFF7F8FC),
       child: Column(
         children: [
           _UsersHeader(
@@ -73,42 +84,10 @@ class _UsersContentState extends State<UsersContent> {
           ),
           Expanded(
             child: Padding(
-              padding: const EdgeInsets.all(24),
+              padding: EdgeInsets.all(horizontalPadding),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  if (_selectedUserId == null)
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        const Text(
-                          'User Information',
-                          style: TextStyle(
-                            fontSize: 28,
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
-                        DecoratedBox(
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(10),
-                            gradient: const LinearGradient(
-                              colors: [Color(0xFF667EEA), Color(0xFF764BA2)],
-                            ),
-                          ),
-                          child: TextButton(
-                            onPressed: _openAddUserDialog,
-                            child: const Text(
-                              '+ Add User',
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  const SizedBox(height: 20),
                   Expanded(
                     child: _selectedUserId == null
                         ? FutureBuilder<List<UserListItem>>(
@@ -140,28 +119,71 @@ class _UsersContentState extends State<UsersContent> {
                               }
 
                               final users = snapshot.data ?? [];
-                              return Container(
-                                decoration: BoxDecoration(
-                                  color: Colors.white,
-                                  borderRadius: BorderRadius.circular(12),
-                                  border: Border.all(
-                                    color: const Color(0xFFE8EAED),
-                                  ),
-                                ),
-                                child: ClipRRect(
-                                  borderRadius: BorderRadius.circular(12),
-                                  child: ListView.separated(
-                                    itemCount: users.length,
-                                    separatorBuilder: (_, _) => const Divider(
-                                      height: 1,
-                                      color: Color(0xFFE8EAED),
+                              final filteredUsers = _filterUsers(users);
+                              final roleOptions = _extractRoleOptions(users);
+                              return Column(
+                                children: [
+                                  _UsersFilterBar(
+                                    isCompact: widget.isCompact,
+                                    searchController: _searchController,
+                                    searchQuery: _searchQuery,
+                                    selectedStatus: _selectedStatusFilter,
+                                    selectedRole: _selectedRoleFilter,
+                                    roleOptions: roleOptions,
+                                    totalUsers: users.length,
+                                    filteredUsers: filteredUsers.length,
+                                    onSearchChanged: (value) => setState(
+                                      () => _searchQuery = value.trim(),
                                     ),
-                                    itemBuilder: (context, index) {
-                                      final user = users[index];
-                                      return _buildUserCard(index + 1, user);
-                                    },
+                                    onClearSearch: () => setState(() {
+                                      _searchController.clear();
+                                      _searchQuery = '';
+                                    }),
+                                    onStatusChanged: (value) => setState(
+                                      () => _selectedStatusFilter = value,
+                                    ),
+                                    onRoleChanged: (value) => setState(
+                                      () => _selectedRoleFilter = value,
+                                    ),
+                                    onRefresh: _reloadUsers,
+                                    onAddUser: _openAddUserDialog,
                                   ),
-                                ),
+                                  const SizedBox(height: 16),
+                                  Expanded(
+                                    child: users.isEmpty
+                                        ? _UsersEmptyState(
+                                            icon: Icons.person_search_outlined,
+                                            title: 'No users found',
+                                            message:
+                                                'Start by creating a new account to populate this list.',
+                                            primaryLabel: 'Add first user',
+                                            onPrimaryAction: _openAddUserDialog,
+                                          )
+                                        : filteredUsers.isEmpty
+                                        ? _UsersEmptyState(
+                                            icon: Icons.filter_alt_off_outlined,
+                                            title: 'No matching users',
+                                            message:
+                                                'Try another name, status or type filter to see more results.',
+                                            primaryLabel: 'Clear filters',
+                                            onPrimaryAction: _clearFilters,
+                                          )
+                                        : ListView.separated(
+                                            physics:
+                                                const BouncingScrollPhysics(),
+                                            itemCount: filteredUsers.length,
+                                            separatorBuilder: (_, _) =>
+                                                const SizedBox(height: 16),
+                                            itemBuilder: (context, index) {
+                                              final user = filteredUsers[index];
+                                              return _buildUserCard(
+                                                index + 1,
+                                                user,
+                                              );
+                                            },
+                                          ),
+                                  ),
+                                ],
                               );
                             },
                           )
@@ -181,139 +203,137 @@ class _UsersContentState extends State<UsersContent> {
   }
 
   Widget _buildUserCard(int index, UserListItem user) {
+    final displayName = user.fullname.isEmpty ? 'Unknown user' : user.fullname;
+    final isBusy = _statusLoadingUserId == user.id;
+    final canDeactivate = _isActiveStatus(user.status);
+
     return Container(
-      color: Colors.white,
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(26),
+        border: Border.all(color: const Color(0xFFF3EDED)),
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x0F0F172A),
+            blurRadius: 28,
+            offset: Offset(0, 8),
+          ),
+        ],
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Container(
-                width: 28,
-                height: 28,
-                alignment: Alignment.center,
-                decoration: BoxDecoration(
-                  color: const Color(0xFFF0F2F5),
-                  borderRadius: BorderRadius.circular(6),
-                ),
-                child: Text(
-                  '$index',
-                  style: const TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600,
-                    color: Color(0xFF4A5568),
-                  ),
-                ),
-              ),
-              const SizedBox(width: 10),
+              _UserAvatar(index: index, fullName: displayName),
+              const SizedBox(width: 14),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      user.fullname.isEmpty ? '-' : user.fullname,
+                      displayName,
                       style: const TextStyle(
-                        color: Color(0xFF667EEA),
-                        fontWeight: FontWeight.w600,
-                        fontSize: 15,
+                        fontSize: 18,
+                        height: 1.2,
+                        fontWeight: FontWeight.w700,
+                        color: Color(0xFF1F2937),
                       ),
                     ),
-                    const SizedBox(height: 2),
-                    GestureDetector(
-                      onTap: () => _openUserDetails(user.id),
-                      child: Text(
-                        user.username,
-                        style: const TextStyle(
-                          color: Color(0xFF667EEA),
-                          fontWeight: FontWeight.w500,
-                          fontSize: 13,
-                          decoration: TextDecoration.underline,
-                        ),
+                    const SizedBox(height: 4),
+                    Text(
+                      user.role.isEmpty ? 'USER' : user.role.toUpperCase(),
+                      style: const TextStyle(
+                        fontSize: 13,
+                        letterSpacing: 0.5,
+                        fontWeight: FontWeight.w500,
+                        color: Color(0xFF7B1E2B),
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      '@${user.username}',
+                      style: const TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w500,
+                        color: Color(0xFF8B7280),
                       ),
                     ),
                   ],
                 ),
               ),
-              _RoleBadge(role: user.role),
-              const SizedBox(width: 8),
-              _StatusBadge(status: user.status),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  _StatusBadge(status: user.status),
+                  const SizedBox(height: 6),
+                  PopupMenuButton<String>(
+                    onSelected: (value) {
+                      if (value == 'edit') {
+                        _openEditUserDialog(user);
+                        return;
+                      }
+                      if (!isBusy && value == 'toggle') {
+                        _confirmToggleUserStatus(user);
+                      }
+                    },
+                    itemBuilder: (context) => [
+                      const PopupMenuItem<String>(
+                        value: 'edit',
+                        child: Text('Edit user'),
+                      ),
+                      PopupMenuItem<String>(
+                        value: 'toggle',
+                        child: Text(
+                          canDeactivate ? 'Deactivate user' : 'Activate user',
+                        ),
+                      ),
+                    ],
+                    icon: const Icon(
+                      Icons.more_horiz_rounded,
+                      color: Color(0xFF94A3B8),
+                    ),
+                    splashRadius: 18,
+                  ),
+                ],
+              ),
             ],
           ),
-          const SizedBox(height: 8),
-          Row(
-            children: [
-              const Icon(
-                Icons.email_outlined,
-                size: 14,
-                color: Color(0xFF9CA3AF),
-              ),
-              const SizedBox(width: 4),
-              Expanded(
-                child: Text(
-                  user.email,
-                  style: const TextStyle(
-                    fontSize: 13,
-                    color: Color(0xFF4A5568),
-                  ),
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ),
-            ],
+          const SizedBox(height: 18),
+          _UserDetailRow(
+            icon: Icons.email_outlined,
+            label: user.email.isEmpty ? 'No email available' : user.email,
           ),
-          if (user.idCard.isNotEmpty) ...[
-            const SizedBox(height: 4),
-            Row(
-              children: [
-                const Icon(
-                  Icons.badge_outlined,
-                  size: 14,
-                  color: Color(0xFF9CA3AF),
-                ),
-                const SizedBox(width: 4),
-                Text(
-                  user.idCard,
-                  style: const TextStyle(
-                    fontSize: 13,
-                    color: Color(0xFF4A5568),
-                  ),
-                ),
-              ],
-            ),
-          ],
           const SizedBox(height: 10),
-          Row(
-            children: [
-              Expanded(
-                child: _ActionButton(
-                  label: 'Details',
-                  color: const Color(0xFF14B8A6),
-                  onTap: () => _openUserDetails(user.id),
+          _UserDetailRow(
+            icon: Icons.badge_outlined,
+            label: user.idCard.isEmpty ? 'ID ${user.id}' : user.idCard,
+          ),
+          const SizedBox(height: 18),
+          const Divider(height: 1, color: Color(0xFFF5EDED)),
+          const SizedBox(height: 16),
+          SizedBox(
+            width: double.infinity,
+            child: TextButton(
+              onPressed: () => _openUserDetails(user.id),
+              style: TextButton.styleFrom(
+                backgroundColor: const Color(0xFFFFF6F6),
+                foregroundColor: const Color(0xFF7B1E2B),
+                padding: const EdgeInsets.symmetric(vertical: 16),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(14),
                 ),
               ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: _ActionButton(
-                  label: 'Edit',
-                  color: const Color(0xFF667EEA),
-                  onTap: () => _openEditUserDialog(user),
+              child: Text(
+                isBusy ? 'Updating...' : 'View Details',
+                style: const TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w700,
                 ),
               ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: _ActionButton(
-                  label: _statusLoadingUserId == user.id
-                      ? '...'
-                      : (_isActiveStatus(user.status) ? 'Active' : 'Deactive'),
-                  color: _isActiveStatus(user.status)
-                      ? const Color(0xFF14B8A6)
-                      : const Color(0xFFDC2626),
-                  onTap: _statusLoadingUserId == user.id
-                      ? () {}
-                      : () => _confirmToggleUserStatus(user),
-                ),
-              ),
-            ],
+            ),
           ),
         ],
       ),
@@ -407,6 +427,52 @@ class _UsersContentState extends State<UsersContent> {
 
   bool _isActiveStatus(String status) =>
       status.trim().toLowerCase() == 'active';
+
+  void _clearFilters() {
+    setState(() {
+      _searchController.clear();
+      _searchQuery = '';
+      _selectedStatusFilter = 'all';
+      _selectedRoleFilter = 'all';
+    });
+  }
+
+  List<UserListItem> _filterUsers(List<UserListItem> users) {
+    return users.where((user) {
+      final normalizedName = user.fullname.trim().toLowerCase();
+      final normalizedUsername = user.username.trim().toLowerCase();
+      final normalizedIdCard = user.idCard.trim().toLowerCase();
+      final normalizedId = user.id.toString().toLowerCase();
+      final normalizedStatus = user.status.trim().toLowerCase();
+      final normalizedRole = user.role.trim().toLowerCase();
+      final normalizedQuery = _searchQuery.toLowerCase();
+
+      final matchesSearch =
+          normalizedQuery.isEmpty ||
+          normalizedName.contains(normalizedQuery) ||
+          normalizedUsername.contains(normalizedQuery) ||
+          normalizedIdCard.contains(normalizedQuery) ||
+          normalizedId.contains(normalizedQuery);
+      final matchesStatus =
+          _selectedStatusFilter == 'all' ||
+          normalizedStatus == _selectedStatusFilter;
+      final matchesRole =
+          _selectedRoleFilter == 'all' || normalizedRole == _selectedRoleFilter;
+
+      return matchesSearch && matchesStatus && matchesRole;
+    }).toList();
+  }
+
+  List<String> _extractRoleOptions(List<UserListItem> users) {
+    final roles =
+        users
+            .map((user) => user.role.trim())
+            .where((role) => role.isNotEmpty)
+            .toSet()
+            .toList()
+          ..sort((a, b) => a.toLowerCase().compareTo(b.toLowerCase()));
+    return roles;
+  }
 }
 
 class _UsersHeader extends StatelessWidget {
@@ -500,28 +566,437 @@ class _UsersHeader extends StatelessWidget {
   }
 }
 
-class _RoleBadge extends StatelessWidget {
-  const _RoleBadge({required this.role});
+class _UsersFilterBar extends StatelessWidget {
+  const _UsersFilterBar({
+    required this.isCompact,
+    required this.searchController,
+    required this.searchQuery,
+    required this.selectedStatus,
+    required this.selectedRole,
+    required this.roleOptions,
+    required this.totalUsers,
+    required this.filteredUsers,
+    required this.onSearchChanged,
+    required this.onClearSearch,
+    required this.onStatusChanged,
+    required this.onRoleChanged,
+    required this.onRefresh,
+    required this.onAddUser,
+  });
 
-  final String role;
+  final bool isCompact;
+  final TextEditingController searchController;
+  final String searchQuery;
+  final String selectedStatus;
+  final String selectedRole;
+  final List<String> roleOptions;
+  final int totalUsers;
+  final int filteredUsers;
+  final ValueChanged<String> onSearchChanged;
+  final VoidCallback onClearSearch;
+  final ValueChanged<String> onStatusChanged;
+  final ValueChanged<String> onRoleChanged;
+  final VoidCallback onRefresh;
+  final VoidCallback onAddUser;
 
   @override
   Widget build(BuildContext context) {
-    final isAdmin = role.toLowerCase().contains('admin');
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(20),
-        color: isAdmin ? const Color(0xFFD1FAE5) : const Color(0xFFFEF3C7),
-      ),
-      child: Text(
-        role.isEmpty ? 'Unknown' : role,
-        style: TextStyle(
-          fontSize: 12,
-          fontWeight: FontWeight.w600,
-          color: isAdmin ? const Color(0xFF065F46) : const Color(0xFF92400E),
+    final actionButtonSize = isCompact ? 58.0 : 62.0;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'User Information',
+                    style: TextStyle(
+                      fontSize: 22,
+                      fontWeight: FontWeight.w700,
+                      color: Color(0xFF1F2937),
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    '$filteredUsers of $totalUsers users',
+                    style: const TextStyle(
+                      fontSize: 11,
+                      color: Color(0xFF6B7280),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: 8),
+            DecoratedBox(
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(15),
+                gradient: const LinearGradient(
+                  colors: [Color(0xFF7C83FD), Color(0xFF8B5CF6)],
+                ),
+                boxShadow: const [
+                  BoxShadow(
+                    color: Color(0x337C83FD),
+                    blurRadius: 14,
+                    offset: Offset(0, 7),
+                  ),
+                ],
+              ),
+              child: TextButton.icon(
+                onPressed: onAddUser,
+                icon: const Icon(Icons.add, color: Colors.white, size: 15),
+                label: const Text(
+                  'Add User',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                style: TextButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 12,
+                  ),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(15),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 12),
+        Row(
+          children: [
+            Expanded(
+              child: TextField(
+                controller: searchController,
+                onChanged: onSearchChanged,
+                style: const TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w500,
+                  color: Color(0xFF7B1E2B),
+                ),
+                decoration: InputDecoration(
+                  hintText: 'Search by name or ID',
+                  hintStyle: const TextStyle(
+                    color: Color(0xFFD38E9A),
+                    fontSize: 14,
+                    fontWeight: FontWeight.w500,
+                  ),
+                  prefixIcon: const Icon(
+                    Icons.search_rounded,
+                    size: 24,
+                    color: Color(0xFF9B2743),
+                  ),
+                  suffixIcon: searchQuery.isEmpty
+                      ? null
+                      : IconButton(
+                          onPressed: onClearSearch,
+                          icon: const Icon(
+                            Icons.close_rounded,
+                            size: 16,
+                            color: Color(0xFF9B2743),
+                          ),
+                        ),
+                  filled: true,
+                  fillColor: const Color(0xFFFFF6F6),
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 15,
+                  ),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(20),
+                    borderSide: BorderSide.none,
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(20),
+                    borderSide: const BorderSide(color: Color(0xFFF1D9DD)),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(20),
+                    borderSide: const BorderSide(
+                      color: Color(0xFF9B2743),
+                      width: 1.4,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(width: 10),
+            Container(
+              width: actionButtonSize,
+              height: actionButtonSize,
+              decoration: BoxDecoration(
+                color: const Color(0xFF9B0D2B),
+                borderRadius: BorderRadius.circular(16),
+                boxShadow: const [
+                  BoxShadow(
+                    color: Color(0x339B0D2B),
+                    blurRadius: 12,
+                    offset: Offset(0, 7),
+                  ),
+                ],
+              ),
+              child: IconButton(
+                onPressed: onRefresh,
+                tooltip: 'Refresh',
+                icon: const Icon(
+                  Icons.swap_vert_rounded,
+                  color: Colors.white,
+                  size: 22,
+                ),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 8),
+        Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: [
+            SizedBox(
+              width: isCompact ? 132 : 148,
+              child: _FilterDropdown(
+                value: selectedStatus,
+                hint: 'Status',
+                items: const [
+                  DropdownMenuItem(value: 'all', child: Text('All status')),
+                  DropdownMenuItem(value: 'active', child: Text('Active')),
+                  DropdownMenuItem(value: 'deactive', child: Text('Deactive')),
+                ],
+                onChanged: onStatusChanged,
+              ),
+            ),
+            SizedBox(
+              width: isCompact ? 132 : 148,
+              child: _FilterDropdown(
+                value: selectedRole,
+                hint: 'Type',
+                items: [
+                  const DropdownMenuItem(value: 'all', child: Text('All type')),
+                  ...roleOptions.map(
+                    (role) => DropdownMenuItem(
+                      value: role.toLowerCase(),
+                      child: Text(_formatRoleLabel(role)),
+                    ),
+                  ),
+                ],
+                onChanged: onRoleChanged,
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+}
+
+class _FilterDropdown extends StatelessWidget {
+  const _FilterDropdown({
+    required this.value,
+    required this.hint,
+    required this.items,
+    required this.onChanged,
+  });
+
+  final String value;
+  final String hint;
+  final List<DropdownMenuItem<String>> items;
+  final ValueChanged<String> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    return DropdownButtonFormField<String>(
+      initialValue: value,
+      items: items,
+      onChanged: (newValue) {
+        if (newValue != null) {
+          onChanged(newValue);
+        }
+      },
+      decoration: InputDecoration(
+        hintText: hint,
+        filled: true,
+        fillColor: const Color(0xFFFFF1F2),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 18,
+          vertical: 16,
+        ),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(999),
+          borderSide: BorderSide.none,
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(999),
+          borderSide: const BorderSide(color: Color(0xFFE9C7CE)),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(999),
+          borderSide: const BorderSide(color: Color(0xFF9B2743), width: 1.4),
         ),
       ),
+      icon: const Icon(
+        Icons.keyboard_arrow_down_rounded,
+        color: Color(0xFF9B2743),
+      ),
+      style: const TextStyle(
+        color: Color(0xFF7B1E2B),
+        fontSize: 15,
+        fontWeight: FontWeight.w600,
+      ),
+      dropdownColor: Colors.white,
+    );
+  }
+}
+
+class _UsersEmptyState extends StatelessWidget {
+  const _UsersEmptyState({
+    required this.icon,
+    required this.title,
+    required this.message,
+    required this.primaryLabel,
+    required this.onPrimaryAction,
+  });
+
+  final IconData icon;
+  final String title;
+  final String message;
+  final String primaryLabel;
+  final VoidCallback onPrimaryAction;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(28),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: const Color(0xFFF0EAF4)),
+      ),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Container(
+            width: 72,
+            height: 72,
+            decoration: BoxDecoration(
+              color: const Color(0xFFF5F3FF),
+              borderRadius: BorderRadius.circular(22),
+            ),
+            child: Icon(icon, size: 34, color: const Color(0xFF7C3AED)),
+          ),
+          const SizedBox(height: 16),
+          Text(
+            title,
+            style: TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.w700,
+              color: Color(0xFF1F2937),
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            message,
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontSize: 14,
+              height: 1.5,
+              color: Color(0xFF6B7280),
+            ),
+          ),
+          const SizedBox(height: 18),
+          FilledButton.icon(
+            onPressed: onPrimaryAction,
+            style: FilledButton.styleFrom(
+              backgroundColor: const Color(0xFF7C83FD),
+              foregroundColor: Colors.white,
+              padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+              ),
+            ),
+            icon: const Icon(Icons.add),
+            label: Text(primaryLabel),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+String _formatRoleLabel(String roleName) {
+  if (roleName.isEmpty) {
+    return '';
+  }
+  final lower = roleName.toLowerCase();
+  return lower[0].toUpperCase() + lower.substring(1);
+}
+
+class _UserAvatar extends StatelessWidget {
+  const _UserAvatar({required this.index, required this.fullName});
+
+  final int index;
+  final String fullName;
+
+  @override
+  Widget build(BuildContext context) {
+    final parts = fullName
+        .trim()
+        .split(RegExp(r'\s+'))
+        .where((part) => part.isNotEmpty)
+        .toList();
+    final initials = parts.isEmpty
+        ? 'U'
+        : parts.take(2).map((part) => part[0].toUpperCase()).join();
+
+    return Container(
+      width: 62,
+      height: 62,
+      alignment: Alignment.center,
+      decoration: const BoxDecoration(
+        shape: BoxShape.circle,
+        gradient: LinearGradient(
+          colors: [Color(0xFFF3D7DD), Color(0xFFE2E8F0)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+      ),
+      child: Text(
+        initials,
+        style: const TextStyle(
+          fontSize: 18,
+          fontWeight: FontWeight.w700,
+          color: Color(0xFF7B1E2B),
+        ),
+      ),
+    );
+  }
+}
+
+class _UserDetailRow extends StatelessWidget {
+  const _UserDetailRow({required this.icon, required this.label});
+
+  final IconData icon;
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Icon(icon, size: 18, color: const Color(0xFF7C8699)),
+        const SizedBox(width: 10),
+        Expanded(
+          child: Text(
+            label,
+            style: const TextStyle(fontSize: 15, color: Color(0xFF6B7280)),
+          ),
+        ),
+      ],
     );
   }
 }
@@ -535,50 +1010,17 @@ class _StatusBadge extends StatelessWidget {
   Widget build(BuildContext context) {
     final normalized = status.toLowerCase();
     final isActive = normalized == 'active';
-    final bg = isActive ? const Color(0xFFD1FAE5) : const Color(0xFFFEE2E2);
-    final fg = isActive ? const Color(0xFF065F46) : const Color(0xFF991B1B);
+    final bg = isActive ? const Color(0xFFECFDF5) : const Color(0xFFF8FAFC);
+    final fg = isActive ? const Color(0xFF047857) : const Color(0xFF64748B);
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(999),
         color: bg,
       ),
       child: Text(
         status.isEmpty ? 'Unknown' : status,
-        style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: fg),
-      ),
-    );
-  }
-}
-
-class _ActionButton extends StatelessWidget {
-  const _ActionButton({
-    required this.label,
-    required this.color,
-    required this.onTap,
-  });
-
-  final String label;
-  final Color color;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        color: color,
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: TextButton(
-        onPressed: onTap,
-        child: Text(
-          label,
-          style: const TextStyle(
-            color: Colors.white,
-            fontSize: 12,
-            fontWeight: FontWeight.w600,
-          ),
-        ),
+        style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: fg),
       ),
     );
   }

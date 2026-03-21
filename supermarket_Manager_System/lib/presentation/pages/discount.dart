@@ -123,8 +123,9 @@ class _DiscountsContentState extends State<DiscountsContent> {
 
   @override
   Widget build(BuildContext context) {
+    final pagePadding = widget.isCompact ? 16.0 : 24.0;
     return Container(
-      color: const Color(0xFFF0F2F5),
+      color: const Color(0xFFF4F7FC),
       child: Column(
         children: [
           _DiscountsHeader(
@@ -135,40 +136,74 @@ class _DiscountsContentState extends State<DiscountsContent> {
           ),
           Expanded(
             child: Padding(
-              padding: const EdgeInsets.all(24),
+              padding: EdgeInsets.all(pagePadding),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      const Text(
-                        'Discount',
-                        style: TextStyle(
-                          fontSize: 28,
-                          fontWeight: FontWeight.w700,
-                          color: Color(0xFF1A1D21),
+                  if (widget.isCompact)
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        const Text(
+                          'Discount',
+                          style: TextStyle(
+                            fontSize: 28,
+                            fontWeight: FontWeight.w800,
+                            color: Color(0xFF111827),
+                          ),
                         ),
-                      ),
-                      DecoratedBox(
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(10),
-                          color: const Color(0xFF16A34A),
-                        ),
-                        child: TextButton.icon(
+                        const SizedBox(height: 12),
+                        ElevatedButton.icon(
                           onPressed: _openAddDiscountDialog,
-                          icon: const Icon(Icons.add, color: Colors.white),
-                          label: const Text(
-                            'Add Discount',
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontWeight: FontWeight.w600,
+                          icon: const Icon(Icons.add_rounded, size: 18),
+                          label: const Text('Add Discount'),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFF2563EB),
+                            foregroundColor: Colors.white,
+                            elevation: 0,
+                            padding: const EdgeInsets.symmetric(vertical: 13),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(14),
+                            ),
+                            textStyle: const TextStyle(
+                              fontWeight: FontWeight.w700,
+                              fontSize: 14,
                             ),
                           ),
                         ),
-                      ),
-                    ],
-                  ),
+                      ],
+                    )
+                  else
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Text(
+                          'Discount',
+                          style: TextStyle(
+                            fontSize: 28,
+                            fontWeight: FontWeight.w700,
+                            color: Color(0xFF1A1D21),
+                          ),
+                        ),
+                        DecoratedBox(
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(10),
+                            color: const Color(0xFF2563EB),
+                          ),
+                          child: TextButton.icon(
+                            onPressed: _openAddDiscountDialog,
+                            icon: const Icon(Icons.add, color: Colors.white),
+                            label: const Text(
+                              'Add Discount',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
                   const SizedBox(height: 20),
                   Expanded(
                     child: FutureBuilder<List<Discount>>(
@@ -186,11 +221,52 @@ class _DiscountsContentState extends State<DiscountsContent> {
                           );
                         }
                         final discounts = snapshot.data ?? [];
+                        if (discounts.isEmpty) {
+                          return Container(
+                            padding: const EdgeInsets.all(28),
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(24),
+                              border: Border.all(color: const Color(0xFFE3EAF6)),
+                            ),
+                            child: const Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(
+                                  Icons.local_offer_outlined,
+                                  size: 42,
+                                  color: Color(0xFF94A3B8),
+                                ),
+                                SizedBox(height: 10),
+                                Text(
+                                  'No discounts found',
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w700,
+                                    color: Color(0xFF1F2937),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          );
+                        }
+                        if (widget.isCompact) {
+                          return ListView.separated(
+                            physics: const BouncingScrollPhysics(),
+                            itemCount: discounts.length,
+                            separatorBuilder: (_, _) =>
+                                const SizedBox(height: 14),
+                            itemBuilder: (context, index) {
+                              final d = discounts[index];
+                              return _buildMobileDiscountCard(d, index + 1);
+                            },
+                          );
+                        }
                         return Container(
                           decoration: BoxDecoration(
                             color: Colors.white,
                             borderRadius: BorderRadius.circular(12),
-                            border: Border.all(color: const Color(0xFFE8EAED)),
+                            border: Border.all(color: const Color(0xFFE3EAF6)),
                             boxShadow: [
                               BoxShadow(
                                 color: Colors.black.withValues(alpha: 0.06),
@@ -247,12 +323,9 @@ class _DiscountsContentState extends State<DiscountsContent> {
                                             children: [
                                               _ActionButton(
                                                 label: 'Edit',
-                                                gradient: const LinearGradient(
-                                                  colors: [
-                                                    Color(0xFF667EEA),
-                                                    Color(0xFF764BA2),
-                                                  ],
-                                                ),
+                                                color: const Color(0xFFEFF4FF),
+                                                foregroundColor:
+                                                    const Color(0xFF1E40AF),
                                                 onTap: () =>
                                                     _openEditDiscountDialog(d),
                                               ),
@@ -289,6 +362,84 @@ class _DiscountsContentState extends State<DiscountsContent> {
   String _formatDate(DateTime date) {
     return '${date.day.toString().padLeft(2, '0')}/${date.month.toString().padLeft(2, '0')}/${date.year}';
   }
+
+  String _formatMoney(double value) {
+    final formatted = value
+        .toStringAsFixed(0)
+        .replaceAllMapped(
+          RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
+          (m) => '${m[1]},',
+        );
+    return '$formattedđ';
+  }
+
+  Widget _buildMobileDiscountCard(Discount d, int index) {
+    return Container(
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: const Color(0xFFE7ECF5)),
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x10213A63),
+            blurRadius: 20,
+            offset: Offset(0, 8),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            '#$index  ${d.name}',
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(
+              fontSize: 17,
+              fontWeight: FontWeight.w700,
+              color: Color(0xFF111827),
+            ),
+          ),
+          const SizedBox(height: 12),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              _DiscountMetricChip(label: 'Percent', value: '${d.percent}%'),
+              _DiscountMetricChip(
+                label: 'Min Order',
+                value: _formatMoney(d.minOrderAmount),
+              ),
+              _DiscountMetricChip(label: 'Start', value: _formatDate(d.startDate)),
+              _DiscountMetricChip(label: 'End', value: _formatDate(d.endDate)),
+            ],
+          ),
+          const SizedBox(height: 14),
+          Row(
+            children: [
+              Expanded(
+                child: _ActionButton(
+                  label: 'Edit',
+                  color: const Color(0xFFEFF4FF),
+                  foregroundColor: const Color(0xFF1E40AF),
+                  onTap: () => _openEditDiscountDialog(d),
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: _ActionButton(
+                  label: 'Delete',
+                  color: const Color(0xFFDC2626),
+                  onTap: () => _deleteDiscount(d.id),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
 }
 
 class _DiscountsHeader extends StatelessWidget {
@@ -322,13 +473,13 @@ class _ActionButton extends StatelessWidget {
   const _ActionButton({
     required this.label,
     this.color,
-    this.gradient,
+    this.foregroundColor,
     required this.onTap,
   });
 
   final String label;
   final Color? color;
-  final Gradient? gradient;
+  final Color? foregroundColor;
   final VoidCallback onTap;
 
   @override
@@ -336,7 +487,6 @@ class _ActionButton extends StatelessWidget {
     return DecoratedBox(
       decoration: BoxDecoration(
         color: color,
-        gradient: gradient,
         borderRadius: BorderRadius.circular(8),
       ),
       child: TextButton(
@@ -346,11 +496,49 @@ class _ActionButton extends StatelessWidget {
         ),
         child: Text(
           label,
-          style: const TextStyle(
-            color: Colors.white,
+          style: TextStyle(
+            color: foregroundColor ?? Colors.white,
             fontSize: 12,
             fontWeight: FontWeight.w600,
           ),
+        ),
+      ),
+    );
+  }
+}
+
+class _DiscountMetricChip extends StatelessWidget {
+  const _DiscountMetricChip({required this.label, required this.value});
+
+  final String label;
+  final String value;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF8FAFF),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: const Color(0xFFE4EBF8)),
+      ),
+      child: RichText(
+        text: TextSpan(
+          style: const TextStyle(color: Color(0xFF111827)),
+          children: [
+            TextSpan(
+              text: '$label: ',
+              style: const TextStyle(
+                fontSize: 12,
+                color: Color(0xFF64748B),
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            TextSpan(
+              text: value,
+              style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700),
+            ),
+          ],
         ),
       ),
     );
