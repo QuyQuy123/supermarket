@@ -30,9 +30,7 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
     }
     if (!RegExp(r'^[\w.+-]+@[\w-]+\.[a-zA-Z]{2,}$').hasMatch(email)) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Invalid email address. Please enter a valid email.'),
-        ),
+        const SnackBar(content: Text('Please enter a valid email address.')),
       );
       return;
     }
@@ -47,14 +45,23 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
       context.push('/verify-otp?email=${Uri.encodeComponent(email)}');
     } catch (e) {
       if (!mounted) return;
-      final msg = e.toString();
-      final displayMsg =
-          (msg.contains('Invalid Addresses') ||
-              msg.contains('valid RFC') ||
-              msg.contains('SMTPAddressFailed') ||
-              msg.contains('SendFailed'))
-          ? 'Invalid email address. Please enter a valid email.'
-          : 'Failed to send OTP. Please try again.';
+      final msg = e.toString().toLowerCase();
+      final String displayMsg;
+      if (msg.contains('not registered') ||
+          msg.contains('not found') ||
+          msg.contains('not exist') ||
+          msg.contains('no user') ||
+          msg.contains('user not') ||
+          msg.contains('404')) {
+        displayMsg = 'Email address not registered.';
+      } else if (msg.contains('invalid addresses') ||
+          msg.contains('valid rfc') ||
+          msg.contains('smtpaddressfailed') ||
+          msg.contains('sendfailed')) {
+        displayMsg = 'Please enter a valid email address.';
+      } else {
+        displayMsg = 'Failed to send OTP. Please try again.';
+      }
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(SnackBar(content: Text(displayMsg)));

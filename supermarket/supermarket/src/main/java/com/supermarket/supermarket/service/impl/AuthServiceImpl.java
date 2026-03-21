@@ -126,6 +126,10 @@ public class AuthServiceImpl implements AuthService {
         String trimmedEmail = email.trim();
         List<User> users = userRepository.findByUsernameIgnoreCaseOrEmailIgnoreCase(trimmedEmail, trimmedEmail);
 
+        if (users.isEmpty()) {
+            throw new RuntimeException("Email address not registered.");
+        }
+
         // Delete expired tokens
         passwordResetTokenRepository.deleteExpiredTokens(LocalDateTime.now());
 
@@ -134,7 +138,7 @@ public class AuthServiceImpl implements AuthService {
 
         // Save token - link to the first user if any exist
         PasswordResetToken token = PasswordResetToken.builder()
-            .user(users.isEmpty() ? null : users.get(0))
+            .user(users.get(0))
             .email(trimmedEmail)
             .otp(otp)
             .token(java.util.UUID.randomUUID().toString())
