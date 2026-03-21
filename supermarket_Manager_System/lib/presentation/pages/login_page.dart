@@ -67,8 +67,8 @@ class _LoginPageState extends State<LoginPage> {
         return;
       }
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(error.toString().replaceFirst('Exception: ', '')),
+        const SnackBar(
+          content: Text('Invalid email or password. Please try again.'),
         ),
       );
     } finally {
@@ -126,6 +126,7 @@ class _LoginPageState extends State<LoginPage> {
                     hintText: 'Enter your email',
                     keyboardType: TextInputType.emailAddress,
                     obscureText: false,
+                    maxLength: 50,
                   ),
                   const SizedBox(height: 20),
                   const _FieldLabel('Password'),
@@ -135,6 +136,7 @@ class _LoginPageState extends State<LoginPage> {
                     hintText: 'Enter your password',
                     keyboardType: TextInputType.text,
                     obscureText: !_isPasswordVisible,
+                    maxLength: 50,
                     suffixIcon: IconButton(
                       onPressed: () => setState(
                         () => _isPasswordVisible = !_isPasswordVisible,
@@ -242,6 +244,7 @@ class _AppTextField extends StatelessWidget {
     required this.keyboardType,
     required this.obscureText,
     this.suffixIcon,
+    this.maxLength,
   });
 
   final TextEditingController controller;
@@ -249,6 +252,7 @@ class _AppTextField extends StatelessWidget {
   final TextInputType keyboardType;
   final bool obscureText;
   final Widget? suffixIcon;
+  final int? maxLength;
 
   @override
   Widget build(BuildContext context) {
@@ -256,10 +260,12 @@ class _AppTextField extends StatelessWidget {
       controller: controller,
       keyboardType: keyboardType,
       obscureText: obscureText,
+      maxLength: maxLength,
       style: const TextStyle(fontSize: 18),
       decoration: InputDecoration(
         hintText: hintText,
         hintStyle: const TextStyle(fontSize: 16),
+        counterText: '',
         filled: true,
         fillColor: const Color(0xFFF8F9FA),
         contentPadding: const EdgeInsets.symmetric(
