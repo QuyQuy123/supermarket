@@ -30,6 +30,7 @@ class _AddProductPageState extends State<AddProductPage> {
   final _descriptionController = TextEditingController();
   final _costPriceController = TextEditingController();
   final _sellingPriceController = TextEditingController();
+  final _cartonsController = TextEditingController();
   final _qtyCartonsController = TextEditingController();
   final _mftDateController = TextEditingController();
   final _expiryDateController = TextEditingController();
@@ -56,6 +57,7 @@ class _AddProductPageState extends State<AddProductPage> {
     _descriptionController.dispose();
     _costPriceController.dispose();
     _sellingPriceController.dispose();
+    _cartonsController.dispose();
     _qtyCartonsController.dispose();
     _mftDateController.dispose();
     _expiryDateController.dispose();
@@ -105,33 +107,38 @@ class _AddProductPageState extends State<AddProductPage> {
       return;
     }
 
+    if (_selectedSupplierId == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please select a supplier')),
+      );
+      return;
+    }
+
+    if (_selectedCategoryId == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please select a category')),
+      );
+      return;
+    }
+
     setState(() => _isLoading = true);
 
     try {
       final request = CreateProductRequest(
         barcode: _barcodeController.text.trim(),
-        productBatch: _productBatchController.text.trim().isEmpty
-            ? null
-            : _productBatchController.text.trim(),
+        productBatch: _productBatchController.text.trim(),
         productName: _productNameController.text.trim(),
         description: _descriptionController.text.trim().isEmpty
             ? null
             : _descriptionController.text.trim(),
-        costPrice: _costPriceController.text.trim().isEmpty
-            ? null
-            : double.tryParse(_costPriceController.text.trim()),
+        costPrice: double.parse(_costPriceController.text.trim()),
         sellingPrice: double.parse(_sellingPriceController.text.trim()),
-        qtyCartons: _qtyCartonsController.text.trim().isEmpty
-            ? null
-            : int.tryParse(_qtyCartonsController.text.trim()),
-        supplierId: _selectedSupplierId,
-        categoryId: _selectedCategoryId,
-        mftDate: _mftDateController.text.trim().isEmpty
-            ? null
-            : _mftDateController.text.trim(),
-        expiryDate: _expiryDateController.text.trim().isEmpty
-            ? null
-            : _expiryDateController.text.trim(),
+        cartons: int.parse(_cartonsController.text.trim()),
+        qtyCartons: int.parse(_qtyCartonsController.text.trim()),
+        supplierId: _selectedSupplierId!,
+        categoryId: _selectedCategoryId!,
+        mftDate: _mftDateController.text.trim(),
+        expiryDate: _expiryDateController.text.trim(),
         imageUrl: _imageUrlController.text.trim().isEmpty
             ? null
             : _imageUrlController.text.trim(),
@@ -141,7 +148,10 @@ class _AddProductPageState extends State<AddProductPage> {
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Product created successfully')),
+          const SnackBar(
+            content: Text('Product created successfully'),
+            backgroundColor: Colors.green,
+          ),
         );
         Navigator.of(context).pop(true);
       }
@@ -274,7 +284,7 @@ class _AddProductPageState extends State<AddProductPage> {
             _buildTextField(
               label: 'Product Batch',
               controller: _productBatchController,
-              required: false,
+              required: true,
             ),
             const SizedBox(height: 16),
             _buildTextField(
@@ -296,7 +306,7 @@ class _AddProductPageState extends State<AddProductPage> {
                   child: _buildTextField(
                     label: 'Cost Price',
                     controller: _costPriceController,
-                    required: false,
+                    required: true,
                     keyboardType: TextInputType.number,
                   ),
                 ),
@@ -312,11 +322,26 @@ class _AddProductPageState extends State<AddProductPage> {
               ],
             ),
             const SizedBox(height: 16),
-            _buildTextField(
-              label: 'Qty (Cartons)',
-              controller: _qtyCartonsController,
-              required: false,
-              keyboardType: TextInputType.number,
+            Row(
+              children: [
+                Expanded(
+                  child: _buildTextField(
+                    label: 'Cartons',
+                    controller: _cartonsController,
+                    required: true,
+                    keyboardType: TextInputType.number,
+                  ),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: _buildTextField(
+                    label: 'In Stock',
+                    controller: _qtyCartonsController,
+                    required: true,
+                    keyboardType: TextInputType.number,
+                  ),
+                ),
+              ],
             ),
             const SizedBox(height: 16),
             Row(
@@ -440,14 +465,30 @@ class _AddProductPageState extends State<AddProductPage> {
             border: const OutlineInputBorder(),
             hintText: 'Enter $label',
           ),
-          validator: required
-              ? (value) {
-                  if (value == null || value.trim().isEmpty) {
-                    return '$label is required';
-                  }
-                  return null;
+          validator: (value) {
+            if (required && (value == null || value.trim().isEmpty)) {
+              return '$label is required';
+            }
+            
+            // Validate numeric fields
+            if (value != null && value.trim().isNotEmpty && keyboardType == TextInputType.number) {
+              final numValue = double.tryParse(value.trim());
+              if (numValue == null) {
+                return 'Please enter a valid number';
+              }
+              if (numValue < 0) {
+                return '$label must be greater than or equal to 0';
+              }
+              // For integer fields (Cartons, In Stock)
+              if (label == 'Cartons' || label == 'In Stock') {
+                if (numValue != numValue.toInt()) {
+                  return '$label must be a whole number';
                 }
-              : null,
+              }
+            }
+            
+            return null;
+          },
         ),
       ],
     );
@@ -469,6 +510,12 @@ class _AddProductPageState extends State<AddProductPage> {
             border: OutlineInputBorder(),
             hintText: 'Choose...',
           ),
+          validator: (value) {
+            if (value == null) {
+              return 'Supplier is required';
+            }
+            return null;
+          },
           selectedItemBuilder: (context) {
             return _suppliers
                 .map(
@@ -507,6 +554,12 @@ class _AddProductPageState extends State<AddProductPage> {
             border: OutlineInputBorder(),
             hintText: 'Choose...',
           ),
+          validator: (value) {
+            if (value == null) {
+              return 'Category is required';
+            }
+            return null;
+          },
           items: _categories
               .map((c) => DropdownMenuItem(
                     value: c.id,
@@ -536,6 +589,12 @@ class _AddProductPageState extends State<AddProductPage> {
             hintText: 'Select date',
             suffixIcon: const Icon(Icons.calendar_today),
           ),
+          validator: (value) {
+            if (value == null || value.trim().isEmpty) {
+              return '$label is required';
+            }
+            return null;
+          },
           onTap: () => _selectDate(controller),
         ),
       ],
