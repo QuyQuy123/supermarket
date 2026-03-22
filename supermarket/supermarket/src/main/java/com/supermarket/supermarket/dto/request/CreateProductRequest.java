@@ -36,6 +36,8 @@ public class CreateProductRequest {
 
     private Integer qtyCartons;
 
+    private Integer inStock;
+
     private Integer supplierId;
 
     private Integer categoryId;

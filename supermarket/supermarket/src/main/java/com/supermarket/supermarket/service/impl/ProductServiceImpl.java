@@ -108,8 +108,10 @@ public class ProductServiceImpl implements ProductService {
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Category not found"));
         }
 
-        // Calculate initial stock from qtyCartons (assuming 1 carton = some units, or just use qtyCartons as stock)
-        Integer initialStock = request.getQtyCartons() != null ? request.getQtyCartons() : 0;
+        // Calculate initial stock from inStock field or default to qtyCartons
+        Integer initialStock = request.getInStock() != null 
+            ? request.getInStock() 
+            : (request.getQtyCartons() != null ? request.getQtyCartons() : 0);
 
         LocalDateTime now = LocalDateTime.now();
         Product product = Product.builder()
@@ -182,8 +184,10 @@ public class ProductServiceImpl implements ProductService {
         product.setExpiryDate(request.getExpiryDate());
         product.setImageUrl(trimOrNull(request.getImageUrl()));
 
-        // Update stock if qtyCartons changed
-        if (request.getQtyCartons() != null) {
+        // Update stock from inStock field or default to qtyCartons
+        if (request.getInStock() != null) {
+            product.setInStock(request.getInStock());
+        } else if (request.getQtyCartons() != null) {
             product.setInStock(request.getQtyCartons());
         }
 

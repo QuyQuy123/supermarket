@@ -26,9 +26,11 @@ class _UpdateProductDialogState extends State<UpdateProductDialog> {
   late final TextEditingController _descriptionController;
   late final TextEditingController _costPriceController;
   late final TextEditingController _sellingPriceController;
+  late final TextEditingController _cartonsController;
   late final TextEditingController _qtyCartonsController;
   late final TextEditingController _mftDateController;
   late final TextEditingController _expiryDateController;
+  late final TextEditingController _imageUrlController;
 
   List<SupplierOption> _suppliers = [];
   List<CategoryOption> _categories = [];
@@ -49,11 +51,15 @@ class _UpdateProductDialogState extends State<UpdateProductDialog> {
     _sellingPriceController = TextEditingController(
       text: widget.product.sellingPrice.toStringAsFixed(2),
     );
+    _cartonsController = TextEditingController(
+      text: widget.product.qtyCartons?.toString() ?? '0',
+    );
     _qtyCartonsController = TextEditingController(
       text: widget.product.inStock.toString(),
     );
     _mftDateController = TextEditingController(text: widget.product.mftDate);
     _expiryDateController = TextEditingController(text: widget.product.expiryDate);
+    _imageUrlController = TextEditingController(text: widget.product.imageUrl);
     _loadOptions();
   }
 
@@ -64,9 +70,11 @@ class _UpdateProductDialogState extends State<UpdateProductDialog> {
     _descriptionController.dispose();
     _costPriceController.dispose();
     _sellingPriceController.dispose();
+    _cartonsController.dispose();
     _qtyCartonsController.dispose();
     _mftDateController.dispose();
     _expiryDateController.dispose();
+    _imageUrlController.dispose();
     super.dispose();
   }
 
@@ -129,32 +137,40 @@ class _UpdateProductDialogState extends State<UpdateProductDialog> {
       return;
     }
 
+    if (_selectedSupplierId == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please select a supplier')),
+      );
+      return;
+    }
+
+    if (_selectedCategoryId == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please select a category')),
+      );
+      return;
+    }
+
     setState(() => _isLoading = true);
 
     try {
       final request = UpdateProductRequest(
-        productBatch: _productBatchController.text.trim().isEmpty
-            ? null
-            : _productBatchController.text.trim(),
+        productBatch: _productBatchController.text.trim(),
         productName: _productNameController.text.trim(),
         description: _descriptionController.text.trim().isEmpty
             ? null
             : _descriptionController.text.trim(),
-        costPrice: _costPriceController.text.trim().isEmpty
-            ? null
-            : double.tryParse(_costPriceController.text.trim()),
+        costPrice: double.parse(_costPriceController.text.trim()),
         sellingPrice: double.parse(_sellingPriceController.text.trim()),
-        qtyCartons: _qtyCartonsController.text.trim().isEmpty
+        cartons: int.parse(_cartonsController.text.trim()),
+        qtyCartons: int.parse(_qtyCartonsController.text.trim()),
+        supplierId: _selectedSupplierId!,
+        categoryId: _selectedCategoryId!,
+        mftDate: _mftDateController.text.trim(),
+        expiryDate: _expiryDateController.text.trim(),
+        imageUrl: _imageUrlController.text.trim().isEmpty
             ? null
-            : int.tryParse(_qtyCartonsController.text.trim()),
-        supplierId: _selectedSupplierId,
-        categoryId: _selectedCategoryId,
-        mftDate: _mftDateController.text.trim().isEmpty
-            ? null
-            : _mftDateController.text.trim(),
-        expiryDate: _expiryDateController.text.trim().isEmpty
-            ? null
-            : _expiryDateController.text.trim(),
+            : _imageUrlController.text.trim(),
       );
 
       await _productApiService.updateProduct(widget.product.id, request);
@@ -239,7 +255,7 @@ class _UpdateProductDialogState extends State<UpdateProductDialog> {
           _buildTextField(
             label: 'Product Batch',
             controller: _productBatchController,
-            required: false,
+            required: true,
           ),
           const SizedBox(height: 16),
           _buildTextField(
@@ -260,7 +276,7 @@ class _UpdateProductDialogState extends State<UpdateProductDialog> {
             first: _buildTextField(
               label: 'Cost Price',
               controller: _costPriceController,
-              required: false,
+              required: true,
               keyboardType: TextInputType.number,
             ),
             second: _buildTextField(
@@ -271,11 +287,20 @@ class _UpdateProductDialogState extends State<UpdateProductDialog> {
             ),
           ),
           const SizedBox(height: 16),
-          _buildTextField(
-            label: 'In Stock',
-            controller: _qtyCartonsController,
-            required: false,
-            keyboardType: TextInputType.number,
+          _buildResponsivePair(
+            isCompactLayout: isCompactLayout,
+            first: _buildTextField(
+              label: 'Cartons',
+              controller: _cartonsController,
+              required: true,
+              keyboardType: TextInputType.number,
+            ),
+            second: _buildTextField(
+              label: 'In Stock',
+              controller: _qtyCartonsController,
+              required: true,
+              keyboardType: TextInputType.number,
+            ),
           ),
           const SizedBox(height: 16),
           _buildResponsivePair(
@@ -288,6 +313,12 @@ class _UpdateProductDialogState extends State<UpdateProductDialog> {
             isCompactLayout: isCompactLayout,
             first: _buildDateField('MFT Date', _mftDateController),
             second: _buildDateField('Expiry Date', _expiryDateController),
+          ),
+          const SizedBox(height: 16),
+          _buildTextField(
+            label: 'Product Image URL',
+            controller: _imageUrlController,
+            required: false,
           ),
           const SizedBox(height: 24),
           Row(
@@ -349,14 +380,30 @@ class _UpdateProductDialogState extends State<UpdateProductDialog> {
             border: const OutlineInputBorder(),
             hintText: 'Enter $label',
           ),
-          validator: required
-              ? (value) {
-                  if (value == null || value.trim().isEmpty) {
-                    return '$label is required';
-                  }
-                  return null;
+          validator: (value) {
+            if (required && (value == null || value.trim().isEmpty)) {
+              return '$label is required';
+            }
+            
+            // Validate numeric fields
+            if (value != null && value.trim().isNotEmpty && keyboardType == TextInputType.number) {
+              final numValue = double.tryParse(value.trim());
+              if (numValue == null) {
+                return 'Please enter a valid number';
+              }
+              if (numValue < 0) {
+                return '$label must be greater than or equal to 0';
+              }
+              // For integer fields (Cartons, In Stock)
+              if (label == 'Cartons' || label == 'In Stock') {
+                if (numValue != numValue.toInt()) {
+                  return '$label must be a whole number';
                 }
-              : null,
+              }
+            }
+            
+            return null;
+          },
         ),
       ],
     );
@@ -378,6 +425,12 @@ class _UpdateProductDialogState extends State<UpdateProductDialog> {
             border: OutlineInputBorder(),
             hintText: 'Choose...',
           ),
+          validator: (value) {
+            if (value == null) {
+              return 'Supplier is required';
+            }
+            return null;
+          },
           selectedItemBuilder: (context) {
             return _suppliers
                 .map(
@@ -421,6 +474,12 @@ class _UpdateProductDialogState extends State<UpdateProductDialog> {
             border: OutlineInputBorder(),
             hintText: 'Choose...',
           ),
+          validator: (value) {
+            if (value == null) {
+              return 'Category is required';
+            }
+            return null;
+          },
           selectedItemBuilder: (context) {
             return _categories
                 .map(
@@ -466,6 +525,12 @@ class _UpdateProductDialogState extends State<UpdateProductDialog> {
             hintText: 'Select date',
             suffixIcon: const Icon(Icons.calendar_today),
           ),
+          validator: (value) {
+            if (value == null || value.trim().isEmpty) {
+              return '$label is required';
+            }
+            return null;
+          },
           onTap: () => _selectDate(controller),
         ),
       ],
