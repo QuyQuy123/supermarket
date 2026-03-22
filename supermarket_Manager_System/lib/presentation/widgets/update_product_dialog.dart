@@ -50,7 +50,7 @@ class _UpdateProductDialogState extends State<UpdateProductDialog> {
       text: widget.product.sellingPrice.toStringAsFixed(2),
     );
     _qtyCartonsController = TextEditingController(
-      text: widget.product.qtyCartons?.toString() ?? '',
+      text: widget.product.inStock.toString(),
     );
     _mftDateController = TextEditingController(text: widget.product.mftDate);
     _expiryDateController = TextEditingController(text: widget.product.expiryDate);
@@ -272,7 +272,7 @@ class _UpdateProductDialogState extends State<UpdateProductDialog> {
           ),
           const SizedBox(height: 16),
           _buildTextField(
-            label: 'Qty (Cartons)',
+            label: 'In Stock',
             controller: _qtyCartonsController,
             required: false,
             keyboardType: TextInputType.number,
