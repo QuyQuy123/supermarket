@@ -1,0 +1,34 @@
+@startuml
+!include _seq-style.puml
+title 3.1.2 Login
+
+actor "Staff / Admin" as U
+boundary "Login UI" as UI <<boundary>>
+control "AuthController" as AC <<control>>
+control "AuthService" as S <<service>>
+entity "UserRepository" as R <<entity>>
+
+== Submit login ==
+U -> UI: enter email/username + password
+activate UI
+UI -> AC: POST /api/auth/login\n(LoginRequest)
+activate AC
+AC -> S: login(request)
+activate S
+S -> R: findByUsernameIgnoreCaseOrEmailIgnoreCase(...)
+activate R
+R --> S: List~User~
+deactivate R
+S -> S: verify password, status, update lastLogin
+S -> R: save(user)
+activate R
+R --> S: User
+deactivate R
+S --> AC: LoginResponse
+deactivate S
+AC --> UI: 200 OK / 401
+deactivate AC
+UI --> U: navigate via redirectTo / show error
+deactivate UI
+
+@enduml

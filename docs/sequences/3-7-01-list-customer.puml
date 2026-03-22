@@ -1,0 +1,30 @@
+@startuml
+!include _seq-style.puml
+title 3.7.2 ListCustomer
+
+actor "Admin / Cashier" as A
+boundary "Customers UI" as UI <<boundary>>
+control "CustomerController" as CC <<control>>
+control "CustomerService" as S <<service>>
+entity "CustomerRepository" as R <<entity>>
+
+== Customer list ==
+A -> UI: open Customers
+activate UI
+UI -> CC: GET /api/customers
+activate CC
+CC -> S: getAllCustomers()
+activate S
+S -> R: findAll()
+activate R
+R --> S: List~Customer~
+deactivate R
+S -> S: map → CustomerListItemResponse
+S --> CC: List~CustomerListItemResponse~
+deactivate S
+CC --> UI: 200 JSON
+deactivate CC
+UI --> A: customer table
+deactivate UI
+
+@enduml

@@ -1,0 +1,30 @@
+@startuml
+!include _seq-style.puml
+title 3.9.2 ListVoucher
+
+actor "Admin / Manager" as A
+boundary "Discounts UI" as UI <<boundary>>
+control "DiscountController" as DC <<control>>
+control "DiscountService" as S <<service>>
+entity "DiscountRepository" as R <<entity>>
+
+== Voucher list ==
+A -> UI: open Discounts
+activate UI
+UI -> DC: GET /api/discounts
+activate DC
+DC -> S: getAllDiscounts()
+activate S
+S -> R: findAll()
+activate R
+R --> S: List~Discount~
+deactivate R
+S -> S: map → DiscountResponse
+S --> DC: List~DiscountResponse~
+deactivate S
+DC --> UI: 200 JSON
+deactivate DC
+UI --> A: discount table
+deactivate UI
+
+@enduml

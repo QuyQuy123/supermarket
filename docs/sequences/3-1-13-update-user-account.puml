@@ -1,0 +1,34 @@
+@startuml
+!include _seq-style.puml
+title 3.1.13 UpdateUserAccount
+
+actor "Admin" as A
+boundary "Edit user UI" as UI <<boundary>>
+control "UserController" as UC <<control>>
+control "UserService" as S <<service>>
+entity "UserRepository" as R <<entity>>
+
+== Update user account ==
+A -> UI: edit + save
+activate UI
+UI -> UC: PUT /api/users/{id}\n(UpdateUserRequest)
+activate UC
+UC -> S: updateUser(id, request)
+activate S
+S -> R: findById(id)
+activate R
+R --> S: User
+deactivate R
+S -> S: apply changes, resolve role
+S -> R: save(user)
+activate R
+R --> S: User
+deactivate R
+S --> UC: UserListItemResponse
+deactivate S
+UC --> UI: 200 JSON
+deactivate UC
+UI --> A: refresh table
+deactivate UI
+
+@enduml

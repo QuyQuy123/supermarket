@@ -1,0 +1,34 @@
+@startuml
+!include _seq-style.puml
+title 3.3.5 UpdateProduct
+
+actor "Admin / Manager" as A
+boundary "Products UI" as UI <<boundary>>
+control "ProductController" as PC <<control>>
+control "ProductService" as S <<service>>
+entity "ProductRepository" as R <<entity>>
+
+== Update product ==
+A -> UI: edit + Save
+activate UI
+UI -> PC: PUT /api/products/{id}\n(UpdateProductRequest)
+activate PC
+PC -> S: updateProduct(id, request)
+activate S
+S -> R: findById(id)
+activate R
+R --> S: Product
+deactivate R
+S -> S: apply fields
+S -> R: save(product)
+activate R
+R --> S: Product
+deactivate R
+S --> PC: ProductDetailResponse
+deactivate S
+PC --> UI: 200 JSON
+deactivate PC
+UI --> A: update UI
+deactivate UI
+
+@enduml

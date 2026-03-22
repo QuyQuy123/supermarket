@@ -1,0 +1,72 @@
+' 3.1 System Access & Security — N-tier template
+
+@startuml
+!include _style.puml
+title 3.1 System Access & Security
+
+class UserController {
+  + getAllUsers(): List~UserDTO~
+  + createUser(dto: UserDTO): UserDTO
+  + updateUser(id: int, dto: UserDTO): UserDTO
+}
+
+class UserServiceImpl {
+  - userRepository: IUserRepository
+  --
+  + getAllUsers(): List~UserDTO~
+  + createUser(dto: UserDTO): UserDTO
+  + updateUser(id: int, dto: UserDTO): UserDTO
+}
+
+class UserRepositoryImpl {
+  + findById(id: int): Optional~User~
+  + save(user: User): User
+  + findAll(): List~User~
+}
+
+interface IUserService {
+  + getAllUsers(): List~UserDTO~
+  + createUser(dto: UserDTO): UserDTO
+  + updateUser(id: int, dto: UserDTO): UserDTO
+}
+
+interface IUserRepository {
+  + findById(id: int): Optional~User~
+  + save(user: User): User
+  + findAll(): List~User~
+}
+
+class UserDTO {
+  - userId: int
+  - fullName: string
+  - email: string
+  - roleName: string
+}
+
+class User {
+  - userId: int
+  - fullName: string
+  - email: string
+  - role: Role
+  - status: string
+}
+
+class Role
+
+UserController -[hidden]right- UserServiceImpl
+UserServiceImpl -[hidden]right- UserRepositoryImpl
+IUserService -[hidden]right- IUserRepository
+UserDTO -[hidden]right- User
+
+UserController --> IUserService
+UserController --> UserDTO
+IUserService --> UserDTO
+UserServiceImpl ..|> IUserService
+UserServiceImpl --> IUserRepository
+UserServiceImpl --> UserDTO
+IUserRepository --> User
+UserRepositoryImpl ..|> IUserRepository
+UserRepositoryImpl --> User
+User --> Role
+
+@enduml

@@ -1,0 +1,29 @@
+@startuml
+!include _seq-style.puml
+title 3.1.6 VerifyOTP
+
+actor "User" as U
+boundary "Reset password UI" as UI <<boundary>>
+control "AuthController" as AC <<control>>
+control "AuthService" as S <<service>>
+entity "PasswordResetTokenRepository" as TR <<entity>>
+
+== Verify OTP ==
+U -> UI: enter OTP code
+activate UI
+UI -> AC: POST /api/auth/verify-otp?otp=
+activate AC
+AC -> S: verifyOtp(otp)
+activate S
+S -> TR: findByOtpAndExpiresAtAfter(otp, now)
+activate TR
+TR --> S: Optional~PasswordResetToken~
+deactivate TR
+S --> AC: boolean
+deactivate S
+AC --> UI: 200 / 400
+deactivate AC
+UI --> U: allow new password / invalid OTP
+deactivate UI
+
+@enduml

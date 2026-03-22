@@ -1,0 +1,29 @@
+@startuml
+!include _seq-style.puml
+title 3.4.6 DeleteSupplier
+
+actor "Admin / Manager" as A
+boundary "Suppliers UI" as UI <<boundary>>
+control "SupplierController" as SC <<control>>
+control "SupplierService" as S <<service>>
+entity "SupplierRepository" as R <<entity>>
+
+== Delete supplier ==
+A -> UI: confirm delete
+activate UI
+UI -> SC: DELETE /api/suppliers/{id}
+activate SC
+SC -> S: deleteSupplier(id)
+activate S
+S -> R: deleteById(id)
+activate R
+R --> S: void
+deactivate R
+S --> SC: void
+deactivate S
+SC --> UI: 204
+deactivate SC
+UI --> A: remove from table
+deactivate UI
+
+@enduml

@@ -1,0 +1,29 @@
+@startuml
+!include _seq-style.puml
+title 3.7.4 AddCustomer
+
+actor "Admin / Cashier" as A
+boundary "Customers UI" as UI <<boundary>>
+control "CustomerController" as CC <<control>>
+control "CustomerService" as S <<service>>
+entity "CustomerRepository" as R <<entity>>
+
+== Add customer ==
+A -> UI: form + Save
+activate UI
+UI -> CC: POST /api/customers\n(CreateCustomerRequest)
+activate CC
+CC -> S: createCustomer(request)
+activate S
+S -> R: save(customer)
+activate R
+R --> S: Customer
+deactivate R
+S --> CC: CustomerListItemResponse
+deactivate S
+CC --> UI: 200 JSON
+deactivate CC
+UI --> A: add row
+deactivate UI
+
+@enduml

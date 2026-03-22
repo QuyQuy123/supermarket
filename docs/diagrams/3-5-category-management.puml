@@ -1,0 +1,66 @@
+' 3.5 Category Management
+
+@startuml
+!include _style.puml
+title 3.5 Category Management
+
+class CategoryController {
+  + getAllCategories(): List~CategoryDTO~
+  + createCategory(dto: CategoryDTO): CategoryDTO
+  + updateCategory(id: int, dto: CategoryDTO): CategoryDTO
+}
+
+class CategoryServiceImpl {
+  - categoryRepository: ICategoryRepository
+  --
+  + getAllCategories(): List~CategoryDTO~
+  + createCategory(dto: CategoryDTO): CategoryDTO
+  + updateCategory(id: int, dto: CategoryDTO): CategoryDTO
+}
+
+class CategoryRepositoryImpl {
+  + findById(id: int): Optional~Category~
+  + save(category: Category): Category
+  + findAll(): List~Category~
+}
+
+interface ICategoryService {
+  + getAllCategories(): List~CategoryDTO~
+  + createCategory(dto: CategoryDTO): CategoryDTO
+  + updateCategory(id: int, dto: CategoryDTO): CategoryDTO
+}
+
+interface ICategoryRepository {
+  + findById(id: int): Optional~Category~
+  + save(category: Category): Category
+  + findAll(): List~Category~
+}
+
+class CategoryDTO {
+  - categoryId: int
+  - categoryName: string
+  - description: string
+}
+
+class Category {
+  - categoryId: int
+  - categoryName: string
+  - description: string
+}
+
+CategoryController -[hidden]right- CategoryServiceImpl
+CategoryServiceImpl -[hidden]right- CategoryRepositoryImpl
+ICategoryService -[hidden]right- ICategoryRepository
+CategoryDTO -[hidden]right- Category
+
+CategoryController --> ICategoryService
+CategoryController --> CategoryDTO
+ICategoryService --> CategoryDTO
+CategoryServiceImpl ..|> ICategoryService
+CategoryServiceImpl --> ICategoryRepository
+CategoryServiceImpl --> CategoryDTO
+ICategoryRepository --> Category
+CategoryRepositoryImpl ..|> ICategoryRepository
+CategoryRepositoryImpl --> Category
+
+@enduml

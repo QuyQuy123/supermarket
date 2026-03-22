@@ -1,0 +1,69 @@
+' 3.2 Order Management
+
+@startuml
+!include _style.puml
+title 3.2 Order Management
+
+class OrderController {
+  + getAllOrders(): List~OrderDTO~
+  + getOrderDetail(id: int): OrderDTO
+  + exportOrders(): byte[]
+}
+
+class OrderServiceImpl {
+  - orderRepository: IOrderRepository
+  --
+  + getAllOrders(): List~OrderDTO~
+  + getOrderDetail(id: int): OrderDTO
+  + exportOrders(): byte[]
+}
+
+class OrderRepositoryImpl {
+  + findById(id: int): Optional~SalesOrder~
+  + save(order: SalesOrder): SalesOrder
+  + findAll(): List~SalesOrder~
+}
+
+interface IOrderService {
+  + getAllOrders(): List~OrderDTO~
+  + getOrderDetail(id: int): OrderDTO
+  + exportOrders(): byte[]
+}
+
+interface IOrderRepository {
+  + findById(id: int): Optional~SalesOrder~
+  + save(order: SalesOrder): SalesOrder
+  + findAll(): List~SalesOrder~
+}
+
+class OrderDTO {
+  - orderId: int
+  - orderNo: string
+  - totalAmount: decimal
+  - orderDate: string
+}
+
+class SalesOrder {
+  - orderId: int
+  - orderNo: string
+  - totalAmount: decimal
+  - customerName: string
+  - cashierId: int
+}
+
+OrderController -[hidden]right- OrderServiceImpl
+OrderServiceImpl -[hidden]right- OrderRepositoryImpl
+IOrderService -[hidden]right- IOrderRepository
+OrderDTO -[hidden]right- SalesOrder
+
+OrderController --> IOrderService
+OrderController --> OrderDTO
+IOrderService --> OrderDTO
+OrderServiceImpl ..|> IOrderService
+OrderServiceImpl --> IOrderRepository
+OrderServiceImpl --> OrderDTO
+IOrderRepository --> SalesOrder
+OrderRepositoryImpl ..|> IOrderRepository
+OrderRepositoryImpl --> SalesOrder
+
+@enduml

@@ -1,0 +1,30 @@
+@startuml
+!include _seq-style.puml
+title 3.8.3 RevenueReportByMonthYear
+
+actor "Admin / Manager" as A
+boundary "Reports UI" as UI <<boundary>>
+control "ReportController" as RC <<control>>
+control "ReportService" as S <<service>>
+entity "SalesOrderRepository" as R <<entity>>
+
+== Revenue report ==
+A -> UI: select year / month
+activate UI
+UI -> RC: GET /api/reports/revenue?year=&month=
+activate RC
+RC -> S: getRevenueReport(year, month)
+activate S
+S -> R: query orders for period
+activate R
+R --> S: aggregated data
+deactivate R
+S -> S: map → RevenueReportItemResponse
+S --> RC: List~RevenueReportItemResponse~
+deactivate S
+RC --> UI: 200 JSON
+deactivate RC
+UI --> A: chart / table
+deactivate UI
+
+@enduml

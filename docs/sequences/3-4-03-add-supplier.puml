@@ -1,0 +1,29 @@
+@startuml
+!include _seq-style.puml
+title 3.4.4 AddSupplier
+
+actor "Admin / Manager" as A
+boundary "Suppliers UI" as UI <<boundary>>
+control "SupplierController" as SC <<control>>
+control "SupplierService" as S <<service>>
+entity "SupplierRepository" as R <<entity>>
+
+== Add supplier ==
+A -> UI: form + Save
+activate UI
+UI -> SC: POST /api/suppliers\n(CreateSupplierRequest)
+activate SC
+SC -> S: createSupplier(request)
+activate S
+S -> R: save(supplier)
+activate R
+R --> S: Supplier
+deactivate R
+S --> SC: SupplierListItemResponse
+deactivate S
+SC --> UI: 201 Created
+deactivate SC
+UI --> A: refresh list
+deactivate UI
+
+@enduml

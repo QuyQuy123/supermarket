@@ -1,0 +1,35 @@
+@startuml
+!include _seq-style.puml
+title 3.2.3 ViewOrderDetail
+
+actor "Admin / Manager" as A
+boundary "Orders UI" as UI <<boundary>>
+control "OrderController" as OC <<control>>
+control "OrderService" as S <<service>>
+entity "SalesOrderRepository" as SR <<entity>>
+entity "OrderItemRepository" as IR <<entity>>
+
+== View order detail ==
+A -> UI: select an order
+activate UI
+UI -> OC: GET /api/orders/{id}
+activate OC
+OC -> S: getOrderDetail(id)
+activate S
+S -> SR: findById(id)
+activate SR
+SR --> S: SalesOrder
+deactivate SR
+S -> IR: findByOrder_IdOrderByIdAsc(id)
+activate IR
+IR --> S: List~OrderItem~
+deactivate IR
+S -> S: build OrderDetailResponse
+S --> OC: OrderDetailResponse
+deactivate S
+OC --> UI: 200 JSON
+deactivate OC
+UI --> A: detail + line items
+deactivate UI
+
+@enduml

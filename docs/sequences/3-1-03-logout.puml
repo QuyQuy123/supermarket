@@ -1,0 +1,19 @@
+@startuml
+!include _seq-style.puml
+title 3.1.3 Logout
+
+actor "Staff / Admin" as U
+boundary "App Shell / Menu" as UI <<boundary>>
+
+== Logout ==
+U -> UI: tap Logout
+activate UI
+UI -> UI: clear JWT & local session data
+note right of UI
+  JWT stateless backend:
+  no revoke API in current codebase
+end note
+UI --> U: navigate to Login
+deactivate UI
+
+@enduml

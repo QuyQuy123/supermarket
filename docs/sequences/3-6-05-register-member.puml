@@ -1,0 +1,29 @@
+@startuml
+!include _seq-style.puml
+title 3.6.6 RegisterMember
+
+actor "Cashier" as C
+boundary "POS UI" as UI <<boundary>>
+control "CustomerController" as CC <<control>>
+control "CustomerService" as S <<service>>
+entity "CustomerRepository" as R <<entity>>
+
+== Register member ==
+C -> UI: enter customer + Save
+activate UI
+UI -> CC: POST /api/customers\n(CreateCustomerRequest)
+activate CC
+CC -> S: createCustomer(request)
+activate S
+S -> R: save(customer)
+activate R
+R --> S: Customer
+deactivate R
+S --> CC: CustomerListItemResponse
+deactivate S
+CC --> UI: 200 JSON
+deactivate CC
+UI --> C: attach customer to sale
+deactivate UI
+
+@enduml

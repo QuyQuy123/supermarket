@@ -1,0 +1,30 @@
+@startuml
+!include _seq-style.puml
+title 3.1.10 ListUserAccount
+
+actor "Admin" as A
+boundary "User list UI" as UI <<boundary>>
+control "UserController" as UC <<control>>
+control "UserService" as S <<service>>
+entity "UserRepository" as R <<entity>>
+
+== Open user list ==
+A -> UI: open account management
+activate UI
+UI -> UC: GET /api/users
+activate UC
+UC -> S: getAllUsers()
+activate S
+S -> R: findAllByOrderByIdAsc()
+activate R
+R --> S: List~User~
+deactivate R
+S -> S: map → UserListItemResponse
+S --> UC: List~UserListItemResponse~
+deactivate S
+UC --> UI: 200 JSON
+deactivate UC
+UI --> A: show user table
+deactivate UI
+
+@enduml

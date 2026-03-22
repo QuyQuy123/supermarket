@@ -1,0 +1,18 @@
+@startuml
+!include _seq-style.puml
+title 3.6.9 CloseShift
+
+actor "Cashier" as C
+boundary "POS UI" as UI <<boundary>>
+
+== Close shift ==
+note over UI
+  No close-shift API. Flutter: enter closing cash,\nsummarize and clear/lock local ShiftSession.
+end note
+C -> UI: enter closing cash, confirm close
+activate UI
+UI -> UI: compute variance, save shift report
+UI --> C: lock sales until new shift
+deactivate UI
+
+@enduml

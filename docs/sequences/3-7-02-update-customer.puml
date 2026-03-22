@@ -1,0 +1,29 @@
+@startuml
+!include _seq-style.puml
+title 3.7.3 UpdateCustomer
+
+actor "Admin" as A
+boundary "Customers UI" as UI <<boundary>>
+control "CustomerController" as CC <<control>>
+control "CustomerService" as S <<service>>
+entity "CustomerRepository" as R <<entity>>
+
+== Update customer ==
+A -> UI: edit details + Save
+activate UI
+UI -> CC: PUT /api/customers/{id}\n(UpdateCustomerRequest)
+activate CC
+CC -> S: updateCustomer(id, request)
+activate S
+S -> R: findById + save
+activate R
+R --> S: Customer
+deactivate R
+S --> CC: CustomerListItemResponse
+deactivate S
+CC --> UI: 200 JSON
+deactivate CC
+UI --> A: refresh table
+deactivate UI
+
+@enduml

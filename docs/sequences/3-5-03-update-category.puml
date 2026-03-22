@@ -1,0 +1,29 @@
+@startuml
+!include _seq-style.puml
+title 3.5.4 UpdateCategory
+
+actor "Admin / Manager" as A
+boundary "Categories UI" as UI <<boundary>>
+control "CategoryController" as CC <<control>>
+control "CategoryService" as S <<service>>
+entity "CategoryRepository" as R <<entity>>
+
+== Update category ==
+A -> UI: edit + Save
+activate UI
+UI -> CC: PUT /api/categories/{id}\n(UpdateCategoryRequest)
+activate CC
+CC -> S: updateCategory(id, request)
+activate S
+S -> R: findById + save
+activate R
+R --> S: Category
+deactivate R
+S --> CC: CategoryListItemResponse
+deactivate S
+CC --> UI: 200 JSON
+deactivate CC
+UI --> A: refresh table
+deactivate UI
+
+@enduml

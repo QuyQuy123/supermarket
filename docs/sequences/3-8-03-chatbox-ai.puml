@@ -1,0 +1,19 @@
+@startuml
+!include _seq-style.puml
+title 3.8.4 ChatboxAI
+
+actor "User" as U
+boundary "Chat AI UI" as UI <<boundary>>
+
+== Chat with AI ==
+note over UI
+  No ChatController / AI in backend.
+  Flutter: call external LLM API or mock.
+end note
+U -> UI: enter question
+activate UI
+UI -> UI: send prompt → receive reply (client)
+UI --> U: show messages
+deactivate UI
+
+@enduml
