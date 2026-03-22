@@ -464,10 +464,22 @@ class _AddProductPageState extends State<AddProductPage> {
         const SizedBox(height: 8),
         DropdownButtonFormField<int>(
           initialValue: _selectedSupplierId,
+          isExpanded: true,
           decoration: const InputDecoration(
             border: OutlineInputBorder(),
             hintText: 'Choose...',
           ),
+          selectedItemBuilder: (context) {
+            return _suppliers
+                .map(
+                  (s) => Text(
+                    s.supplierName,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                )
+                .toList();
+          },
           items: _suppliers
               .map((s) => DropdownMenuItem(
                     value: s.id,
