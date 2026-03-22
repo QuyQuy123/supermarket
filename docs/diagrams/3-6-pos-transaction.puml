@@ -1,0 +1,68 @@
+' 3.6 POS Transaction
+
+@startuml
+!include _style.puml
+title 3.6 POS Transaction
+
+class PosController {
+  + openShift(dto: PosDTO): PosDTO
+  + checkout(dto: PosDTO): PosDTO
+  + closeShift(id: int): PosDTO
+}
+
+class PosServiceImpl {
+  - orderRepository: IOrderRepository
+  --
+  + openShift(dto: PosDTO): PosDTO
+  + checkout(dto: PosDTO): PosDTO
+  + closeShift(id: int): PosDTO
+}
+
+class OrderRepositoryImpl {
+  + findById(id: int): Optional~SalesOrder~
+  + save(order: SalesOrder): SalesOrder
+  + findAll(): List~SalesOrder~
+}
+
+interface IPosService {
+  + openShift(dto: PosDTO): PosDTO
+  + checkout(dto: PosDTO): PosDTO
+  + closeShift(id: int): PosDTO
+}
+
+interface IOrderRepository {
+  + findById(id: int): Optional~SalesOrder~
+  + save(order: SalesOrder): SalesOrder
+  + findAll(): List~SalesOrder~
+}
+
+class PosDTO {
+  - shiftId: int
+  - cartJson: string
+  - discountCode: string
+  - totalAmount: decimal
+}
+
+class SalesOrder {
+  - orderId: int
+  - orderNo: string
+  - totalAmount: decimal
+  - shiftId: int
+}
+
+PosController -[hidden]right- PosServiceImpl
+PosServiceImpl -[hidden]right- OrderRepositoryImpl
+IPosService -[hidden]right- IOrderRepository
+PosDTO -[hidden]right- SalesOrder
+
+PosController --> IPosService
+PosController --> PosDTO
+IPosService --> PosDTO
+PosServiceImpl ..|> IPosService
+PosServiceImpl --> IOrderRepository
+PosServiceImpl --> PosDTO
+IOrderRepository --> SalesOrder
+OrderRepositoryImpl ..|> IOrderRepository
+OrderRepositoryImpl --> SalesOrder
+
+@enduml

@@ -1,0 +1,30 @@
+@startuml
+!include _seq-style.puml
+title 3.5.2 ViewCategoryList
+
+actor "Admin / Manager" as A
+boundary "Categories UI" as UI <<boundary>>
+control "CategoryController" as CC <<control>>
+control "CategoryService" as S <<service>>
+entity "CategoryRepository" as R <<entity>>
+
+== Categories ==
+A -> UI: open Categories
+activate UI
+UI -> CC: GET /api/categories
+activate CC
+CC -> S: getAllCategories()
+activate S
+S -> R: findAll()
+activate R
+R --> S: List~Category~
+deactivate R
+S -> S: map → CategoryListItemResponse
+S --> CC: List~CategoryListItemResponse~
+deactivate S
+CC --> UI: 200 JSON
+deactivate CC
+UI --> A: category table
+deactivate UI
+
+@enduml

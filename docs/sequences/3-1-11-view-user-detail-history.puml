@@ -1,0 +1,35 @@
+@startuml
+!include _seq-style.puml
+title 3.1.11 ViewUserDetail & History
+
+actor "Admin" as A
+boundary "User detail UI" as UI <<boundary>>
+control "UserController" as UC <<control>>
+control "UserService" as S <<service>>
+entity "UserRepository" as UR <<entity>>
+entity "ShiftRepository" as SR <<entity>>
+
+== View user detail & shift history ==
+A -> UI: select a user
+activate UI
+UI -> UC: GET /api/users/{id}
+activate UC
+UC -> S: getUserDetail(id)
+activate S
+S -> UR: findById(id)
+activate UR
+UR --> S: User
+deactivate UR
+S -> SR: findTop7ByUser_IdOrderByOpenTimeDesc(id)
+activate SR
+SR --> S: List~Shift~
+deactivate SR
+S -> S: build UserDetailResponse\n(schedule + lastLogin)
+S --> UC: UserDetailResponse
+deactivate S
+UC --> UI: 200 JSON
+deactivate UC
+UI --> A: detail form + shift table
+deactivate UI
+
+@enduml

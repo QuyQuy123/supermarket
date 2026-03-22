@@ -1,0 +1,69 @@
+' 3.4 Supplier Management
+
+@startuml
+!include _style.puml
+title 3.4 Supplier Management
+
+class SupplierController {
+  + getAllSuppliers(): List~SupplierDTO~
+  + createSupplier(dto: SupplierDTO): SupplierDTO
+  + updateSupplier(id: int, dto: SupplierDTO): SupplierDTO
+}
+
+class SupplierServiceImpl {
+  - supplierRepository: ISupplierRepository
+  --
+  + getAllSuppliers(): List~SupplierDTO~
+  + createSupplier(dto: SupplierDTO): SupplierDTO
+  + updateSupplier(id: int, dto: SupplierDTO): SupplierDTO
+}
+
+class SupplierRepositoryImpl {
+  + findById(id: int): Optional~Supplier~
+  + save(supplier: Supplier): Supplier
+  + findAll(): List~Supplier~
+}
+
+interface ISupplierService {
+  + getAllSuppliers(): List~SupplierDTO~
+  + createSupplier(dto: SupplierDTO): SupplierDTO
+  + updateSupplier(id: int, dto: SupplierDTO): SupplierDTO
+}
+
+interface ISupplierRepository {
+  + findById(id: int): Optional~Supplier~
+  + save(supplier: Supplier): Supplier
+  + findAll(): List~Supplier~
+}
+
+class SupplierDTO {
+  - supplierId: int
+  - supplierName: string
+  - phone: string
+  - email: string
+}
+
+class Supplier {
+  - supplierId: int
+  - supplierName: string
+  - phone: string
+  - email: string
+  - address: string
+}
+
+SupplierController -[hidden]right- SupplierServiceImpl
+SupplierServiceImpl -[hidden]right- SupplierRepositoryImpl
+ISupplierService -[hidden]right- ISupplierRepository
+SupplierDTO -[hidden]right- Supplier
+
+SupplierController --> ISupplierService
+SupplierController --> SupplierDTO
+ISupplierService --> SupplierDTO
+SupplierServiceImpl ..|> ISupplierService
+SupplierServiceImpl --> ISupplierRepository
+SupplierServiceImpl --> SupplierDTO
+ISupplierRepository --> Supplier
+SupplierRepositoryImpl ..|> ISupplierRepository
+SupplierRepositoryImpl --> Supplier
+
+@enduml

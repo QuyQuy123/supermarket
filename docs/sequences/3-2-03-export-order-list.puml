@@ -1,0 +1,19 @@
+@startuml
+!include _seq-style.puml
+title 3.2.4 ExportOrderList
+
+actor "Admin / Manager" as A
+boundary "Orders UI" as UI <<boundary>>
+
+== Export list ==
+note over UI
+  No export API in backend.
+  Flutter: use cached data (GET /api/orders)\nor refetch then write CSV/Excel locally.
+end note
+A -> UI: choose Export
+activate UI
+UI -> UI: build file from List~OrderListItemResponse~
+UI --> A: share / save file
+deactivate UI
+
+@enduml

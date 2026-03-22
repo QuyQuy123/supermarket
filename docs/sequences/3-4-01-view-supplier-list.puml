@@ -1,0 +1,30 @@
+@startuml
+!include _seq-style.puml
+title 3.4.2 ViewSupplierList
+
+actor "Admin / Manager" as A
+boundary "Suppliers UI" as UI <<boundary>>
+control "SupplierController" as SC <<control>>
+control "SupplierService" as S <<service>>
+entity "SupplierRepository" as R <<entity>>
+
+== Supplier list ==
+A -> UI: open Suppliers
+activate UI
+UI -> SC: GET /api/suppliers
+activate SC
+SC -> S: getAllSuppliers()
+activate S
+S -> R: findAll()
+activate R
+R --> S: List~Supplier~
+deactivate R
+S -> S: map → SupplierListItemResponse
+S --> SC: List~SupplierListItemResponse~
+deactivate S
+SC --> UI: 200 JSON
+deactivate SC
+UI --> A: supplier table
+deactivate UI
+
+@enduml

@@ -1,0 +1,19 @@
+@startuml
+!include _seq-style.puml
+title 3.6.2 OpenShift
+
+actor "Cashier" as C
+boundary "POS / Open shift UI" as UI <<boundary>>
+
+== Open shift ==
+note over UI
+  No POST /shifts in current backend.
+  Flutter: persist shift state (time, opening cash)\nin state/local storage for transactions.
+end note
+C -> UI: enter opening cash, confirm
+activate UI
+UI -> UI: create local ShiftSession
+UI --> C: enable sales
+deactivate UI
+
+@enduml

@@ -1,0 +1,30 @@
+@startuml
+!include _seq-style.puml
+title 3.2.2 ViewOrderList
+
+actor "Admin / Manager" as A
+boundary "Orders UI" as UI <<boundary>>
+control "OrderController" as OC <<control>>
+control "OrderService" as S <<service>>
+entity "SalesOrderRepository" as R <<entity>>
+
+== Open order list ==
+A -> UI: open Orders screen
+activate UI
+UI -> OC: GET /api/orders
+activate OC
+OC -> S: getAllOrders()
+activate S
+S -> R: findAllByOrderByCreatedAtDescIdDesc()
+activate R
+R --> S: List~SalesOrder~
+deactivate R
+S -> S: map → OrderListItemResponse
+S --> OC: List~OrderListItemResponse~
+deactivate S
+OC --> UI: 200 JSON
+deactivate OC
+UI --> A: show order table
+deactivate UI
+
+@enduml

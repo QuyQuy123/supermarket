@@ -1,0 +1,29 @@
+@startuml
+!include _seq-style.puml
+title 3.5.5 DeleteCategory
+
+actor "Admin / Manager" as A
+boundary "Categories UI" as UI <<boundary>>
+control "CategoryController" as CC <<control>>
+control "CategoryService" as S <<service>>
+entity "CategoryRepository" as R <<entity>>
+
+== Delete category ==
+A -> UI: confirm delete
+activate UI
+UI -> CC: DELETE /api/categories/{id}
+activate CC
+CC -> S: deleteCategory(id)
+activate S
+S -> R: deleteById(id)
+activate R
+R --> S: void
+deactivate R
+S --> CC: void
+deactivate S
+CC --> UI: 204
+deactivate CC
+UI --> A: remove row
+deactivate UI
+
+@enduml

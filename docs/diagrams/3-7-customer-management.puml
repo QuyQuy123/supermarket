@@ -1,0 +1,69 @@
+' 3.7 Customer Management
+
+@startuml
+!include _style.puml
+title 3.7 Customer Management
+
+class CustomerController {
+  + getAllCustomers(): List~CustomerDTO~
+  + createCustomer(dto: CustomerDTO): CustomerDTO
+  + updateCustomer(id: int, dto: CustomerDTO): CustomerDTO
+}
+
+class CustomerServiceImpl {
+  - customerRepository: ICustomerRepository
+  --
+  + getAllCustomers(): List~CustomerDTO~
+  + createCustomer(dto: CustomerDTO): CustomerDTO
+  + updateCustomer(id: int, dto: CustomerDTO): CustomerDTO
+}
+
+class CustomerRepositoryImpl {
+  + findById(id: int): Optional~Customer~
+  + save(customer: Customer): Customer
+  + findAll(): List~Customer~
+}
+
+interface ICustomerService {
+  + getAllCustomers(): List~CustomerDTO~
+  + createCustomer(dto: CustomerDTO): CustomerDTO
+  + updateCustomer(id: int, dto: CustomerDTO): CustomerDTO
+}
+
+interface ICustomerRepository {
+  + findById(id: int): Optional~Customer~
+  + save(customer: Customer): Customer
+  + findAll(): List~Customer~
+}
+
+class CustomerDTO {
+  - customerId: int
+  - fullName: string
+  - phone: string
+  - email: string
+}
+
+class Customer {
+  - customerId: int
+  - fullName: string
+  - phone: string
+  - email: string
+  - address: string
+}
+
+CustomerController -[hidden]right- CustomerServiceImpl
+CustomerServiceImpl -[hidden]right- CustomerRepositoryImpl
+ICustomerService -[hidden]right- ICustomerRepository
+CustomerDTO -[hidden]right- Customer
+
+CustomerController --> ICustomerService
+CustomerController --> CustomerDTO
+ICustomerService --> CustomerDTO
+CustomerServiceImpl ..|> ICustomerService
+CustomerServiceImpl --> ICustomerRepository
+CustomerServiceImpl --> CustomerDTO
+ICustomerRepository --> Customer
+CustomerRepositoryImpl ..|> ICustomerRepository
+CustomerRepositoryImpl --> Customer
+
+@enduml

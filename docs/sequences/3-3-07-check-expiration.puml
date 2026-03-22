@@ -1,0 +1,30 @@
+@startuml
+!include _seq-style.puml
+title 3.3.8 CheckExpiration
+
+actor "Admin / Manager" as A
+boundary "Expiration UI" as UI <<boundary>>
+control "ExpirationController" as EC <<control>>
+control "ExpirationService" as S <<service>>
+entity "ProductRepository" as R <<entity>>
+
+== Expiration check ==
+A -> UI: open expiration screen
+activate UI
+UI -> EC: GET /api/expiration/today\n(or /7days, /3months, /6months)
+activate EC
+EC -> S: getProductsExpiringToday() / ...
+activate S
+S -> R: query by expiryDate
+activate R
+R --> S: List~Product~
+deactivate R
+S -> S: map → ExpirationProductResponse
+S --> EC: List~ExpirationProductResponse~
+deactivate S
+EC --> UI: 200 JSON
+deactivate EC
+UI --> A: list + stats
+deactivate UI
+
+@enduml

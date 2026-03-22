@@ -1,0 +1,30 @@
+@startuml
+!include _seq-style.puml
+title 3.1.8 ViewProfile
+
+actor "User" as U
+boundary "Profile UI" as UI <<boundary>>
+control "UserController" as UC <<control>>
+control "UserService" as S <<service>>
+entity "UserRepository" as R <<entity>>
+
+== View profile ==
+U -> UI: open Profile screen
+activate UI
+UI -> UC: GET /api/users/{id}
+activate UC
+UC -> S: getUserDetail(id)
+activate S
+S -> R: findById(id)
+activate R
+R --> S: User
+deactivate R
+S -> S: toUserDetailResponse\n(+ shifts from ShiftRepository)
+S --> UC: UserDetailResponse
+deactivate S
+UC --> UI: 200 JSON
+deactivate UC
+UI --> U: display profile
+deactivate UI
+
+@enduml

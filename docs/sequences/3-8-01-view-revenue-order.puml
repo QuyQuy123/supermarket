@@ -1,0 +1,42 @@
+@startuml
+!include _seq-style.puml
+title 3.8.2 ViewRevenueAndOrder
+
+actor "Admin / Manager" as A
+boundary "Dashboard UI" as UI <<boundary>>
+control "OrderController" as OC <<control>>
+control "OrderService" as S <<service>>
+entity "SalesOrderRepository" as R <<entity>>
+
+== Dashboard overview ==
+A -> UI: open Dashboard
+activate UI
+UI -> OC: GET /api/orders/dashboard
+activate OC
+OC -> S: getDashboardSummary()
+activate S
+S -> R: count / aggregate by day-month-year
+activate R
+R --> S: raw aggregates
+deactivate R
+S -> S: build DashboardSummaryResponse
+S --> OC: DashboardSummaryResponse
+deactivate S
+OC --> UI: 200 JSON
+deactivate OC
+UI -> OC: GET /api/orders/today-transactions
+activate OC
+OC -> S: getTodayTransactions()
+activate S
+S -> R: query today orders
+activate R
+R --> S: List~SalesOrder~
+deactivate R
+S --> OC: List~DashboardTransactionResponse~
+deactivate S
+OC --> UI: 200 JSON
+deactivate OC
+UI --> A: KPIs + transaction table
+deactivate UI
+
+@enduml

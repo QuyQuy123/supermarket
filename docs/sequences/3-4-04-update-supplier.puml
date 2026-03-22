@@ -1,0 +1,29 @@
+@startuml
+!include _seq-style.puml
+title 3.4.5 UpdateSupplier
+
+actor "Admin / Manager" as A
+boundary "Suppliers UI" as UI <<boundary>>
+control "SupplierController" as SC <<control>>
+control "SupplierService" as S <<service>>
+entity "SupplierRepository" as R <<entity>>
+
+== Update supplier ==
+A -> UI: edit + Save
+activate UI
+UI -> SC: PUT /api/suppliers/{id}\n(UpdateSupplierRequest)
+activate SC
+SC -> S: updateSupplier(id, request)
+activate S
+S -> R: findById + save
+activate R
+R --> S: Supplier
+deactivate R
+S --> SC: SupplierListItemResponse
+deactivate S
+SC --> UI: 200 JSON
+deactivate SC
+UI --> A: update view
+deactivate UI
+
+@enduml

@@ -1,0 +1,30 @@
+@startuml
+!include _seq-style.puml
+title 3.6.7 ApplyDiscountCode
+
+actor "Cashier" as C
+boundary "POS UI" as UI <<boundary>>
+control "DiscountController" as DC <<control>>
+control "DiscountService" as S <<service>>
+entity "DiscountRepository" as R <<entity>>
+
+== Apply discount code ==
+C -> UI: enter voucher code
+activate UI
+UI -> DC: GET /api/discounts
+activate DC
+DC -> S: getAllDiscounts()
+activate S
+S -> R: findAll()
+activate R
+R --> S: List~Discount~
+deactivate R
+S --> DC: List~DiscountResponse~
+deactivate S
+DC --> UI: 200 JSON
+deactivate DC
+UI -> UI: match valid code, apply %\nto cart
+UI --> C: update payable total
+deactivate UI
+
+@enduml

@@ -1,0 +1,15 @@
+@startuml
+!include _seq-style.puml
+title 3.6.5 UpdateCartItem
+
+actor "Cashier" as C
+boundary "POS UI" as UI <<boundary>>
+
+== Update cart ==
+C -> UI: change qty / remove line
+activate UI
+UI -> UI: update cart state\n(recalc subtotal)
+UI --> C: show running total
+deactivate UI
+
+@enduml

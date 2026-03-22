@@ -1,0 +1,19 @@
+@startuml
+!include _seq-style.puml
+title 3.6.8 IssueInvoices
+
+actor "Cashier" as C
+boundary "POS UI" as UI <<boundary>>
+
+== Issue invoice / complete sale ==
+note over UI
+  No POST create-order from POS in backend.
+  Flutter: save order locally / sync later\nor call extended SalesOrder API.
+end note
+C -> UI: Checkout
+activate UI
+UI -> UI: create local order + print / show receipt
+UI --> C: complete transaction
+deactivate UI
+
+@enduml

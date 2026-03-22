@@ -1,0 +1,34 @@
+@startuml
+!include _seq-style.puml
+title 3.1.9 UpdateProfile
+
+actor "User" as U
+boundary "Profile UI" as UI <<boundary>>
+control "UserController" as UC <<control>>
+control "UserService" as S <<service>>
+entity "UserRepository" as R <<entity>>
+
+== Update profile ==
+U -> UI: edit name, email, phone, ...
+activate UI
+UI -> UC: PUT /api/users/{id}/profile\n(UpdateProfileRequest)
+activate UC
+UC -> S: updateProfile(id, request)
+activate S
+S -> R: findById(id)
+activate R
+R --> S: User
+deactivate R
+S -> S: check duplicate email
+S -> R: save(user)
+activate R
+R --> S: User
+deactivate R
+S --> UC: UserDetailResponse
+deactivate S
+UC --> UI: 200 JSON
+deactivate UC
+UI --> U: refresh UI
+deactivate UI
+
+@enduml

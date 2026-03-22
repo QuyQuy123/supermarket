@@ -1,0 +1,30 @@
+@startuml
+!include _seq-style.puml
+title 3.3.2 ViewProductList
+
+actor "Admin / Manager" as A
+boundary "Products UI" as UI <<boundary>>
+control "ProductController" as PC <<control>>
+control "ProductService" as S <<service>>
+entity "ProductRepository" as R <<entity>>
+
+== Product list ==
+A -> UI: open Products
+activate UI
+UI -> PC: GET /api/products
+activate PC
+PC -> S: getAllProducts()
+activate S
+S -> R: findAll() (or equivalent query)
+activate R
+R --> S: List~Product~
+deactivate R
+S -> S: map → ProductListItemResponse
+S --> PC: List~ProductListItemResponse~
+deactivate S
+PC --> UI: 200 JSON
+deactivate PC
+UI --> A: product table
+deactivate UI
+
+@enduml

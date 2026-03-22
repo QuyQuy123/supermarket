@@ -1,0 +1,70 @@
+' 3.9 Discount Management
+
+@startuml
+!include _style.puml
+title 3.9 Discount Management
+
+class DiscountController {
+  + getAllDiscounts(): List~DiscountDTO~
+  + createDiscount(dto: DiscountDTO): DiscountDTO
+  + updateDiscount(id: int, dto: DiscountDTO): DiscountDTO
+}
+
+class DiscountServiceImpl {
+  - discountRepository: IDiscountRepository
+  --
+  + getAllDiscounts(): List~DiscountDTO~
+  + createDiscount(dto: DiscountDTO): DiscountDTO
+  + updateDiscount(id: int, dto: DiscountDTO): DiscountDTO
+}
+
+class DiscountRepositoryImpl {
+  + findById(id: int): Optional~Discount~
+  + save(discount: Discount): Discount
+  + findAll(): List~Discount~
+}
+
+interface IDiscountService {
+  + getAllDiscounts(): List~DiscountDTO~
+  + createDiscount(dto: DiscountDTO): DiscountDTO
+  + updateDiscount(id: int, dto: DiscountDTO): DiscountDTO
+}
+
+interface IDiscountRepository {
+  + findById(id: int): Optional~Discount~
+  + save(discount: Discount): Discount
+  + findAll(): List~Discount~
+}
+
+class DiscountDTO {
+  - discountId: int
+  - code: string
+  - discountPercent: decimal
+  - active: boolean
+}
+
+class Discount {
+  - discountId: int
+  - code: string
+  - description: string
+  - discountPercent: decimal
+  - startDate: string
+  - endDate: string
+}
+
+DiscountController -[hidden]right- DiscountServiceImpl
+DiscountServiceImpl -[hidden]right- DiscountRepositoryImpl
+IDiscountService -[hidden]right- IDiscountRepository
+DiscountDTO -[hidden]right- Discount
+
+DiscountController --> IDiscountService
+DiscountController --> DiscountDTO
+IDiscountService --> DiscountDTO
+DiscountServiceImpl ..|> IDiscountService
+DiscountServiceImpl --> IDiscountRepository
+DiscountServiceImpl --> DiscountDTO
+IDiscountRepository --> Discount
+DiscountRepositoryImpl ..|> IDiscountRepository
+DiscountRepositoryImpl --> Discount
+
+@enduml

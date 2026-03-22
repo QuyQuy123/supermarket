@@ -1,0 +1,68 @@
+' 3.8 Dashboard & Reporting
+
+@startuml
+!include _style.puml
+title 3.8 Dashboard & Reporting
+
+class ReportController {
+  + getRevenueReport(year: int, month: int): List~ReportDTO~
+  + getDashboardSummary(): ReportDTO
+  + getTodayTransactions(): List~ReportDTO~
+}
+
+class ReportServiceImpl {
+  - orderRepository: IOrderRepository
+  --
+  + getRevenueReport(year: int, month: int): List~ReportDTO~
+  + getDashboardSummary(): ReportDTO
+  + getTodayTransactions(): List~ReportDTO~
+}
+
+class OrderRepositoryImpl {
+  + findById(id: int): Optional~SalesOrder~
+  + save(order: SalesOrder): SalesOrder
+  + findAll(): List~SalesOrder~
+}
+
+interface IReportService {
+  + getRevenueReport(year: int, month: int): List~ReportDTO~
+  + getDashboardSummary(): ReportDTO
+  + getTodayTransactions(): List~ReportDTO~
+}
+
+interface IOrderRepository {
+  + findById(id: int): Optional~SalesOrder~
+  + save(order: SalesOrder): SalesOrder
+  + findAll(): List~SalesOrder~
+}
+
+class ReportDTO {
+  - label: string
+  - revenue: decimal
+  - orderCount: int
+  - period: string
+}
+
+class SalesOrder {
+  - orderId: int
+  - orderNo: string
+  - totalAmount: decimal
+  - orderDate: string
+}
+
+ReportController -[hidden]right- ReportServiceImpl
+ReportServiceImpl -[hidden]right- OrderRepositoryImpl
+IReportService -[hidden]right- IOrderRepository
+ReportDTO -[hidden]right- SalesOrder
+
+ReportController --> IReportService
+ReportController --> ReportDTO
+IReportService --> ReportDTO
+ReportServiceImpl ..|> IReportService
+ReportServiceImpl --> IOrderRepository
+ReportServiceImpl --> ReportDTO
+IOrderRepository --> SalesOrder
+OrderRepositoryImpl ..|> IOrderRepository
+OrderRepositoryImpl --> SalesOrder
+
+@enduml

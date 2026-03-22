@@ -1,0 +1,36 @@
+@startuml
+!include _seq-style.puml
+title 3.7.5 ViewCustomerHistory
+
+actor "Admin" as A
+boundary "Customer detail UI" as UI <<boundary>>
+control "CustomerController" as CC <<control>>
+control "CustomerService" as S <<service>>
+control "OrderService" as O <<service>>
+entity "SalesOrderRepository" as R <<entity>>
+
+== Purchase history ==
+A -> UI: view customer order history
+activate UI
+UI -> CC: GET /api/customers/{id}/history
+activate CC
+CC -> S: getCustomerOrderHistory(id)
+activate S
+S -> S: existsById (CustomerRepository)
+S -> O: getOrdersByCustomerId(id)
+activate O
+O -> R: findByCustomer_IdOrderByCreatedAtDesc(id)
+activate R
+R --> O: List~SalesOrder~
+deactivate R
+O -> O: map → OrderListItemResponse
+O --> S: List~OrderListItemResponse~
+deactivate O
+S --> CC: List~OrderListItemResponse~
+deactivate S
+CC --> UI: 200 JSON
+deactivate CC
+UI --> A: order table
+deactivate UI
+
+@enduml

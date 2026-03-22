@@ -1,0 +1,9 @@
+' Shared N-tier class diagram styling — clean default PlantUML C/I icons
+skinparam classAttributeIconSize 0
+skinparam shadowing false
+skinparam roundcorner 0
+skinparam backgroundColor transparent
+skinparam packageStyle rectangle
+skinparam ArrowColor #333333
+skinparam ClassBorderColor #333333
+skinparam InterfaceBorderColor #333333

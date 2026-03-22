@@ -1,0 +1,69 @@
+' 3.3 Product Management
+
+@startuml
+!include _style.puml
+title 3.3 Product Management
+
+class ProductController {
+  + getAllProducts(): List~ProductDTO~
+  + getProductDetail(id: int): ProductDTO
+  + saveProduct(dto: ProductDTO): ProductDTO
+}
+
+class ProductServiceImpl {
+  - productRepository: IProductRepository
+  --
+  + getAllProducts(): List~ProductDTO~
+  + getProductDetail(id: int): ProductDTO
+  + saveProduct(dto: ProductDTO): ProductDTO
+}
+
+class ProductRepositoryImpl {
+  + findById(id: int): Optional~Product~
+  + save(product: Product): Product
+  + findAll(): List~Product~
+}
+
+interface IProductService {
+  + getAllProducts(): List~ProductDTO~
+  + getProductDetail(id: int): ProductDTO
+  + saveProduct(dto: ProductDTO): ProductDTO
+}
+
+interface IProductRepository {
+  + findById(id: int): Optional~Product~
+  + save(product: Product): Product
+  + findAll(): List~Product~
+}
+
+class ProductDTO {
+  - productId: int
+  - productName: string
+  - barcode: string
+  - sellingPrice: decimal
+}
+
+class Product {
+  - productId: int
+  - productName: string
+  - barcode: string
+  - sellingPrice: decimal
+  - expiryDate: string
+}
+
+ProductController -[hidden]right- ProductServiceImpl
+ProductServiceImpl -[hidden]right- ProductRepositoryImpl
+IProductService -[hidden]right- IProductRepository
+ProductDTO -[hidden]right- Product
+
+ProductController --> IProductService
+ProductController --> ProductDTO
+IProductService --> ProductDTO
+ProductServiceImpl ..|> IProductService
+ProductServiceImpl --> IProductRepository
+ProductServiceImpl --> ProductDTO
+IProductRepository --> Product
+ProductRepositoryImpl ..|> IProductRepository
+ProductRepositoryImpl --> Product
+
+@enduml

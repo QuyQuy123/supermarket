@@ -1,0 +1,39 @@
+@startuml
+!include _seq-style.puml
+title 3.1.12 AddUserAccount
+
+actor "Admin" as A
+boundary "Create user UI" as UI <<boundary>>
+control "UserController" as UC <<control>>
+control "UserService" as S <<service>>
+entity "UserRepository" as UR <<entity>>
+entity "RoleRepository" as RR <<entity>>
+
+== Add user account ==
+A -> UI: fill form + submit
+activate UI
+UI -> UC: POST /api/users\n(CreateUserRequest)
+activate UC
+UC -> S: createUser(request)
+activate S
+S -> UR: existsByUsername / existsByEmail
+activate UR
+UR --> S: boolean
+deactivate UR
+S -> RR: findAll / resolve role
+activate RR
+RR --> S: Role
+deactivate RR
+S -> S: encode password, build User
+S -> UR: save(user)
+activate UR
+UR --> S: User
+deactivate UR
+S --> UC: UserListItemResponse
+deactivate S
+UC --> UI: 201 Created
+deactivate UC
+UI --> A: append row to list
+deactivate UI
+
+@enduml

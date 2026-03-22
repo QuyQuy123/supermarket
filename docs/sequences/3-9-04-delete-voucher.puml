@@ -1,0 +1,29 @@
+@startuml
+!include _seq-style.puml
+title 3.9.5 DeleteVoucher
+
+actor "Admin / Manager" as A
+boundary "Discounts UI" as UI <<boundary>>
+control "DiscountController" as DC <<control>>
+control "DiscountService" as S <<service>>
+entity "DiscountRepository" as R <<entity>>
+
+== Delete voucher ==
+A -> UI: confirm delete
+activate UI
+UI -> DC: DELETE /api/discounts/{id}
+activate DC
+DC -> S: deleteDiscount(id)
+activate S
+S -> R: deleteById(id)
+activate R
+R --> S: void
+deactivate R
+S --> DC: void
+deactivate S
+DC --> UI: 204
+deactivate DC
+UI --> A: remove row
+deactivate UI
+
+@enduml
