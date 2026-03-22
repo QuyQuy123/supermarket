@@ -107,32 +107,14 @@ class _ProfileViewContentState extends State<ProfileViewContent> {
 
                     return SingleChildScrollView(
                       padding: const EdgeInsets.all(24),
-                      child: LayoutBuilder(
-                        builder: (context, constraints) {
-                          final twoColumns = constraints.maxWidth >= 980;
-                          final leftCard = _ProfileInfoCard(detail: detail);
-                          final rightCard = _ProfileSettingsCard(
+                      child: Center(
+                        child: ConstrainedBox(
+                          constraints: const BoxConstraints(maxWidth: 600),
+                          child: _ProfileInfoCard(
                             detail: detail,
                             onEditProfile: () => widget.onEditProfile(detail),
-                          );
-                          if (!twoColumns) {
-                            return Column(
-                              children: [
-                                leftCard,
-                                const SizedBox(height: 16),
-                                rightCard,
-                              ],
-                            );
-                          }
-                          return Row(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Expanded(child: leftCard),
-                              const SizedBox(width: 16),
-                              Expanded(child: rightCard),
-                            ],
-                          );
-                        },
+                          ),
+                        ),
                       ),
                     );
                   },
@@ -620,9 +602,10 @@ class _ProfileHeader extends StatelessWidget {
 }
 
 class _ProfileInfoCard extends StatelessWidget {
-  const _ProfileInfoCard({required this.detail});
+  const _ProfileInfoCard({required this.detail, required this.onEditProfile});
 
   final UserDetail detail;
+  final VoidCallback onEditProfile;
 
   @override
   Widget build(BuildContext context) {
@@ -694,21 +677,31 @@ class _ProfileInfoCard extends StatelessWidget {
           ),
           const SizedBox(height: 22),
           _ProfileBullet(
-            text: detail.phone.isEmpty ? 'Phone: N/A' : detail.phone,
+            text: detail.phone.isEmpty
+                ? 'Phone: N/A'
+                : 'Phone: ${detail.phone}',
           ),
           _ProfileBullet(
-            text: detail.email.isEmpty ? 'Email: N/A' : detail.email,
+            text: detail.email.isEmpty
+                ? 'Email: N/A'
+                : 'Email: ${detail.email}',
           ),
           _ProfileBullet(
-            text: detail.idCard.isEmpty ? 'ID Card: N/A' : detail.idCard,
+            text: detail.idCard.isEmpty
+                ? 'ID Card Number: N/A'
+                : 'ID Card Number: ${detail.idCard}',
           ),
           _ProfileBullet(
             text: detail.dob.isEmpty ? 'DOB: N/A' : 'DOB: ${detail.dob}',
           ),
           _ProfileBullet(
-            text: detail.address.isEmpty ? 'Address: N/A' : detail.address,
+            text: detail.address.isEmpty
+                ? 'Address: N/A'
+                : 'Address: ${detail.address}',
           ),
-          _ProfileBullet(text: detail.role.isEmpty ? 'Role: N/A' : detail.role),
+          _ProfileBullet(
+            text: detail.role.isEmpty ? 'Role: N/A' : 'Role: ${detail.role}',
+          ),
           const SizedBox(height: 20),
           const Text(
             'Authentication Details',
@@ -719,74 +712,6 @@ class _ProfileInfoCard extends StatelessWidget {
           _AuthDetailRow(label: 'User Name :', value: detail.username),
           _AuthDetailRow(label: 'Last Login:', value: detail.lastLogin),
           const _AuthDetailRow(label: 'Registered:', value: '—'),
-        ],
-      ),
-    );
-  }
-}
-
-class _ProfileSettingsCard extends StatelessWidget {
-  const _ProfileSettingsCard({
-    required this.detail,
-    required this.onEditProfile,
-  });
-
-  final UserDetail detail;
-  final VoidCallback onEditProfile;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(22),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFFE8EAED)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text(
-            'Profile Settings',
-            style: TextStyle(fontSize: 21, fontWeight: FontWeight.w700),
-          ),
-          const SizedBox(height: 18),
-          const _ProfileInputLabel('Email'),
-          const SizedBox(height: 6),
-          _ProfileTextField(initialValue: detail.email, readOnly: true),
-          const SizedBox(height: 14),
-          const _ProfileInputLabel('Phone'),
-          const SizedBox(height: 6),
-          _ProfileTextField(
-            initialValue: detail.phone,
-            hintText: 'Enter phone',
-            readOnly: true,
-          ),
-          const SizedBox(height: 14),
-          const _ProfileInputLabel('ID Card Number'),
-          const SizedBox(height: 6),
-          _ProfileTextField(
-            initialValue: detail.idCard,
-            hintText: 'Enter ID card number',
-            readOnly: true,
-          ),
-          const SizedBox(height: 14),
-          const _ProfileInputLabel('Date Of Birth'),
-          const SizedBox(height: 6),
-          _ProfileTextField(
-            initialValue: detail.dob,
-            hintText: 'yyyy-MM-dd',
-            readOnly: true,
-          ),
-          const SizedBox(height: 14),
-          const _ProfileInputLabel('Address'),
-          const SizedBox(height: 6),
-          _ProfileTextField(
-            initialValue: detail.address,
-            hintText: 'Sample address',
-            maxLines: 4,
-            readOnly: true,
-          ),
           const SizedBox(height: 20),
           Row(
             children: [
@@ -816,26 +741,28 @@ class _ProfileSettingsCard extends StatelessWidget {
               ),
               const SizedBox(width: 12),
               Expanded(
-                child: InkWell(
-                  onTap: () {
-                    showDialog(
-                      context: context,
-                      builder: (_) => ChangePasswordDialog(userId: detail.id),
-                    );
-                  },
-                  borderRadius: BorderRadius.circular(10),
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(vertical: 11),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF6B7280),
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: const Center(
-                      child: Text(
-                        'Change Password',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.w700,
+                child: Builder(
+                  builder: (context) => InkWell(
+                    onTap: () {
+                      showDialog(
+                        context: context,
+                        builder: (_) => ChangePasswordDialog(userId: detail.id),
+                      );
+                    },
+                    borderRadius: BorderRadius.circular(10),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(vertical: 11),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF6B7280),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: const Center(
+                        child: Text(
+                          'Change Password',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.w700,
+                          ),
                         ),
                       ),
                     ),
@@ -968,50 +895,6 @@ class _ProfileEditableField extends StatelessWidget {
         suffixIcon: suffixIcon != null
             ? Icon(suffixIcon, size: 20, color: const Color(0xFF64748B))
             : null,
-        filled: true,
-        fillColor: const Color(0xFFF8FAFC),
-        contentPadding: const EdgeInsets.symmetric(
-          horizontal: 12,
-          vertical: 12,
-        ),
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(10),
-          borderSide: const BorderSide(color: Color(0xFFD5DCE5)),
-        ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(10),
-          borderSide: const BorderSide(color: Color(0xFFD5DCE5)),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(10),
-          borderSide: const BorderSide(color: Color(0xFF667EEA)),
-        ),
-      ),
-    );
-  }
-}
-
-class _ProfileTextField extends StatelessWidget {
-  const _ProfileTextField({
-    required this.initialValue,
-    this.hintText,
-    this.readOnly = false,
-    this.maxLines = 1,
-  });
-
-  final String initialValue;
-  final String? hintText;
-  final bool readOnly;
-  final int maxLines;
-
-  @override
-  Widget build(BuildContext context) {
-    return TextFormField(
-      initialValue: initialValue,
-      readOnly: readOnly,
-      maxLines: maxLines,
-      decoration: InputDecoration(
-        hintText: hintText,
         filled: true,
         fillColor: const Color(0xFFF8FAFC),
         contentPadding: const EdgeInsets.symmetric(
