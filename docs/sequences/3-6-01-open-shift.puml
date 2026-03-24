@@ -1,15 +1,17 @@
 @startuml
-!include _seq-style.puml
-title 3.6.2 OpenShift
+skinparam shadowing false
+skinparam responseMessageBelowArrow true
+skinparam sequenceMessageAlign center
+skinparam maxMessageSize 180
+skinparam sequenceParticipant underline false
+skinparam stereotypePosition top
+
 
 actor "Cashier" as C
 boundary "POS / Open shift UI" as UI <<boundary>>
 
 == Open shift ==
-note over UI
-  No POST /shifts in current backend.
-  Flutter: persist shift state (time, opening cash)\nin state/local storage for transactions.
-end note
+
 C -> UI: enter opening cash, confirm
 activate UI
 UI -> UI: create local ShiftSession

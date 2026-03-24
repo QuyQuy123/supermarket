@@ -1,6 +1,11 @@
 @startuml
-!include _seq-style.puml
-title 3.1.13 UpdateUserAccount
+skinparam shadowing false
+skinparam responseMessageBelowArrow true
+skinparam sequenceMessageAlign center
+skinparam maxMessageSize 180
+skinparam sequenceParticipant underline false
+skinparam stereotypePosition top
+
 
 actor "Admin" as A
 boundary "Edit user UI" as UI <<boundary>>

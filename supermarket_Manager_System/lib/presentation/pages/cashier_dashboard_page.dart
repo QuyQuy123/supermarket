@@ -3,12 +3,20 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:supermarket_manager_system/data/services/customer_api_service.dart';
 import 'package:supermarket_manager_system/data/services/order_api_service.dart';
+import 'package:supermarket_manager_system/data/services/discount_api_service.dart';
+import 'package:supermarket_manager_system/data/services/product_api_service.dart';
+import 'package:supermarket_manager_system/domain/models/checkout_invoice.dart';
+import 'package:supermarket_manager_system/domain/models/discount.dart';
+import 'package:supermarket_manager_system/domain/models/product_list_item.dart';
+import 'package:supermarket_manager_system/presentation/widgets/cashier_discount_select_dialog.dart';
+import 'package:supermarket_manager_system/presentation/widgets/cashier_product_search_dialog.dart';
 import 'package:supermarket_manager_system/domain/models/customer_list_item.dart';
 import 'package:supermarket_manager_system/domain/models/order_detail.dart';
 import 'package:supermarket_manager_system/domain/models/order_list_item.dart';
 import 'package:supermarket_manager_system/domain/models/user_detail.dart';
 import 'package:supermarket_manager_system/presentation/pages/profile_content_page.dart';
 import 'package:supermarket_manager_system/presentation/widgets/order_detail_card.dart';
+import 'package:supermarket_manager_system/utils/app_session.dart';
 
 enum _CashierTab {
   scanner,
@@ -47,7 +55,31 @@ class _CashierDashboardPageState extends State<CashierDashboardPage> {
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   final _customerApiService = CustomerApiService();
   final _orderApiService = OrderApiService();
+  final _productApiService = ProductApiService();
+  final _discountApiService = DiscountApiService();
   final TextEditingController _totalCashEndController = TextEditingController();
+  /// Barcode scanner (desktop) — customer + cart total for "Add customer for points".
+  final TextEditingController _scannerCustomerNameController =
+      TextEditingController();
+  final TextEditingController _scannerCustomerPhoneController =
+      TextEditingController();
+  /// Grand total for current sale; updated from cart lines.
+  double _scannerGrandTotal = 0;
+  final TextEditingController _scannerBarcodeController =
+      TextEditingController();
+  final TextEditingController _scannerSearchQueryController =
+      TextEditingController();
+  List<ProductListItem> _productCatalog = [];
+  bool _loadingProductCatalog = false;
+  final List<_ScannerCartLine> _scannerCart = [];
+  Discount? _selectedScannerDiscount;
+  String? _paymentMethod;
+  final TextEditingController _amountTenderController = TextEditingController();
+  bool _loadingDiscounts = false;
+  CustomerListItem? _scannerMatchedCustomer;
+  Timer? _phoneLookupDebounce;
+  bool _creatingInvoice = false;
+  bool _formattingTender = false;
 
   late DateTime _now;
   Timer? _clockTimer;
@@ -87,6 +119,7 @@ class _CashierDashboardPageState extends State<CashierDashboardPage> {
     if (_selectedTab == _CashierTab.orderDetail && _selectedOrderId != null) {
       _loadOrderDetail(_selectedOrderId!);
     }
+    _scannerCustomerPhoneController.addListener(_scheduleScannerPhoneLookup);
   }
 
   @override
@@ -114,7 +147,14 @@ class _CashierDashboardPageState extends State<CashierDashboardPage> {
   @override
   void dispose() {
     _clockTimer?.cancel();
+    _phoneLookupDebounce?.cancel();
     _totalCashEndController.dispose();
+    _scannerCustomerNameController.dispose();
+    _scannerCustomerPhoneController.removeListener(_scheduleScannerPhoneLookup);
+    _scannerCustomerPhoneController.dispose();
+    _scannerBarcodeController.dispose();
+    _scannerSearchQueryController.dispose();
+    _amountTenderController.dispose();
     super.dispose();
   }
 
@@ -196,6 +236,7 @@ class _CashierDashboardPageState extends State<CashierDashboardPage> {
         _customers = data;
         _isLoadingCustomers = false;
       });
+      _syncScannerCustomerByPhoneLocal();
     } catch (error) {
       if (!mounted) {
         return;
@@ -289,6 +330,741 @@ class _CashierDashboardPageState extends State<CashierDashboardPage> {
       '${_two(_now.hour)}:${_two(_now.minute)}:${_two(_now.second)}';
   String _money(double amount) => '${amount.toStringAsFixed(0)}đ';
   String _discountText(double p) => p <= 0 ? '—' : '${p.toStringAsFixed(0)}%';
+  String _formatTenderDisplay(double amount) => formatVndPrice(amount);
+
+  void _formatAmountTenderInput() {
+    if (_formattingTender) {
+      return;
+    }
+    final digits = _amountTenderController.text.replaceAll(RegExp(r'[^\d]'), '');
+    if (digits.isEmpty) {
+      _formattingTender = true;
+      _amountTenderController.value = const TextEditingValue(text: '');
+      _formattingTender = false;
+      return;
+    }
+    final value = double.tryParse(digits) ?? 0;
+    final formatted = _formatTenderDisplay(value);
+    _formattingTender = true;
+    _amountTenderController.value = TextEditingValue(
+      text: formatted,
+      selection: TextSelection.collapsed(offset: formatted.length),
+    );
+    _formattingTender = false;
+  }
+
+  String _normalizePhone(String raw) => raw.replaceAll(RegExp(r'[^\d]'), '');
+
+  void _syncScannerCustomerByPhoneLocal() {
+    final normalized = _normalizePhone(_scannerCustomerPhoneController.text);
+    CustomerListItem? matched;
+    if (normalized.isNotEmpty) {
+      for (final c in _customers) {
+        if (_normalizePhone(c.phone) == normalized) {
+          matched = c;
+          break;
+        }
+      }
+    }
+    if (!mounted) {
+      return;
+    }
+    setState(() {
+      _scannerMatchedCustomer = matched;
+    });
+  }
+
+  void _scheduleScannerPhoneLookup() {
+    _syncScannerCustomerByPhoneLocal();
+    _phoneLookupDebounce?.cancel();
+    final phone = _scannerCustomerPhoneController.text.trim();
+    if (_normalizePhone(phone).length < 8) {
+      return;
+    }
+    _phoneLookupDebounce = Timer(const Duration(milliseconds: 350), () {
+      _lookupCustomerByPhoneRemote(phone);
+    });
+  }
+
+  Future<void> _lookupCustomerByPhoneRemote(String phoneSnapshot) async {
+    try {
+      final customer = await _customerApiService.getCustomerByPhone(phoneSnapshot);
+      if (!mounted) {
+        return;
+      }
+      final currentNormalized = _normalizePhone(
+        _scannerCustomerPhoneController.text,
+      );
+      if (currentNormalized != _normalizePhone(phoneSnapshot)) {
+        return;
+      }
+      setState(() {
+        _scannerMatchedCustomer = customer;
+      });
+      _syncAmountTenderWithPayable();
+      if (_scannerCustomerNameController.text.trim().isEmpty) {
+        _scannerCustomerNameController.text = customer.name;
+      }
+    } catch (_) {
+      // Keep local match result; API 404 is expected for unknown phone.
+    }
+  }
+
+  int get _scannerLoyaltyPoints => _scannerMatchedCustomer?.points ?? 0;
+  double get _scannerLoyaltyDiscountPercent =>
+      (_scannerLoyaltyPoints ~/ 1000).toDouble();
+  double get _scannerCustomerDiscountPercent =>
+      (_scannerMatchedCustomer?.discountPercent ?? 0).toDouble();
+  double get _scannerMemberDiscountPercent => (_scannerCustomerDiscountPercent >
+          _scannerLoyaltyDiscountPercent)
+      ? _scannerCustomerDiscountPercent
+      : _scannerLoyaltyDiscountPercent;
+
+  void _recalcScannerGrandTotal() {
+    _scannerGrandTotal = _scannerCart.fold<double>(
+      0,
+      (sum, line) => sum + line.product.sellingPrice * line.quantity,
+    );
+  }
+
+  /// Amount customer pays after percent discount (subtotal = [_scannerGrandTotal]).
+  double get _scannerPayableTotal {
+    final pct = _scannerCombinedDiscountPercent;
+    return _scannerGrandTotal * (1 - pct / 100);
+  }
+
+  double get _scannerCombinedDiscountPercent =>
+      (((_selectedScannerDiscount?.percent ?? 0) + _scannerMemberDiscountPercent)
+              .clamp(0, 100))
+          .toDouble();
+
+  void _syncAmountTenderWithPayable() {
+    final payable = _scannerPayableTotal;
+    _amountTenderController.text =
+        payable > 0 ? _formatTenderDisplay(payable) : '';
+  }
+
+  void _syncScannerDiscountAfterTotalChange() {
+    final d = _selectedScannerDiscount;
+    if (d != null &&
+        !isDiscountApplicableForOrder(d, _scannerGrandTotal)) {
+      _selectedScannerDiscount = null;
+    }
+    _syncAmountTenderWithPayable();
+  }
+
+  Future<void> _openSelectDiscountDialog() async {
+    if (_scannerGrandTotal <= 0) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Add products to the cart before selecting a discount.'),
+        ),
+      );
+      return;
+    }
+    setState(() => _loadingDiscounts = true);
+    try {
+      final all = await _discountApiService.getDiscounts();
+      if (!mounted) {
+        return;
+      }
+      final applicable = all
+          .where((d) => isDiscountApplicableForOrder(d, _scannerGrandTotal))
+          .toList();
+      setState(() => _loadingDiscounts = false);
+      final picked = await showCashierDiscountSelectDialog(
+        context,
+        applicableDiscounts: applicable,
+      );
+      if (!mounted) {
+        return;
+      }
+      setState(() => _selectedScannerDiscount = picked);
+      _syncAmountTenderWithPayable();
+    } catch (error) {
+      if (!mounted) {
+        return;
+      }
+      setState(() => _loadingDiscounts = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            error.toString().replaceFirst('Exception: ', ''),
+          ),
+        ),
+      );
+    }
+  }
+
+  Future<void> _onGenerateInvoice() async {
+    if (_scannerCart.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Cart is empty.')),
+      );
+      return;
+    }
+    if (_paymentMethod == null || _paymentMethod!.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please select a payment method.')),
+      );
+      return;
+    }
+    final tenderDigits = _amountTenderController.text
+        .trim()
+        .replaceAll(RegExp(r'[^\d]'), '');
+    final tender = double.tryParse(tenderDigits);
+    final payable = _scannerPayableTotal;
+    if (tender == null || tender < payable) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Amount tender must be at least ${payable.toStringAsFixed(0)}đ.',
+          ),
+        ),
+      );
+      return;
+    }
+    if (_creatingInvoice) {
+      return;
+    }
+
+    setState(() => _creatingInvoice = true);
+    try {
+      final cashierId = AppSession.instance.userId ?? widget.userId;
+      final invoice = await _orderApiService.checkout(
+        cashierId: cashierId,
+        customerName: _scannerCustomerNameController.text.trim(),
+        customerPhone: _scannerCustomerPhoneController.text.trim(),
+        paymentMethod: _paymentMethod!,
+        paid: tender,
+        discountPercent: _scannerCombinedDiscountPercent,
+        discountId: _selectedScannerDiscount?.id,
+        items: _scannerCart
+            .map(
+              (l) => {
+                'productId': l.product.id,
+                'qty': l.quantity,
+              },
+            )
+            .toList(),
+      );
+      if (!mounted) {
+        return;
+      }
+      await _loadCustomers();
+      if (!mounted) {
+        return;
+      }
+      await showDialog<void>(
+        context: context,
+        barrierColor: Colors.black54,
+        builder: (_) => _InvoicePreviewDialog(invoice: invoice),
+      );
+      if (!mounted) {
+        return;
+      }
+      _resetScannerForNewInvoice();
+      await _refreshProductCatalog();
+    } catch (error) {
+      if (!mounted) {
+        return;
+      }
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            error.toString().replaceFirst('Exception: ', ''),
+          ),
+        ),
+      );
+    } finally {
+      if (mounted) {
+        setState(() => _creatingInvoice = false);
+      }
+    }
+  }
+
+  Future<bool> _ensureProductCatalogLoaded() async {
+    if (_productCatalog.isNotEmpty) {
+      return true;
+    }
+    setState(() => _loadingProductCatalog = true);
+    try {
+      final list = await _productApiService.getProducts();
+      if (!mounted) {
+        return false;
+      }
+      setState(() {
+        _productCatalog = list;
+        _loadingProductCatalog = false;
+      });
+      return true;
+    } catch (error) {
+      if (!mounted) {
+        return false;
+      }
+      setState(() => _loadingProductCatalog = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            error.toString().replaceFirst('Exception: ', ''),
+          ),
+        ),
+      );
+      return false;
+    }
+  }
+
+  Future<void> _refreshProductCatalog() async {
+    try {
+      final list = await _productApiService.getProducts();
+      if (!mounted) {
+        return;
+      }
+      setState(() {
+        _productCatalog = list;
+      });
+    } catch (_) {
+      // Keep current cache if refresh fails.
+    }
+  }
+
+  void _resetScannerForNewInvoice() {
+    setState(() {
+      _scannerCart.clear();
+      _scannerGrandTotal = 0;
+      _selectedScannerDiscount = null;
+      _paymentMethod = null;
+      _scannerMatchedCustomer = null;
+      _amountTenderController.clear();
+      _scannerBarcodeController.clear();
+      _scannerSearchQueryController.clear();
+      _scannerCustomerNameController.clear();
+      _scannerCustomerPhoneController.clear();
+    });
+  }
+
+  List<ProductListItem> _filterProductsForScanner() {
+    final bc = _scannerBarcodeController.text.trim().toLowerCase();
+    final nq = _scannerSearchQueryController.text.trim().toLowerCase();
+    if (bc.isEmpty && nq.isEmpty) {
+      return List<ProductListItem>.from(_productCatalog);
+    }
+    return _productCatalog.where((p) {
+      final code = p.barcode.toLowerCase();
+      final name = p.productName.toLowerCase();
+      if (bc.isNotEmpty && nq.isNotEmpty) {
+        final matchBarcodeField =
+            code.contains(bc) || name.contains(bc);
+        final matchNameField = name.contains(nq) || code.contains(nq);
+        return matchBarcodeField || matchNameField;
+      }
+      if (bc.isNotEmpty) {
+        return code.contains(bc) || name.contains(bc);
+      }
+      return name.contains(nq) || code.contains(nq);
+    }).toList();
+  }
+
+  /// [requireQuery]: true = user must type barcode or name (Search). false = allow showing all products (Add to cart).
+  Future<void> _openScannerProductPicker({required bool requireQuery}) async {
+    final bc = _scannerBarcodeController.text.trim();
+    final nq = _scannerSearchQueryController.text.trim();
+    if (requireQuery && bc.isEmpty && nq.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Enter a barcode or product name to search.'),
+        ),
+      );
+      return;
+    }
+    if (_loadingProductCatalog) {
+      return;
+    }
+    final ok = await _ensureProductCatalogLoaded();
+    if (!ok || !mounted) {
+      return;
+    }
+    final filtered = _filterProductsForScanner();
+    final title = requireQuery && (bc.isNotEmpty || nq.isNotEmpty)
+        ? 'Search results (${filtered.length})'
+        : 'Products (${filtered.length})';
+    final picked = await showCashierProductSearchDialog(
+      context,
+      products: filtered,
+      title: title,
+    );
+    if (picked != null && mounted) {
+      _addProductToScannerCart(picked);
+    }
+  }
+
+  void _addProductToScannerCart(ProductListItem p) {
+    if (p.inStock <= 0) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Product is out of stock.')),
+      );
+      return;
+    }
+    final idx = _scannerCart.indexWhere((l) => l.product.id == p.id);
+    if (idx >= 0) {
+      final line = _scannerCart[idx];
+      if (line.quantity >= p.inStock) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'Maximum in stock for this product is ${p.inStock}.',
+            ),
+          ),
+        );
+        return;
+      }
+      setState(() {
+        line.quantity++;
+        _recalcScannerGrandTotal();
+        _syncScannerDiscountAfterTotalChange();
+      });
+    } else {
+      setState(() {
+        _scannerCart.add(_ScannerCartLine(product: p, quantity: 1));
+        _recalcScannerGrandTotal();
+        _syncScannerDiscountAfterTotalChange();
+      });
+    }
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('Added: ${p.productName}')),
+    );
+  }
+
+  void _changeScannerCartQty(int index, int delta) {
+    if (index < 0 || index >= _scannerCart.length) {
+      return;
+    }
+    final line = _scannerCart[index];
+    final maxQ = line.product.inStock;
+    final next = line.quantity + delta;
+    if (next < 1) {
+      setState(() {
+        _scannerCart.removeAt(index);
+        _recalcScannerGrandTotal();
+        _syncScannerDiscountAfterTotalChange();
+      });
+      return;
+    }
+    if (next > maxQ) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Maximum in stock is $maxQ.'),
+        ),
+      );
+      return;
+    }
+    setState(() {
+      line.quantity = next;
+      _recalcScannerGrandTotal();
+      _syncScannerDiscountAfterTotalChange();
+    });
+  }
+
+  void _removeScannerCartLine(int index) {
+    if (index < 0 || index >= _scannerCart.length) {
+      return;
+    }
+    setState(() {
+      _scannerCart.removeAt(index);
+      _recalcScannerGrandTotal();
+      _syncScannerDiscountAfterTotalChange();
+    });
+  }
+
+  Future<void> _openAddCustomerForPointsDialog() async {
+    final nameCtrl = TextEditingController(
+      text: _scannerCustomerNameController.text.trim(),
+    );
+    final phoneCtrl = TextEditingController(
+      text: _scannerCustomerPhoneController.text.trim(),
+    );
+    final payable = _scannerPayableTotal;
+    final amountCtrl = TextEditingController(
+      text: payable > 0 ? payable.toStringAsFixed(0) : '',
+    );
+
+    try {
+      await showDialog<void>(
+        context: context,
+        barrierColor: Colors.black54,
+        builder: (dialogContext) {
+          return Dialog(
+            backgroundColor: Colors.transparent,
+            insetPadding: const EdgeInsets.symmetric(
+              horizontal: 24,
+              vertical: 24,
+            ),
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 420),
+              child: Material(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(14),
+                clipBehavior: Clip.antiAlias,
+                elevation: 8,
+                shadowColor: Colors.black26,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.fromLTRB(20, 16, 12, 16),
+                      decoration: const BoxDecoration(
+                        color: Color(0xFFFAFBFC),
+                        border: Border(
+                          bottom: BorderSide(color: Color(0xFFE8EAED)),
+                        ),
+                      ),
+                      child: Row(
+                        children: [
+                          const Expanded(
+                            child: Text(
+                              'Add Customer',
+                              style: TextStyle(
+                                fontSize: 20,
+                                fontWeight: FontWeight.w700,
+                                color: Color(0xFF1A1D21),
+                              ),
+                            ),
+                          ),
+                          IconButton(
+                            onPressed: () =>
+                                Navigator.of(dialogContext).pop(),
+                            style: IconButton.styleFrom(
+                              backgroundColor: const Color(0xFFF3F4F6),
+                              foregroundColor: const Color(0xFF6B7280),
+                            ),
+                            icon: const Icon(Icons.close),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.all(20),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          _addCustomerField(
+                            label: 'Name',
+                            controller: nameCtrl,
+                            hint: 'Customer name',
+                          ),
+                          const SizedBox(height: 16),
+                          _addCustomerField(
+                            label: 'Phone',
+                            controller: phoneCtrl,
+                            hint: 'e.g. 0901234567',
+                            keyboardType: TextInputType.phone,
+                          ),
+                          const SizedBox(height: 16),
+                          _addCustomerField(
+                            label: 'Amount',
+                            controller: amountCtrl,
+                            hint: 'e.g. 1000000',
+                            keyboardType: TextInputType.number,
+                          ),
+                        ],
+                      ),
+                    ),
+                    Container(
+                      padding: const EdgeInsets.fromLTRB(20, 12, 20, 16),
+                      decoration: const BoxDecoration(
+                        border: Border(
+                          top: BorderSide(color: Color(0xFFE8EAED)),
+                        ),
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.end,
+                        children: [
+                          TextButton(
+                            onPressed: () =>
+                                Navigator.of(dialogContext).pop(),
+                            style: TextButton.styleFrom(
+                              backgroundColor: const Color(0xFFDC2626),
+                              foregroundColor: Colors.white,
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 18,
+                                vertical: 12,
+                              ),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                            ),
+                            child: const Text(
+                              'Cancel',
+                              style: TextStyle(fontWeight: FontWeight.w600),
+                            ),
+                          ),
+                          const SizedBox(width: 10),
+                          TextButton(
+                            onPressed: () async {
+                              final name = nameCtrl.text.trim();
+                              final phone = phoneCtrl.text.trim();
+                              final amount = double.tryParse(
+                                amountCtrl.text
+                                    .trim()
+                                    .replaceAll(',', '')
+                                    .replaceAll('đ', ''),
+                              );
+                              if (phone.isEmpty || amount == null || amount < 0) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                    content: Text(
+                                      'Phone and a valid Amount are required.',
+                                    ),
+                                  ),
+                                );
+                                return;
+                              }
+                              try {
+                                final normalizedPhone = _normalizePhone(phone);
+                                CustomerListItem? existing;
+                                for (final c in _customers) {
+                                  if (_normalizePhone(c.phone) == normalizedPhone) {
+                                    existing = c;
+                                    break;
+                                  }
+                                }
+                                final earnedPoints = (amount / 1000).floor();
+                                if (existing != null) {
+                                  await _customerApiService.updateCustomer(
+                                    customerId: existing.id,
+                                    name: name.isEmpty ? existing.name : name,
+                                    phone: existing.phone,
+                                    totalAmount: existing.totalAmount + amount,
+                                  );
+                                } else {
+                                  if (name.isEmpty) {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      const SnackBar(
+                                        content: Text(
+                                          'Name is required for a new customer.',
+                                        ),
+                                      ),
+                                    );
+                                    return;
+                                  }
+                                  await _customerApiService.createCustomer(
+                                    name: name,
+                                    phone: phone,
+                                    totalAmount: amount,
+                                  );
+                                }
+                                if (!mounted) return;
+                                if (dialogContext.mounted) {
+                                  Navigator.of(dialogContext).pop();
+                                }
+                                if (name.isNotEmpty) {
+                                  _scannerCustomerNameController.text = name;
+                                }
+                                _scannerCustomerPhoneController.text = phone;
+                                await _loadCustomers();
+                                if (!mounted) return;
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text(
+                                      existing != null
+                                          ? 'Added +$earnedPoints points to ${existing.phone}.'
+                                          : 'Customer created and +$earnedPoints points added.',
+                                    ),
+                                  ),
+                                );
+                              } catch (error) {
+                                if (!mounted) return;
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text(
+                                      error
+                                          .toString()
+                                          .replaceFirst('Exception: ', ''),
+                                    ),
+                                  ),
+                                );
+                              }
+                            },
+                            style: TextButton.styleFrom(
+                              backgroundColor: const Color(0xFF16A34A),
+                              foregroundColor: Colors.white,
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 18,
+                                vertical: 12,
+                              ),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                            ),
+                            child: const Text(
+                              'Submit',
+                              style: TextStyle(fontWeight: FontWeight.w600),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          );
+        },
+      );
+    } finally {
+      nameCtrl.dispose();
+      phoneCtrl.dispose();
+      amountCtrl.dispose();
+    }
+  }
+
+  Widget _addCustomerField({
+    required String label,
+    required TextEditingController controller,
+    required String hint,
+    TextInputType? keyboardType,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: const TextStyle(
+            fontSize: 13,
+            fontWeight: FontWeight.w600,
+            color: Color(0xFF374151),
+          ),
+        ),
+        const SizedBox(height: 6),
+        TextField(
+          controller: controller,
+          keyboardType: keyboardType,
+          decoration: InputDecoration(
+            hintText: hint,
+            filled: true,
+            fillColor: Colors.white,
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 14,
+              vertical: 12,
+            ),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(8),
+              borderSide: const BorderSide(color: Color(0xFFD1D5DB)),
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(8),
+              borderSide: const BorderSide(color: Color(0xFFD1D5DB)),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(8),
+              borderSide: const BorderSide(color: Color(0xFF667EEA), width: 1),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
 
   Future<void> _openCloseShiftDialog() async {
     final fullName = widget.fullName.isEmpty ? 'Cashier' : widget.fullName;
@@ -549,6 +1325,293 @@ class _CashierDashboardPageState extends State<CashierDashboardPage> {
     amountController.dispose();
   }
 
+  Widget _buildScannerCheckoutSection() {
+    final payable = _scannerPayableTotal;
+    final loyaltyPct = _scannerLoyaltyDiscountPercent;
+    final customerPct = _scannerCustomerDiscountPercent;
+    final memberPct = _scannerMemberDiscountPercent;
+    final promoPct = _selectedScannerDiscount?.percent ?? 0;
+    final combinedPct = _scannerCombinedDiscountPercent;
+    final points = _scannerLoyaltyPoints;
+    final matchedPhone = _scannerMatchedCustomer?.phone ?? '—';
+    final discountLabel = _selectedScannerDiscount == null
+        ? 'None'
+        : '${_selectedScannerDiscount!.name} '
+            '(${_selectedScannerDiscount!.percent.toStringAsFixed(0)}%)';
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            const Text(
+              'Grand Total',
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w700,
+                color: Color(0xFF1A1D21),
+              ),
+            ),
+            const SizedBox(width: 12),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+              constraints: const BoxConstraints(minWidth: 140),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: const Color(0xFFD1D5DB)),
+              ),
+              child: Text(
+                formatVndPrice(_scannerGrandTotal),
+                style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w700,
+                  color: Color(0xFF1A1D21),
+                ),
+              ),
+            ),
+          ],
+        ),
+        if (_selectedScannerDiscount != null) ...[
+          const SizedBox(height: 6),
+          Text(
+            'Amount due: ${formatVndPrice(payable)}',
+            style: const TextStyle(
+              fontSize: 15,
+              fontWeight: FontWeight.w700,
+              color: Color(0xFF0D9488),
+            ),
+          ),
+        ],
+        const SizedBox(height: 14),
+        Wrap(
+          spacing: 12,
+          runSpacing: 8,
+          crossAxisAlignment: WrapCrossAlignment.center,
+          children: [
+            SizedBox(
+              width: 240,
+              child: TextField(
+                controller: _scannerCustomerPhoneController,
+                keyboardType: TextInputType.phone,
+                decoration: const InputDecoration(
+                  labelText: 'Buyer Phone',
+                  hintText: 'Enter customer phone',
+                  isDense: true,
+                  filled: true,
+                  fillColor: Colors.white,
+                  border: OutlineInputBorder(),
+                ),
+              ),
+            ),
+            Text(
+              'Points: $points',
+              style: const TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w700,
+                color: Color(0xFF1A1D21),
+              ),
+            ),
+            Text(
+              'Loyalty discount: ${loyaltyPct.toStringAsFixed(0)}%',
+              style: const TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w700,
+                color: Color(0xFF0D9488),
+              ),
+            ),
+            Text(
+              'Customer discount: ${customerPct.toStringAsFixed(0)}%',
+              style: const TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w700,
+                color: Color(0xFF0D9488),
+              ),
+            ),
+            Text(
+              'Matched: $matchedPhone',
+              style: const TextStyle(
+                fontSize: 13,
+                color: Color(0xFF64748B),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 10),
+        Wrap(
+          spacing: 12,
+          runSpacing: 8,
+          crossAxisAlignment: WrapCrossAlignment.center,
+          children: [
+            const Text(
+              'Discount:',
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+                color: Color(0xFF374151),
+              ),
+            ),
+            Text(
+              discountLabel,
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+                color: _selectedScannerDiscount == null
+                    ? const Color(0xFF0D9488)
+                    : const Color(0xFF0D9488),
+              ),
+            ),
+            ElevatedButton(
+              onPressed: _loadingDiscounts ? null : _openSelectDiscountDialog,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF0D9488),
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+              ),
+              child: _loadingDiscounts
+                  ? const SizedBox(
+                      width: 18,
+                      height: 18,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: Colors.white,
+                      ),
+                    )
+                  : const Text(
+                      'Select Discount',
+                      style: TextStyle(fontWeight: FontWeight.w600),
+                    ),
+            ),
+            Text(
+              'Promo ${promoPct.toStringAsFixed(0)}% + Member ${memberPct.toStringAsFixed(0)}% = ${combinedPct.toStringAsFixed(0)}%',
+              style: const TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+                color: Color(0xFF475569),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 18),
+        LayoutBuilder(
+          builder: (context, constraints) {
+            final wide = constraints.maxWidth >= 900;
+            final paymentField = SizedBox(
+              width: wide ? 200 : double.infinity,
+              child: InputDecorator(
+                decoration: const InputDecoration(
+                  labelText: 'Payment Method',
+                  filled: true,
+                  fillColor: Colors.white,
+                  border: OutlineInputBorder(),
+                  isDense: true,
+                  contentPadding: EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 4,
+                  ),
+                ),
+                child: DropdownButtonHideUnderline(
+                  child: DropdownButton<String>(
+                    value: _paymentMethod,
+                    hint: const Text('Select...'),
+                    isExpanded: true,
+                    items: const [
+                      DropdownMenuItem(value: 'Cash', child: Text('Cash')),
+                      DropdownMenuItem(value: 'Card', child: Text('Card')),
+                      DropdownMenuItem(
+                        value: 'Transfer',
+                        child: Text('Transfer'),
+                      ),
+                      DropdownMenuItem(
+                        value: 'E-wallet',
+                        child: Text('E-wallet'),
+                      ),
+                    ],
+                    onChanged: (v) => setState(() => _paymentMethod = v),
+                  ),
+                ),
+              ),
+            );
+            final tenderField = SizedBox(
+              width: wide ? 220 : double.infinity,
+              child: TextField(
+                controller: _amountTenderController,
+                keyboardType: TextInputType.number,
+                onChanged: (_) => _formatAmountTenderInput(),
+                decoration: const InputDecoration(
+                  labelText: 'Amount Tender',
+                  hintText: 'Enter amount paid',
+                  filled: true,
+                  fillColor: Colors.white,
+                  border: OutlineInputBorder(),
+                  isDense: true,
+                ),
+              ),
+            );
+            final invoiceBtn = ElevatedButton(
+              onPressed: _creatingInvoice ? null : _onGenerateInvoice,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF1E3A5F),
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 28,
+                  vertical: 16,
+                ),
+              ),
+              child: _creatingInvoice
+                  ? const SizedBox(
+                      width: 18,
+                      height: 18,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: Colors.white,
+                      ),
+                    )
+                  : const Text(
+                      'Generate Invoice',
+                      style: TextStyle(fontWeight: FontWeight.w700),
+                    ),
+            );
+            if (wide) {
+              return Row(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  paymentField,
+                  const SizedBox(width: 12),
+                  tenderField,
+                  const Spacer(),
+                  invoiceBtn,
+                ],
+              );
+            }
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                paymentField,
+                const SizedBox(height: 10),
+                tenderField,
+                const SizedBox(height: 12),
+                invoiceBtn,
+              ],
+            );
+          },
+        ),
+        const SizedBox(height: 24),
+        Center(
+          child: Text(
+            'POINT OF SALES SYSTEM BY KODEMAGAZY',
+            style: TextStyle(
+              fontSize: 12,
+              color: const Color(0xFF1A1D21).withValues(alpha: 0.08),
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
   Widget _buildBody({required bool isCompact}) {
     switch (_selectedTab) {
       case _CashierTab.scanner:
@@ -564,13 +1627,15 @@ class _CashierDashboardPageState extends State<CashierDashboardPage> {
                   _scannerInputBox(
                     label: 'Customer Name',
                     hint: 'Optional [Required for credit sales]',
+                    controller: _scannerCustomerNameController,
                   ),
                   _scannerInputBox(
                     label: 'Phone',
                     hint: 'Optional [Required for credit sales]',
+                    controller: _scannerCustomerPhoneController,
                   ),
                   ElevatedButton(
-                    onPressed: () {},
+                    onPressed: _openAddCustomerForPointsDialog,
                     style: ElevatedButton.styleFrom(
                       backgroundColor: const Color(0xFF0D9488),
                       foregroundColor: Colors.white,
@@ -586,15 +1651,28 @@ class _CashierDashboardPageState extends State<CashierDashboardPage> {
                 crossAxisAlignment: WrapCrossAlignment.center,
                 children: [
                   ElevatedButton(
-                    onPressed: () {},
+                    onPressed: _loadingProductCatalog
+                        ? null
+                        : () => _openScannerProductPicker(requireQuery: false),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: const Color(0xFF16A34A),
                       foregroundColor: Colors.white,
                     ),
-                    child: const Text('+ Add To Cart'),
+                    child: _loadingProductCatalog
+                        ? const SizedBox(
+                            width: 18,
+                            height: 18,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: Colors.white,
+                            ),
+                          )
+                        : const Text('+ Add To Cart'),
                   ),
                   ElevatedButton(
-                    onPressed: () {},
+                    onPressed: _loadingProductCatalog
+                        ? null
+                        : () => _openScannerProductPicker(requireQuery: true),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: const Color(0xFF0D9488),
                       foregroundColor: Colors.white,
@@ -604,22 +1682,39 @@ class _CashierDashboardPageState extends State<CashierDashboardPage> {
                   SizedBox(
                     width: 220,
                     child: TextField(
+                      controller: _scannerBarcodeController,
                       decoration: const InputDecoration(
                         hintText: 'Scan or enter barcode...',
                         isDense: true,
                         border: OutlineInputBorder(),
+                      ),
+                      textInputAction: TextInputAction.search,
+                      onSubmitted: (_) => _openScannerProductPicker(
+                        requireQuery: true,
                       ),
                     ),
                   ),
                   SizedBox(
                     width: 260,
                     child: TextField(
+                      controller: _scannerSearchQueryController,
                       decoration: const InputDecoration(
                         hintText: 'Search by name or code...',
                         isDense: true,
                         border: OutlineInputBorder(),
                       ),
+                      textInputAction: TextInputAction.search,
+                      onSubmitted: (_) => _openScannerProductPicker(
+                        requireQuery: true,
+                      ),
                     ),
+                  ),
+                  OutlinedButton.icon(
+                    onPressed: _loadingProductCatalog
+                        ? null
+                        : () => _openScannerProductPicker(requireQuery: true),
+                    icon: const Icon(Icons.search, size: 18),
+                    label: const Text('Search'),
                   ),
                 ],
               ),
@@ -640,40 +1735,144 @@ class _CashierDashboardPageState extends State<CashierDashboardPage> {
                       DataColumn(label: Text('Product Name')),
                       DataColumn(label: Text('Stock Qty')),
                       DataColumn(label: Text('Unit Price')),
-                      DataColumn(label: Text('Qty')),
+                      DataColumn(
+                        label: Center(
+                          child: Text(
+                            'Qty',
+                            style: TextStyle(fontWeight: FontWeight.w600),
+                          ),
+                        ),
+                      ),
                       DataColumn(label: Text('Subtotal')),
                       DataColumn(label: Text('')),
                     ],
-                    rows: const [
-                      DataRow(
-                        cells: [
-                          DataCell(
-                            Text('No products. Scan barcode or search to add.'),
-                          ),
-                          DataCell(Text('-')),
-                          DataCell(Text('-')),
-                          DataCell(Text('-')),
-                          DataCell(Text('-')),
-                          DataCell(Text('-')),
-                        ],
-                      ),
-                    ],
+                    rows: _scannerCart.isEmpty
+                        ? const [
+                            DataRow(
+                              cells: [
+                                DataCell(
+                                  Text(
+                                    'No products. Scan barcode or search to add.',
+                                  ),
+                                ),
+                                DataCell(Text('-')),
+                                DataCell(Text('-')),
+                                DataCell(Text('-')),
+                                DataCell(Text('-')),
+                                DataCell(Text('-')),
+                              ],
+                            ),
+                          ]
+                        : _scannerCart.asMap().entries.map((entry) {
+                            final index = entry.key;
+                            final line = entry.value;
+                            final p = line.product;
+                            final sub = p.sellingPrice * line.quantity;
+                            return DataRow(
+                              cells: [
+                                DataCell(Text(p.productName)),
+                                DataCell(Text('${p.inStock}')),
+                                DataCell(Text(formatVndPrice(p.sellingPrice))),
+                                DataCell(
+                                  Align(
+                                    alignment: Alignment.center,
+                                    child: SizedBox(
+                                      width: 128,
+                                      height: 40,
+                                      child: Row(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.center,
+                                        children: [
+                                          SizedBox(
+                                            width: 40,
+                                            height: 40,
+                                            child: IconButton(
+                                              padding: EdgeInsets.zero,
+                                              constraints: const BoxConstraints(
+                                                minWidth: 40,
+                                                minHeight: 40,
+                                                maxWidth: 40,
+                                                maxHeight: 40,
+                                              ),
+                                              style: IconButton.styleFrom(
+                                                tapTargetSize: MaterialTapTargetSize
+                                                    .shrinkWrap,
+                                              ),
+                                              onPressed: () =>
+                                                  _changeScannerCartQty(
+                                                    index,
+                                                    -1,
+                                                  ),
+                                              icon: const Icon(
+                                                Icons.remove_circle_outline,
+                                                size: 24,
+                                              ),
+                                            ),
+                                          ),
+                                          Expanded(
+                                            child: Center(
+                                              child: Text(
+                                                '${line.quantity}',
+                                                textAlign: TextAlign.center,
+                                                style: const TextStyle(
+                                                  fontSize: 15,
+                                                  fontWeight: FontWeight.w700,
+                                                  height: 1,
+                                                ),
+                                              ),
+                                            ),
+                                          ),
+                                          SizedBox(
+                                            width: 40,
+                                            height: 40,
+                                            child: IconButton(
+                                              padding: EdgeInsets.zero,
+                                              constraints: const BoxConstraints(
+                                                minWidth: 40,
+                                                minHeight: 40,
+                                                maxWidth: 40,
+                                                maxHeight: 40,
+                                              ),
+                                              style: IconButton.styleFrom(
+                                                tapTargetSize: MaterialTapTargetSize
+                                                    .shrinkWrap,
+                                              ),
+                                              onPressed: () =>
+                                                  _changeScannerCartQty(
+                                                    index,
+                                                    1,
+                                                  ),
+                                              icon: const Icon(
+                                                Icons.add_circle_outline,
+                                                size: 24,
+                                              ),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                                DataCell(Text(formatVndPrice(sub))),
+                                DataCell(
+                                  IconButton(
+                                    onPressed: () =>
+                                        _removeScannerCartLine(index),
+                                    icon: const Icon(
+                                      Icons.delete_outline,
+                                      color: Color(0xFFDC2626),
+                                    ),
+                                    tooltip: 'Remove',
+                                  ),
+                                ),
+                              ],
+                            );
+                          }).toList(),
                   ),
                 ),
               ),
               const SizedBox(height: 14),
-              const Row(
-                children: [
-                  Text(
-                    'Grand Total: ',
-                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
-                  ),
-                  Text(
-                    '0đ',
-                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
-                  ),
-                ],
-              ),
+              _buildScannerCheckoutSection(),
             ],
           ),
         );
@@ -1105,16 +2304,238 @@ class _CashierDashboardPageState extends State<CashierDashboardPage> {
     );
   }
 
-  Widget _scannerInputBox({required String label, required String hint}) {
+  Widget _scannerInputBox({
+    required String label,
+    required String hint,
+    required TextEditingController controller,
+  }) {
     return SizedBox(
       width: 280,
       child: TextField(
+        controller: controller,
         decoration: InputDecoration(
           labelText: label,
           hintText: hint,
           border: const OutlineInputBorder(),
           isDense: true,
         ),
+      ),
+    );
+  }
+}
+
+class _ScannerCartLine {
+  _ScannerCartLine({required this.product, this.quantity = 1});
+
+  final ProductListItem product;
+  int quantity;
+}
+
+class _InvoicePreviewDialog extends StatelessWidget {
+  const _InvoicePreviewDialog({required this.invoice});
+
+  final CheckoutInvoice invoice;
+
+  @override
+  Widget build(BuildContext context) {
+    return Dialog(
+      insetPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+      backgroundColor: Colors.transparent,
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 520),
+        child: Container(
+          padding: const EdgeInsets.all(18),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(10),
+            border: Border.all(color: const Color(0xFFE5E7EB)),
+          ),
+          child: DefaultTextStyle(
+            style: const TextStyle(
+              fontFamily: 'monospace',
+              color: Color(0xFF1A1D21),
+              fontSize: 13,
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Row(
+                  children: [
+                    const Expanded(
+                      child: Text(
+                        'Sales Invoice',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ),
+                    IconButton(
+                      onPressed: () => Navigator.of(context).pop(),
+                      icon: const Icon(Icons.close),
+                    ),
+                  ],
+                ),
+                Flexible(
+                  child: SingleChildScrollView(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        const Center(
+                          child: Text(
+                            'KODEMADEEAZY',
+                            style: TextStyle(fontWeight: FontWeight.w700),
+                          ),
+                        ),
+                        const SizedBox(height: 6),
+                        const Center(
+                          child: Text(
+                            'SMS SYSTEM',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 14),
+                        const Center(
+                          child: Text(
+                            'SALES INVOICE',
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 14),
+                        _InvoiceInfoRow(label: 'SALES POINT', value: invoice.salesPoint),
+                        _InvoiceInfoRow(label: 'CASHIER', value: invoice.cashierName),
+                        _InvoiceInfoRow(label: 'INVOICE NO', value: invoice.orderNo),
+                        _InvoiceInfoRow(label: 'CUSTOMER', value: invoice.customerName),
+                        _InvoiceInfoRow(label: 'PHONE', value: invoice.customerPhone),
+                        _InvoiceInfoRow(label: 'DATE', value: invoice.orderDate),
+                        _InvoiceInfoRow(label: 'TIME', value: invoice.orderTime),
+                        const Divider(height: 22),
+                        const Row(
+                          children: [
+                            Expanded(
+                              flex: 6,
+                              child: Text('ITEM', style: TextStyle(fontWeight: FontWeight.w700)),
+                            ),
+                            Expanded(
+                              flex: 2,
+                              child: Text(
+                                'QTY',
+                                textAlign: TextAlign.center,
+                                style: TextStyle(fontWeight: FontWeight.w700),
+                              ),
+                            ),
+                            Expanded(
+                              flex: 4,
+                              child: Text(
+                                'AMOUNT',
+                                textAlign: TextAlign.right,
+                                style: TextStyle(fontWeight: FontWeight.w700),
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 6),
+                        ...invoice.items.map(
+                          (it) => Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 4),
+                            child: Row(
+                              children: [
+                                Expanded(
+                                  flex: 6,
+                                  child: Text(
+                                    '${it.productName}\nUnit: ${formatVndPrice(it.unitPrice)}',
+                                    style: const TextStyle(fontSize: 12),
+                                  ),
+                                ),
+                                Expanded(
+                                  flex: 2,
+                                  child: Text(
+                                    '${it.qty}',
+                                    textAlign: TextAlign.center,
+                                  ),
+                                ),
+                                Expanded(
+                                  flex: 4,
+                                  child: Text(
+                                    formatVndPrice(it.amount),
+                                    textAlign: TextAlign.right,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                        const Divider(height: 22),
+                        _InvoiceInfoRow(label: 'TOTAL', value: formatVndPrice(invoice.subtotal)),
+                        _InvoiceInfoRow(
+                          label: 'DISCOUNT (${invoice.discountPercent.toStringAsFixed(0)}%)',
+                          value: formatVndPrice(invoice.discountAmount),
+                        ),
+                        _InvoiceInfoRow(
+                          label: 'PAYABLE',
+                          value: formatVndPrice(invoice.totalPayable),
+                          bold: true,
+                        ),
+                        _InvoiceInfoRow(label: 'PAID', value: formatVndPrice(invoice.paid)),
+                        _InvoiceInfoRow(label: 'BALANCE', value: formatVndPrice(invoice.balance)),
+                        _InvoiceInfoRow(label: 'PAID VIA', value: invoice.paymentMethod),
+                        const SizedBox(height: 16),
+                        const Center(
+                          child: Text(
+                            'Copyright © 2023 KODE MADE EAZY POS',
+                            style: TextStyle(fontSize: 11, color: Color(0xFF6B7280)),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _InvoiceInfoRow extends StatelessWidget {
+  const _InvoiceInfoRow({
+    required this.label,
+    required this.value,
+    this.bold = false,
+  });
+
+  final String label;
+  final String value;
+  final bool bold;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 3),
+      child: Row(
+        children: [
+          Expanded(
+            flex: 4,
+            child: Text('$label: ', style: const TextStyle(fontWeight: FontWeight.w600)),
+          ),
+          Expanded(
+            flex: 6,
+            child: Text(
+              value,
+              textAlign: TextAlign.right,
+              style: TextStyle(fontWeight: bold ? FontWeight.w700 : FontWeight.w500),
+            ),
+          ),
+        ],
       ),
     );
   }

@@ -1,6 +1,10 @@
 @startuml
-!include _seq-style.puml
-title 3.4.3 ViewSupplierDetail
+skinparam shadowing false
+skinparam responseMessageBelowArrow true
+skinparam sequenceMessageAlign center
+skinparam maxMessageSize 180
+skinparam sequenceParticipant underline false
+skinparam stereotypePosition top
 
 actor "Admin / Manager" as A
 boundary "Suppliers UI" as UI <<boundary>>

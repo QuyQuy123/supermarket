@@ -1,0 +1,33 @@
+@startuml
+title 1.2 Package Diagram - Backend (Spring Boot)
+
+skinparam backgroundColor white
+skinparam shadowing false
+skinparam packageStyle folder
+skinparam ArrowColor #333333
+skinparam DefaultTextAlignment center
+skinparam linetype polyline
+
+left to right direction
+
+package "controller" as Controller
+package "service" as Service
+package "service.impl" as ServiceImpl
+package "repository" as Repository
+package "entity" as Entity
+package "dto.request" as DtoRequest
+package "dto.response" as DtoResponse
+package "config" as Config
+package "exception" as ExceptionPkg
+
+Controller ..> Service : call use case
+Controller ..> DtoRequest : request
+Controller ..> DtoResponse : response
+
+ServiceImpl ..|> Service : implements
+ServiceImpl ..> Repository : read/write
+Repository ..> Entity : persistence
+Config ..> Controller : security/cors
+ExceptionPkg ..> DtoResponse : error response
+
+@enduml

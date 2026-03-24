@@ -1,5 +1,7 @@
 package com.supermarket.supermarket.service;
 
+import com.supermarket.supermarket.dto.request.CreateOrderRequest;
+import com.supermarket.supermarket.dto.response.CheckoutOrderResponse;
 import com.supermarket.supermarket.dto.response.DashboardSummaryResponse;
 import com.supermarket.supermarket.dto.response.DashboardTransactionResponse;
 import com.supermarket.supermarket.dto.response.OrderListItemResponse;
@@ -16,6 +18,8 @@ public interface OrderService {
     DashboardSummaryResponse getDashboardSummary();
 
     List<DashboardTransactionResponse> getTodayTransactions();
+
+    CheckoutOrderResponse createOrder(CreateOrderRequest request);
 }
 
 

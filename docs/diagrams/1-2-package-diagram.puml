@@ -1,0 +1,29 @@
+@startuml
+title 1.2 Package Diagram
+
+skinparam backgroundColor white
+skinparam shadowing false
+skinparam packageStyle folder
+skinparam ArrowColor #333333
+skinparam DefaultTextAlignment center
+skinparam linetype polyline
+
+left to right direction
+
+package "bean" as Bean
+package "view" as View
+package "controller" as Controller
+package "filter" as Filter
+package "dao" as Dao
+package "util" as Util
+
+View ..> Bean
+Controller ..> Bean
+Dao ..> Bean
+
+Controller ..> Util
+Filter ..> Util
+Dao ..> Util
+Filter ..> Dao
+
+@enduml

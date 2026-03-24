@@ -10,6 +10,7 @@ import 'package:supermarket_manager_system/presentation/pages/dashboard_content.
 import 'package:supermarket_manager_system/presentation/pages/orders_page.dart';
 import 'package:supermarket_manager_system/presentation/pages/profile_content_page.dart';
 import 'package:supermarket_manager_system/presentation/pages/revenue_report_page.dart';
+import 'package:supermarket_manager_system/presentation/pages/creditors_page.dart';
 import 'package:supermarket_manager_system/presentation/pages/users_page.dart';
 import 'package:supermarket_manager_system/presentation/pages/discount.dart';
 import 'package:supermarket_manager_system/presentation/pages/suppliers_page.dart';
@@ -35,6 +36,7 @@ enum _AdminTab {
   profileEdit,
   productDetail,
   reports,
+  creditors,
 }
 
 class AdminDashboardPage extends StatefulWidget {
@@ -79,6 +81,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
       'profile' => _AdminTab.profile,
       'profile-edit' => _AdminTab.profileEdit,
       'reports' => _AdminTab.reports,
+      'creditors' => _AdminTab.creditors,
       _ => _AdminTab.dashboard,
     };
   }
@@ -99,6 +102,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
       _AdminTab.profile => '/admin/profile',
       _AdminTab.profileEdit => '/admin/profile/edit',
       _AdminTab.reports => '/admin/reports',
+      _AdminTab.creditors => '/admin/creditors',
     };
   }
 
@@ -359,6 +363,13 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                           currentTimeText: _formatClock(_now),
                           onProfileTap: () => _selectTab(_AdminTab.profile),
                         ),
+                        _AdminTab.creditors => CreditorsPage(
+                          fullName: widget.fullName,
+                          roleLabel: 'Administrator',
+                          isCompact: isCompact,
+                          currentTimeText: _formatClock(_now),
+                          onProfileTap: () => _selectTab(_AdminTab.profile),
+                        ),
                       },
                       if (isCompact)
                         Positioned(
@@ -477,7 +488,11 @@ class _SidebarMenu extends StatelessWidget {
                       onTap: () => onSelectTab(_AdminTab.products),
                     ),
                     const _SidebarItem(label: 'Barcode Scanner'),
-                    const _SidebarItem(label: 'Creditors'),
+                    _SidebarItem(
+                      label: 'Creditors',
+                      active: selectedTab == _AdminTab.creditors,
+                      onTap: () => onSelectTab(_AdminTab.creditors),
+                    ),
                     _SidebarItem(
                       label: 'Expired',
                       active: selectedTab == _AdminTab.expired,

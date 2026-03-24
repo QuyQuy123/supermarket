@@ -1,12 +1,20 @@
 package com.supermarket.supermarket.service.impl;
 
+import com.supermarket.supermarket.dto.request.CreateOrderRequest;
+import com.supermarket.supermarket.dto.response.CheckoutOrderResponse;
 import com.supermarket.supermarket.dto.response.DashboardSummaryResponse;
 import com.supermarket.supermarket.dto.response.DashboardTransactionResponse;
 import com.supermarket.supermarket.dto.response.OrderDetailItemResponse;
 import com.supermarket.supermarket.dto.response.OrderDetailResponse;
 import com.supermarket.supermarket.dto.response.OrderListItemResponse;
+import com.supermarket.supermarket.entity.Customer;
+import com.supermarket.supermarket.entity.Discount;
 import com.supermarket.supermarket.entity.OrderItem;
+import com.supermarket.supermarket.entity.Product;
 import com.supermarket.supermarket.entity.SalesOrder;
+import com.supermarket.supermarket.entity.User;
+import com.supermarket.supermarket.repository.CustomerRepository;
+import com.supermarket.supermarket.repository.DiscountRepository;
 import com.supermarket.supermarket.repository.OrderItemRepository;
 import com.supermarket.supermarket.repository.ProductRepository;
 import com.supermarket.supermarket.repository.SalesOrderRepository;
@@ -16,13 +24,16 @@ import com.supermarket.supermarket.service.OrderService;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 @Service
@@ -35,6 +46,8 @@ public class OrderServiceImpl implements OrderService {
     private final UserRepository userRepository;
     private final ProductRepository productRepository;
     private final SupplierRepository supplierRepository;
+    private final CustomerRepository customerRepository;
+    private final DiscountRepository discountRepository;
 
     @Override
     public List<OrderListItemResponse> getAllOrders() {
@@ -141,6 +154,144 @@ public class OrderServiceImpl implements OrderService {
             .toList();
     }
 
+    @Override
+    @Transactional
+    public CheckoutOrderResponse createOrder(CreateOrderRequest request) {
+        User cashier = userRepository.findById(request.getCashierId())
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Cashier not found"));
+
+        LocalDateTime now = LocalDateTime.now();
+        String normalizedPhone = normalizePhone(request.getCustomerPhone());
+        Customer customer = null;
+        if (!normalizedPhone.isBlank()) {
+            customer = customerRepository.findAllByOrderByIdAsc()
+                .stream()
+                .filter(c -> normalizePhone(c.getPhone()).equals(normalizedPhone))
+                .findFirst()
+                .orElse(null);
+        }
+
+        Discount discount = null;
+        if (request.getDiscountId() != null) {
+            discount = discountRepository.findById(request.getDiscountId())
+                .orElse(null);
+        }
+
+        List<OrderItem> pendingItems = new ArrayList<>();
+        BigDecimal subtotal = BigDecimal.ZERO;
+        for (CreateOrderRequest.CreateOrderItemRequest itemReq : request.getItems()) {
+            Product product = productRepository.findById(itemReq.getProductId())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Product not found: " + itemReq.getProductId()));
+            int inStock = Objects.requireNonNullElse(product.getInStock(), 0);
+            int qty = itemReq.getQty();
+            if (qty > inStock) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Insufficient stock for product: " + product.getProductName());
+            }
+
+            BigDecimal unitPrice = orZero(product.getSellingPrice());
+            BigDecimal lineAmount = unitPrice.multiply(BigDecimal.valueOf(qty));
+            subtotal = subtotal.add(lineAmount);
+
+            pendingItems.add(OrderItem.builder()
+                .product(product)
+                .productName(product.getProductName())
+                .unitPrice(unitPrice)
+                .qty(qty)
+                .amount(lineAmount)
+                .build());
+
+            product.setInStock(inStock - qty);
+            product.setUpdatedAt(now);
+            productRepository.save(product);
+        }
+
+        BigDecimal discountPercent = request.getDiscountPercent() == null
+            ? BigDecimal.ZERO
+            : request.getDiscountPercent();
+        if (discountPercent.compareTo(BigDecimal.ZERO) < 0) {
+            discountPercent = BigDecimal.ZERO;
+        }
+        if (discountPercent.compareTo(BigDecimal.valueOf(100)) > 0) {
+            discountPercent = BigDecimal.valueOf(100);
+        }
+
+        BigDecimal discountAmount = subtotal.multiply(discountPercent).divide(BigDecimal.valueOf(100));
+        BigDecimal totalPayable = subtotal.subtract(discountAmount);
+        BigDecimal paid = orZero(request.getPaid());
+        BigDecimal balance = totalPayable.subtract(paid);
+
+        String orderNo = "INV-" + now.format(DateTimeFormatter.ofPattern("yyyyMMdd-HHmmss-SSS"));
+        SalesOrder order = SalesOrder.builder()
+            .orderNo(orderNo)
+            .customer(customer)
+            .customerPhone((request.getCustomerPhone() == null || request.getCustomerPhone().isBlank())
+                ? (customer == null ? null : customer.getPhone())
+                : request.getCustomerPhone().trim())
+            .customerName((request.getCustomerName() == null || request.getCustomerName().isBlank())
+                ? (customer == null ? null : customer.getName())
+                : request.getCustomerName().trim())
+            .cashier(cashier)
+            .salesPoint((request.getSalesPoint() == null || request.getSalesPoint().isBlank()) ? "Main Store" : request.getSalesPoint().trim())
+            .orderDate(now.toLocalDate())
+            .orderTime(LocalTime.of(now.getHour(), now.getMinute(), now.getSecond()))
+            .subtotal(subtotal)
+            .discount(discount)
+            .discountPercent(discountPercent)
+            .discountAmount(discountAmount)
+            .totalPayable(totalPayable)
+            .paid(paid)
+            .balance(balance)
+            .paymentMethod((request.getPaymentMethod() == null || request.getPaymentMethod().isBlank()) ? "Cash" : request.getPaymentMethod().trim())
+            .status(balance.compareTo(BigDecimal.ZERO) > 0 ? "Pending" : "Paid")
+            .payDueDate(balance.compareTo(BigDecimal.ZERO) > 0 ? now.toLocalDate().plusDays(7) : null)
+            .createdAt(now)
+            .updatedAt(now)
+            .build();
+
+        SalesOrder savedOrder = salesOrderRepository.save(order);
+
+        List<CheckoutOrderResponse.CheckoutOrderItemResponse> responseItems = new ArrayList<>();
+        for (OrderItem item : pendingItems) {
+            item.setOrder(savedOrder);
+            orderItemRepository.save(item);
+            responseItems.add(CheckoutOrderResponse.CheckoutOrderItemResponse.builder()
+                .productName(emptyAsDash(item.getProductName()))
+                .unitPrice(orZero(item.getUnitPrice()))
+                .qty(Objects.requireNonNullElse(item.getQty(), 0))
+                .amount(orZero(item.getAmount()))
+                .build());
+        }
+
+        if (customer != null) {
+            int existingPoints = Objects.requireNonNullElse(customer.getPoints(), 0);
+            int earnedPoints = totalPayable.divide(BigDecimal.valueOf(1000)).intValue();
+            customer.setPoints(existingPoints + Math.max(earnedPoints, 0));
+            customer.setTotalPurchases(Objects.requireNonNullElse(customer.getTotalPurchases(), 0) + 1);
+            customer.setTotalAmount(orZero(customer.getTotalAmount()).add(totalPayable));
+            customer.setUpdatedAt(now);
+            customerRepository.save(customer);
+        }
+
+        return CheckoutOrderResponse.builder()
+            .orderId(savedOrder.getId())
+            .orderNo(savedOrder.getOrderNo())
+            .customerName(resolveCustomerName(savedOrder))
+            .customerPhone(emptyAsDash(savedOrder.getCustomerPhone()))
+            .cashierName(resolveCashierName(savedOrder))
+            .salesPoint(emptyAsDash(savedOrder.getSalesPoint()))
+            .orderDate(savedOrder.getOrderDate() == null ? "—" : savedOrder.getOrderDate().toString())
+            .orderTime(savedOrder.getOrderTime() == null ? "—" : savedOrder.getOrderTime().toString())
+            .subtotal(orZero(savedOrder.getSubtotal()))
+            .discountPercent(orZero(savedOrder.getDiscountPercent()))
+            .discountAmount(orZero(savedOrder.getDiscountAmount()))
+            .totalPayable(orZero(savedOrder.getTotalPayable()))
+            .paid(orZero(savedOrder.getPaid()))
+            .balance(orZero(savedOrder.getBalance()))
+            .paymentMethod(emptyAsDash(savedOrder.getPaymentMethod()))
+            .items(responseItems)
+            .build();
+    }
+
     private OrderListItemResponse toResponse(SalesOrder order) {
         return OrderListItemResponse.builder()
             .id(order.getId())
@@ -213,5 +364,12 @@ public class OrderServiceImpl implements OrderService {
             return "—";
         }
         return ORDER_DATE_TIME_FORMATTER.format(dateTime);
+    }
+
+    private String normalizePhone(String phone) {
+        if (phone == null) {
+            return "";
+        }
+        return phone.replaceAll("[^0-9]", "");
     }
 }
