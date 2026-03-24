@@ -13,6 +13,7 @@ import 'package:supermarket_manager_system/presentation/pages/list_category_scre
 import 'package:supermarket_manager_system/presentation/pages/products_page.dart';
 import 'package:supermarket_manager_system/presentation/pages/expiration_page.dart';
 import 'package:supermarket_manager_system/presentation/pages/product_detail_page.dart';
+import 'package:supermarket_manager_system/presentation/pages/creditors_page.dart';
 
 enum _ManagerTab {
   dashboard,
@@ -27,6 +28,7 @@ enum _ManagerTab {
   profile,
   profileEdit,
   productDetail,
+  creditors,
 }
 
 class ManagerDashboardPage extends StatefulWidget {
@@ -67,6 +69,7 @@ class _ManagerDashboardPageState extends State<ManagerDashboardPage> {
       'categories' => _ManagerTab.categories,
       'products' => _ManagerTab.products,
       'expired' => _ManagerTab.expired,
+      'creditors' => _ManagerTab.creditors,
       'profile-edit' => _ManagerTab.profileEdit,
       _ => _ManagerTab.dashboard,
     };
@@ -84,6 +87,7 @@ class _ManagerDashboardPageState extends State<ManagerDashboardPage> {
       _ManagerTab.products => '/manager/products',
       _ManagerTab.expired => '/manager/expired',
       _ManagerTab.productDetail => '/manager/expired',
+      _ManagerTab.creditors => '/manager/creditors',
       _ManagerTab.profile => '/manager/profile',
       _ManagerTab.profileEdit => '/manager/profile/edit',
     };
@@ -224,6 +228,7 @@ class _ManagerDashboardPageState extends State<ManagerDashboardPage> {
                     onSuppliersTap: () => _selectTab(_ManagerTab.suppliers),
                     onCategoriesTap: () => _selectTab(_ManagerTab.categories),
                     onProductsTap: () => _selectTab(_ManagerTab.products),
+                    onCreditorsTap: () => _selectTab(_ManagerTab.creditors),
                     onExpiredTap: () => _selectTab(_ManagerTab.expired),
                   ),
                 )
@@ -244,6 +249,7 @@ class _ManagerDashboardPageState extends State<ManagerDashboardPage> {
                       onSuppliersTap: () => _selectTab(_ManagerTab.suppliers),
                       onCategoriesTap: () => _selectTab(_ManagerTab.categories),
                       onProductsTap: () => _selectTab(_ManagerTab.products),
+                      onCreditorsTap: () => _selectTab(_ManagerTab.creditors),
                       onExpiredTap: () => _selectTab(_ManagerTab.expired),
                     ),
                   ),
@@ -316,6 +322,13 @@ class _ManagerDashboardPageState extends State<ManagerDashboardPage> {
                               onBack: _closeProductDetail,
                             )
                           : Container(),
+                    _ManagerTab.creditors => CreditorsPage(
+                      fullName: widget.fullName,
+                      roleLabel: 'Manager',
+                      isCompact: isCompact,
+                      currentTimeText: _formatClock(_now),
+                      onProfileTap: () => _selectTab(_ManagerTab.profile),
+                    ),
                     _ManagerTab.profile => ProfileViewContent(
                       fullName: widget.fullName,
                       userId: widget.userId,
@@ -353,6 +366,7 @@ class _ManagerSidebar extends StatelessWidget {
     required this.onSuppliersTap,
     required this.onCategoriesTap,
     required this.onProductsTap,
+    required this.onCreditorsTap,
     required this.onExpiredTap,
   });
 
@@ -365,6 +379,7 @@ class _ManagerSidebar extends StatelessWidget {
   final VoidCallback onSuppliersTap;
   final VoidCallback onCategoriesTap;
   final VoidCallback onProductsTap;
+  final VoidCallback onCreditorsTap;
   final VoidCallback onExpiredTap;
 
   @override
@@ -439,7 +454,11 @@ class _ManagerSidebar extends StatelessWidget {
                       active: selectedTab == _ManagerTab.products,
                       onTap: onProductsTap,
                     ),
-                    const _ManagerSidebarItem(label: 'Creditors'),
+                    _ManagerSidebarItem(
+                      label: 'Creditors',
+                      active: selectedTab == _ManagerTab.creditors,
+                      onTap: onCreditorsTap,
+                    ),
                     _ManagerSidebarItem(
                       label: 'Expired',
                       active: selectedTab == _ManagerTab.expired,

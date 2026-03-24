@@ -41,6 +41,24 @@ public class CustomerServiceImpl implements CustomerService {
     }
 
     @Override
+    public CustomerListItemResponse getCustomerByPhone(String phone) {
+        String normalizedInput = normalizePhone(phone);
+        if (normalizedInput.isBlank()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Phone is required");
+        }
+
+        Customer customer = customerRepository.findByPhone(phone.trim()).orElse(null);
+        if (customer == null) {
+            customer = customerRepository.findAllByOrderByIdAsc()
+                .stream()
+                .filter(c -> normalizePhone(c.getPhone()).equals(normalizedInput))
+                .findFirst()
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Customer not found"));
+        }
+        return toListItem(customer);
+    }
+
+    @Override
     public CustomerListItemResponse createCustomer(CreateCustomerRequest request) {
         String phone = request.getPhone().trim();
         if (customerRepository.findByPhone(phone).isPresent()) {
@@ -127,5 +145,12 @@ public class CustomerServiceImpl implements CustomerService {
 
     private String emptyAsDash(String value) {
         return value == null || value.isBlank() ? "—" : value;
+    }
+
+    private String normalizePhone(String value) {
+        if (value == null) {
+            return "";
+        }
+        return value.replaceAll("[^0-9]", "");
     }
 }

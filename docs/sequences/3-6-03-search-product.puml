@@ -1,6 +1,11 @@
 @startuml
-!include _seq-style.puml
-title 3.6.4 SearchProduct
+skinparam shadowing false
+skinparam responseMessageBelowArrow true
+skinparam sequenceMessageAlign center
+skinparam maxMessageSize 180
+skinparam sequenceParticipant underline false
+skinparam stereotypePosition top
+title 3.6.4 Search Product
 
 actor "Cashier" as C
 boundary "POS UI" as UI <<boundary>>
@@ -23,8 +28,8 @@ S --> PC: List~ProductListItemResponse~
 deactivate S
 PC --> UI: 200 JSON
 deactivate PC
-UI -> UI: filter by name/barcode (client)
-UI --> C: suggestion list
+UI -> UI: filter by name/barcode (client-side)
+UI --> C: show product result list
 deactivate UI
 
 @enduml

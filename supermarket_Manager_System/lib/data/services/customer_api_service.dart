@@ -48,6 +48,25 @@ class CustomerApiService {
     return CustomerDetail.fromJson(decoded);
   }
 
+  Future<CustomerListItem> getCustomerByPhone(String phone) async {
+    final uri = Uri.parse(
+      '${ApiConstants.baseUrl}${ApiConstants.customersPath}/by-phone'
+      '?phone=${Uri.encodeQueryComponent(phone.trim())}',
+    );
+    final response = await http.get(uri);
+    if (response.statusCode >= 200 && response.statusCode < 300) {
+      final decoded = jsonDecode(response.body);
+      if (decoded is Map<String, dynamic>) {
+        return CustomerListItem.fromJson(decoded);
+      }
+      throw Exception('Invalid customer by phone response');
+    }
+    if (response.body.isNotEmpty) {
+      throw Exception(response.body);
+    }
+    throw Exception('Customer not found by phone');
+  }
+
   Future<CustomerListItem> createCustomer({
     required String name,
     required String phone,

@@ -1,6 +1,11 @@
 @startuml
-!include _seq-style.puml
-title 3.6.6 RegisterMember
+skinparam shadowing false
+skinparam responseMessageBelowArrow true
+skinparam sequenceMessageAlign center
+skinparam maxMessageSize 180
+skinparam sequenceParticipant underline false
+skinparam stereotypePosition top
+title 3.6.6 Register Member
 
 actor "Cashier" as C
 boundary "POS UI" as UI <<boundary>>
@@ -9,21 +14,29 @@ control "CustomerService" as S <<service>>
 entity "CustomerRepository" as R <<entity>>
 
 == Register member ==
-C -> UI: enter customer + Save
+C -> UI: enter phone/name + Save
 activate UI
-UI -> CC: POST /api/customers\n(CreateCustomerRequest)
+UI -> CC: GET /api/customers/by-phone?phone=...
 activate CC
-CC -> S: createCustomer(request)
+CC -> S: getCustomerByPhone(phone)
 activate S
-S -> R: save(customer)
+S -> R: findByPhone(phone)
 activate R
-R --> S: Customer
+R --> S: Customer | null
 deactivate R
-S --> CC: CustomerListItemResponse
+alt found existing member
+  S --> CC: CustomerListItemResponse
+  CC --> UI: 200 existing customer
+else not found
+  CC -> S: createCustomer(request)
+  S -> R: save(customer)
+  R --> S: Customer
+  S --> CC: CustomerListItemResponse
+  CC --> UI: 200 new customer
+end
 deactivate S
-CC --> UI: 200 JSON
 deactivate CC
-UI --> C: attach customer to sale
+UI --> C: attach member + show loyalty/discount
 deactivate UI
 
 @enduml

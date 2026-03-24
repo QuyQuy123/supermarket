@@ -1,8 +1,13 @@
 @startuml
-!include _seq-style.puml
-title 3.7.2 ListCustomer
+skinparam shadowing false
+skinparam responseMessageBelowArrow true
+skinparam sequenceMessageAlign center
+skinparam maxMessageSize 180
+skinparam sequenceParticipant underline false
+skinparam stereotypePosition top
 
-actor "Admin / Cashier" as A
+
+actor "User" as A
 boundary "Customers UI" as UI <<boundary>>
 control "CustomerController" as CC <<control>>
 control "CustomerService" as S <<service>>

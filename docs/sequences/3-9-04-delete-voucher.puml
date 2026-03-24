@@ -1,6 +1,10 @@
 @startuml
-!include _seq-style.puml
-title 3.9.5 DeleteVoucher
+skinparam shadowing false
+skinparam responseMessageBelowArrow true
+skinparam sequenceMessageAlign center
+skinparam maxMessageSize 180
+skinparam sequenceParticipant underline false
+skinparam stereotypePosition top
 
 actor "Admin / Manager" as A
 boundary "Discounts UI" as UI <<boundary>>

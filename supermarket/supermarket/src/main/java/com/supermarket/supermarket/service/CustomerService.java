@@ -13,6 +13,8 @@ public interface CustomerService {
 
     CustomerDetailResponse getCustomerDetail(Integer id);
 
+    CustomerListItemResponse getCustomerByPhone(String phone);
+
     CustomerListItemResponse createCustomer(CreateCustomerRequest request);
 
     CustomerListItemResponse updateCustomer(Integer id, UpdateCustomerRequest request);

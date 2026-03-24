@@ -1,19 +1,44 @@
 @startuml
-!include _seq-style.puml
-title 3.6.8 IssueInvoices
+skinparam shadowing false
+skinparam responseMessageBelowArrow true
+skinparam sequenceMessageAlign center
+skinparam maxMessageSize 180
+skinparam sequenceParticipant underline false
+skinparam stereotypePosition top
+title 3.6.8 Issue Invoices
 
 actor "Cashier" as C
 boundary "POS UI" as UI <<boundary>>
+control "OrderController" as OC <<control>>
+control "OrderService" as OS <<service>>
+entity "ProductRepository" as PR <<entity>>
+entity "SalesOrderRepository" as SR <<entity>>
+entity "OrderItemRepository" as OIR <<entity>>
+entity "CustomerRepository" as CR <<entity>>
 
 == Issue invoice / complete sale ==
-note over UI
-  No POST create-order from POS in backend.
-  Flutter: save order locally / sync later\nor call extended SalesOrder API.
-end note
 C -> UI: Checkout
 activate UI
-UI -> UI: create local order + print / show receipt
-UI --> C: complete transaction
+UI -> OC: POST /api/orders/checkout\n(CreateOrderRequest)
+activate OC
+OC -> OS: createOrder(request)
+activate OS
+OS -> PR: find products + validate stock
+PR --> OS: Product list
+OS -> OS: calc subtotal/discount/total
+OS -> SR: save(SalesOrder)
+SR --> OS: SalesOrder
+OS -> OIR: saveAll(OrderItem)
+OIR --> OS: items saved
+OS -> PR: update inStock after sold
+OS -> CR: update loyalty points/history
+OS --> OC: CheckoutOrderResponse
+deactivate OS
+OC --> UI: 200 JSON invoice
+deactivate OC
+UI -> UI: show invoice dialog (overlay)
+UI -> UI: reset POS state + reload products
+UI --> C: transaction completed
 deactivate UI
 
 @enduml

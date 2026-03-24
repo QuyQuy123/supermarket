@@ -1,0 +1,31 @@
+@startuml
+title 1.2 Package Diagram - Mobile (Flutter)
+
+skinparam backgroundColor white
+skinparam shadowing false
+skinparam packageStyle folder
+skinparam ArrowColor #333333
+skinparam DefaultTextAlignment center
+skinparam linetype polyline
+
+left to right direction
+
+package "main" as Main
+package "presentation.pages" as Pages
+package "presentation.widgets" as Widgets
+package "data.services" as Services
+package "data.local" as LocalData
+package "domain.models" as Models
+package "utils" as Utils
+
+Main ..> Pages : app entry/navigation
+
+Pages ..> Widgets : compose UI
+Pages ..> Services : call API
+Pages ..> Models : bind state
+
+Services ..> Models : parse/serialize
+Services ..> Utils : api constants
+LocalData ..> Models : cache objects
+
+@enduml

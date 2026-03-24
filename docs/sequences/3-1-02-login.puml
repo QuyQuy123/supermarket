@@ -1,8 +1,12 @@
 @startuml
-!include _seq-style.puml
-title 3.1.2 Login
+skinparam shadowing false
+skinparam responseMessageBelowArrow true
+skinparam sequenceMessageAlign center
+skinparam maxMessageSize 180
+skinparam sequenceParticipant underline false
+skinparam stereotypePosition top
 
-actor "Staff / Admin" as U
+actor "Uses" as U
 boundary "Login UI" as UI <<boundary>>
 control "AuthController" as AC <<control>>
 control "AuthService" as S <<service>>

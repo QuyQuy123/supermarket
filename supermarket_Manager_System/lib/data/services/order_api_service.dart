@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:supermarket_manager_system/domain/models/dashboard_summary.dart';
 import 'package:supermarket_manager_system/domain/models/dashboard_transaction.dart';
+import 'package:supermarket_manager_system/domain/models/checkout_invoice.dart';
 import 'package:supermarket_manager_system/domain/models/order_detail.dart';
 import 'package:supermarket_manager_system/domain/models/order_list_item.dart';
 import 'package:supermarket_manager_system/utils/api_constants.dart';
@@ -64,6 +65,49 @@ class OrderApiService {
         .whereType<Map<String, dynamic>>()
         .map(DashboardTransaction.fromJson)
         .toList();
+  }
+
+  Future<CheckoutInvoice> checkout({
+    required int cashierId,
+    required String customerName,
+    required String customerPhone,
+    required String paymentMethod,
+    required double paid,
+    required double discountPercent,
+    int? discountId,
+    String salesPoint = 'Main Store',
+    required List<Map<String, dynamic>> items,
+  }) async {
+    final uri = Uri.parse(
+      '${ApiConstants.baseUrl}${ApiConstants.ordersPath}/checkout',
+    );
+    final body = {
+      'cashierId': cashierId,
+      'customerName': customerName,
+      'customerPhone': customerPhone,
+      'salesPoint': salesPoint,
+      'paymentMethod': paymentMethod,
+      'paid': paid,
+      'discountPercent': discountPercent,
+      'discountId': discountId,
+      'items': items,
+    };
+    final response = await http.post(
+      uri,
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode(body),
+    );
+    if (response.statusCode < 200 || response.statusCode >= 300) {
+      if (response.body.isNotEmpty) {
+        throw Exception(response.body);
+      }
+      throw Exception('Failed to checkout order');
+    }
+    final decoded = jsonDecode(response.body);
+    if (decoded is! Map<String, dynamic>) {
+      throw Exception('Invalid checkout response format');
+    }
+    return CheckoutInvoice.fromJson(decoded);
   }
 }
 

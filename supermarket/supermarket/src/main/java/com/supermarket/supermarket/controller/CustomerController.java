@@ -29,6 +29,11 @@ public class CustomerController {
         return customerService.getCustomerDetail(id);
     }
 
+    @GetMapping("/by-phone")
+    public CustomerListItemResponse getCustomerByPhone(@RequestParam String phone) {
+        return customerService.getCustomerByPhone(phone);
+    }
+
     @PostMapping
     public CustomerListItemResponse createCustomer(@Valid @RequestBody CreateCustomerRequest request) {
         return customerService.createCustomer(request);

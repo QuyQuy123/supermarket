@@ -30,6 +30,8 @@ $RECYCLE.BIN/
 # ------------------------------
 *.log
 logs/
+analyze*.txt
+out*.txt
 
 # ------------------------------
 # Java / Spring Boot (backend)

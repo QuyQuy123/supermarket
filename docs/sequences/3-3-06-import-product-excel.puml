@@ -1,15 +1,16 @@
 @startuml
-!include _seq-style.puml
-title 3.3.7 ImportProductFromExcel
+skinparam shadowing false
+skinparam responseMessageBelowArrow true
+skinparam sequenceMessageAlign center
+skinparam maxMessageSize 180
+skinparam sequenceParticipant underline false
+skinparam stereotypePosition top
+
 
 actor "Admin / Manager" as A
 boundary "Products UI" as UI <<boundary>>
 
 == Import Excel ==
-note over UI
-  No POST import in backend.
-  Option: parse Excel in Flutter,\nPOST /api/products per row\nor add import API later.
-end note
 A -> UI: pick Excel file
 activate UI
 UI -> UI: parse rows → CreateProductRequest

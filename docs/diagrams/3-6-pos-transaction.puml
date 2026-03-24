@@ -4,65 +4,59 @@
 !include _style.puml
 title 3.6 POS Transaction
 
-class PosController {
+class PosCheckoutController {
   + openShift(dto: PosDTO): PosDTO
-  + checkout(dto: PosDTO): PosDTO
-  + closeShift(id: int): PosDTO
-}
-
-class PosServiceImpl {
-  - orderRepository: IOrderRepository
-  --
-  + openShift(dto: PosDTO): PosDTO
-  + checkout(dto: PosDTO): PosDTO
-  + closeShift(id: int): PosDTO
-}
-
-class OrderRepositoryImpl {
-  + findById(id: int): Optional~SalesOrder~
-  + save(order: SalesOrder): SalesOrder
-  + findAll(): List~SalesOrder~
+  + scanProduct(dto: PosDTO): PosDTO
+  + searchProduct(dto: PosDTO): PosDTO
+  + updateCartItem(dto: PosDTO): PosDTO
+  + registerMember(dto: PosDTO): PosDTO
+  + applyDiscountCode(dto: PosDTO): PosDTO
+  + issueInvoice(dto: PosDTO): PosDTO
+  + closeShift(dto: PosDTO): PosDTO
 }
 
 interface IPosService {
   + openShift(dto: PosDTO): PosDTO
-  + checkout(dto: PosDTO): PosDTO
-  + closeShift(id: int): PosDTO
+  + scanProduct(dto: PosDTO): PosDTO
+  + searchProduct(dto: PosDTO): PosDTO
+  + updateCartItem(dto: PosDTO): PosDTO
+  + registerMember(dto: PosDTO): PosDTO
+  + applyDiscountCode(dto: PosDTO): PosDTO
+  + issueInvoice(dto: PosDTO): PosDTO
+  + closeShift(dto: PosDTO): PosDTO
 }
 
-interface IOrderRepository {
-  + findById(id: int): Optional~SalesOrder~
-  + save(order: SalesOrder): SalesOrder
-  + findAll(): List~SalesOrder~
+class PosServiceImpl {
+  -posRepository: IPosRepository
 }
 
-class PosDTO {
-  - shiftId: int
-  - cartJson: string
-  - discountCode: string
-  - totalAmount: decimal
+interface IPosRepository {
+  + findByKey(key: string): Entity
+  + findAll(): List~Entity~
+  + save(entity: Entity): Entity
 }
 
-class SalesOrder {
-  - orderId: int
-  - orderNo: string
-  - totalAmount: decimal
-  - shiftId: int
+class PosRepositoryImpl {
 }
 
-PosController -[hidden]right- PosServiceImpl
-PosServiceImpl -[hidden]right- OrderRepositoryImpl
-IPosService -[hidden]right- IOrderRepository
-PosDTO -[hidden]right- SalesOrder
+class PosDTO
 
-PosController --> IPosService
-PosController --> PosDTO
-IPosService --> PosDTO
+class Entity
+
+PosCheckoutController --> IPosService
 PosServiceImpl ..|> IPosService
-PosServiceImpl --> IOrderRepository
-PosServiceImpl --> PosDTO
-IOrderRepository --> SalesOrder
-OrderRepositoryImpl ..|> IOrderRepository
-OrderRepositoryImpl --> SalesOrder
+PosServiceImpl --> IPosRepository
+PosRepositoryImpl ..|> IPosRepository
+
+PosCheckoutController --> PosDTO
+
+IPosService --> PosDTO
+
+IPosRepository --> Entity
+
+PosCheckoutController -[hidden]right- PosServiceImpl
+PosServiceImpl -[hidden]right- PosRepositoryImpl
+IPosService -[hidden]right- IPosRepository
+PosDTO -[hidden]right- Entity
 
 @enduml

@@ -1,18 +1,26 @@
 @startuml
-!include _seq-style.puml
-title 3.6.9 CloseShift
+skinparam shadowing false
+skinparam responseMessageBelowArrow true
+skinparam sequenceMessageAlign center
+skinparam maxMessageSize 180
+skinparam sequenceParticipant underline false
+skinparam stereotypePosition top
+title 3.6.9 Close Shift
 
 actor "Cashier" as C
 boundary "POS UI" as UI <<boundary>>
+control "ShiftSessionManager" as SM <<control>>
 
 == Close shift ==
-note over UI
-  No close-shift API. Flutter: enter closing cash,\nsummarize and clear/lock local ShiftSession.
-end note
 C -> UI: enter closing cash, confirm close
 activate UI
-UI -> UI: compute variance, save shift report
-UI --> C: lock sales until new shift
+UI -> SM: closeShift(closingCash)
+activate SM
+SM -> SM: calculate expected cash + variance
+SM -> SM: store close summary
+SM --> UI: ShiftSummaryDTO
+deactivate SM
+UI --> C: lock sales until next open shift
 deactivate UI
 
 @enduml

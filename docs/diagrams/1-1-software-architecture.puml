@@ -1,0 +1,68 @@
+@startuml
+title 1.1 Software Architecture - Supermarket Manager System
+
+skinparam backgroundColor white
+skinparam shadowing false
+skinparam componentStyle rectangle
+skinparam packageStyle rectangle
+skinparam ArrowColor #333333
+skinparam DefaultTextAlignment center
+skinparam linetype curved
+
+actor "Admin / Manager / Cashier" as User
+
+package "Client Side" as CLIENT #D6EEF8 {
+  component "Flutter Mobile App\n(Presentation Layer)" as FlutterApp
+  component "HTTP Client\n(Dio/Retrofit)" as ApiClient
+  component "Local Storage\n(Secure Storage / SharedPrefs)" as LocalStorage
+
+  FlutterApp --> ApiClient : Call REST API\n(JSON/HTTPS)
+  FlutterApp --> LocalStorage : Save token/session\ncache user state
+}
+
+package "Backend Server (Spring Boot)" as SERVER #D9F7BE {
+  package "API Layer" as API #E9FBE0 {
+    component "REST Controllers" as Controllers
+    component "Security\n(JWT Filter, RBAC, CORS)" as Security
+  }
+
+  package "Application Layer" as APP #F0FFF0 {
+    component "Service Layer\n(Business Use Cases)" as Services
+    component "DTO Mapper\n(Entity <-> DTO)" as Mapper
+  }
+
+  package "Domain Layer" as DOMAIN #FFF8CC {
+    component "Domain Model\n(User, Product, Order,\nVoucher, Customer...)" as DomainModel
+    component "Domain Rules\n(Validation / Policies)" as DomainRules
+  }
+
+  package "Data Access Layer" as DATA #FFE8B6 {
+    component "Repository Layer\n(Spring Data JPA)" as Repositories
+    component "JPA/Hibernate ORM" as ORM
+  }
+}
+
+database "MySQL Database" as MySQL #BFF4FF
+cloud "External AI Service\n(OpenAI API)" as AI #F5D0FE
+
+User --> FlutterApp : Use application
+ApiClient --> Controllers : HTTP Request
+Controllers --> Security : Authenticate / Authorize
+Security --> Services : Allow request
+Services --> Mapper : Map request DTO
+Services --> DomainRules : Apply rules
+DomainRules --> DomainModel : Validate state
+Services --> Repositories : Read / Write data
+Repositories --> ORM : Persist entities
+ORM --> MySQL : SQL
+MySQL ..> ORM : Query result / rows
+ORM ..> Repositories : Entity objects
+Repositories ..> Services : Domain entities
+Services ..> Controllers : Use-case result
+
+Services --> AI : Chatbox / AI response\n(optional feature)
+AI ..> Services : AI result
+Controllers ..> ApiClient : HTTP Response (JSON)
+ApiClient ..> FlutterApp : Parsed response model
+
+@enduml
