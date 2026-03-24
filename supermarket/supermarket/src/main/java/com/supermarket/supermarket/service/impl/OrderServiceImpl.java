@@ -180,6 +180,10 @@ public class OrderServiceImpl implements OrderService {
         List<OrderItem> pendingItems = new ArrayList<>();
         BigDecimal subtotal = BigDecimal.ZERO;
         for (CreateOrderRequest.CreateOrderItemRequest itemReq : request.getItems()) {
+            BigDecimal kg = itemReq.getKg() == null ? BigDecimal.ONE : itemReq.getKg();
+            if (kg.compareTo(BigDecimal.ZERO) <= 0) {
+                continue;
+            }
             Product product = productRepository.findById(itemReq.getProductId())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Product not found: " + itemReq.getProductId()));
             int inStock = Objects.requireNonNullElse(product.getInStock(), 0);
@@ -189,7 +193,7 @@ public class OrderServiceImpl implements OrderService {
             }
 
             BigDecimal unitPrice = orZero(product.getSellingPrice());
-            BigDecimal lineAmount = unitPrice.multiply(BigDecimal.valueOf(qty));
+            BigDecimal lineAmount = unitPrice.multiply(BigDecimal.valueOf(qty)).multiply(kg);
             subtotal = subtotal.add(lineAmount);
 
             pendingItems.add(OrderItem.builder()
@@ -203,6 +207,9 @@ public class OrderServiceImpl implements OrderService {
             product.setInStock(inStock - qty);
             product.setUpdatedAt(now);
             productRepository.save(product);
+        }
+        if (pendingItems.isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "No billable items. Enter Kg > 0.");
         }
 
         BigDecimal discountPercent = request.getDiscountPercent() == null

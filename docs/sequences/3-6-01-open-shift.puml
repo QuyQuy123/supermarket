@@ -5,17 +5,22 @@ skinparam sequenceMessageAlign center
 skinparam maxMessageSize 180
 skinparam sequenceParticipant underline false
 skinparam stereotypePosition top
-
+title 3.6.2 Open Shift
 
 actor "Cashier" as C
-boundary "POS / Open shift UI" as UI <<boundary>>
+boundary "POS UI" as UI <<boundary>>
+control "ShiftSessionManager" as SM <<control>>
 
-== Open shift ==
-
-C -> UI: enter opening cash, confirm
+== Start shift ==
+C -> UI: input opening cash + open shift
 activate UI
-UI -> UI: create local ShiftSession
-UI --> C: enable sales
+UI -> SM: openShift(cashierId, openingCash)
+activate SM
+SM -> SM: validate no active shift
+SM -> SM: create ShiftSession(openedAt, openingCash)
+SM --> UI: ShiftSessionDTO
+deactivate SM
+UI --> C: show active shift + enable checkout
 deactivate UI
 
 @enduml

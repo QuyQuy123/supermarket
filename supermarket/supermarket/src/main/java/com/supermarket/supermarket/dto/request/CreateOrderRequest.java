@@ -52,5 +52,8 @@ public class CreateOrderRequest {
         @NotNull(message = "Quantity is required")
         @Min(value = 1, message = "Quantity must be >= 1")
         private Integer qty;
+
+        @DecimalMin(value = "0.0", inclusive = false, message = "Kg must be > 0 when provided")
+        private BigDecimal kg;
     }
 }

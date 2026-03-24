@@ -5,7 +5,7 @@ skinparam sequenceMessageAlign center
 skinparam maxMessageSize 180
 skinparam sequenceParticipant underline false
 skinparam stereotypePosition top
-title 3.6.3 ScanProduct
+title 3.6.3 Scan Product
 
 actor "Cashier" as C
 boundary "POS UI" as UI <<boundary>>
@@ -28,8 +28,9 @@ S --> PC: List~ProductListItemResponse~
 deactivate S
 PC --> UI: 200 JSON
 deactivate PC
-UI -> UI: match barcode → add to cart
-UI --> C: show product + price
+UI -> UI: match barcode + inStock check
+UI -> UI: add line to cart\n(default qty=1, kg=1)
+UI --> C: show line + subtotal
 deactivate UI
 
 @enduml

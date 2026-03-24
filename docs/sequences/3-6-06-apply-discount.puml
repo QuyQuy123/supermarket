@@ -5,7 +5,7 @@ skinparam sequenceMessageAlign center
 skinparam maxMessageSize 180
 skinparam sequenceParticipant underline false
 skinparam stereotypePosition top
-title 3.6.7 ApplyDiscountCode
+title 3.6.7 Apply Discount Code
 
 actor "Cashier" as C
 boundary "POS UI" as UI <<boundary>>
@@ -28,8 +28,10 @@ S --> DC: List~DiscountResponse~
 deactivate S
 DC --> UI: 200 JSON
 deactivate DC
-UI -> UI: match valid code, apply %\nto cart
-UI --> C: update payable total
+UI -> UI: filter valid discounts by date/minOrder
+UI -> UI: choose best member discount\n(max(customer, loyalty))
+UI -> UI: payable = subtotal * (1 - combinedPercent/100)
+UI --> C: show discount + amount due
 deactivate UI
 
 @enduml

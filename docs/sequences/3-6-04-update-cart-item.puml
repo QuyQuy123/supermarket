@@ -5,16 +5,18 @@ skinparam sequenceMessageAlign center
 skinparam maxMessageSize 180
 skinparam sequenceParticipant underline false
 skinparam stereotypePosition top
-title 3.6.5 UpdateCartItem
+title 3.6.5 Update Cart Item
 
 actor "Cashier" as C
 boundary "POS UI" as UI <<boundary>>
 
 == Update cart ==
-C -> UI: change qty / remove line
+C -> UI: change qty / kg / remove line
 activate UI
-UI -> UI: update cart state\n(recalc subtotal)
-UI --> C: show running total
+UI -> UI: update cart state
+UI -> UI: recalc line subtotal = unitPrice * qty * kg
+UI -> UI: recalc grand total + payable
+UI --> C: show updated totals
 deactivate UI
 
 @enduml

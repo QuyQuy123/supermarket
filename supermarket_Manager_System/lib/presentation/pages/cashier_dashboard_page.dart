@@ -423,9 +423,14 @@ class _CashierDashboardPageState extends State<CashierDashboardPage> {
   void _recalcScannerGrandTotal() {
     _scannerGrandTotal = _scannerCart.fold<double>(
       0,
-      (sum, line) => sum + line.product.sellingPrice * line.quantity,
+      (sum, line) => sum + _scannerLineSubtotal(line),
     );
   }
+
+  double _scannerLineKg(_ScannerCartLine line) => line.kg > 0 ? line.kg : 1;
+
+  double _scannerLineSubtotal(_ScannerCartLine line) =>
+      line.product.sellingPrice * line.quantity * _scannerLineKg(line);
 
   /// Amount customer pays after percent discount (subtotal = [_scannerGrandTotal]).
   double get _scannerPayableTotal {
@@ -514,6 +519,13 @@ class _CashierDashboardPageState extends State<CashierDashboardPage> {
         .replaceAll(RegExp(r'[^\d]'), '');
     final tender = double.tryParse(tenderDigits);
     final payable = _scannerPayableTotal;
+    final billableLines = _scannerCart.where((l) => _scannerLineKg(l) > 0).toList();
+    if (billableLines.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Enter Kg (>0) for at least one product.')),
+      );
+      return;
+    }
     if (tender == null || tender < payable) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -540,10 +552,12 @@ class _CashierDashboardPageState extends State<CashierDashboardPage> {
         discountPercent: _scannerCombinedDiscountPercent,
         discountId: _selectedScannerDiscount?.id,
         items: _scannerCart
+            .where((l) => _scannerLineKg(l) > 0)
             .map(
               (l) => {
                 'productId': l.product.id,
                 'qty': l.quantity,
+                'kg': _scannerLineKg(l),
               },
             )
             .toList(),
@@ -771,6 +785,21 @@ class _CashierDashboardPageState extends State<CashierDashboardPage> {
     }
     setState(() {
       _scannerCart.removeAt(index);
+      _recalcScannerGrandTotal();
+      _syncScannerDiscountAfterTotalChange();
+    });
+  }
+
+  void _updateScannerCartKg(int index, String raw) {
+    if (index < 0 || index >= _scannerCart.length) {
+      return;
+    }
+    final normalized = raw.replaceAll(',', '.').trim();
+    final double kg = normalized.isEmpty
+        ? 1
+        : (double.tryParse(normalized) ?? 1);
+    setState(() {
+      _scannerCart[index].kg = kg > 0 ? kg : 1;
       _recalcScannerGrandTotal();
       _syncScannerDiscountAfterTotalChange();
     });
@@ -1743,6 +1772,7 @@ class _CashierDashboardPageState extends State<CashierDashboardPage> {
                           ),
                         ),
                       ),
+                      DataColumn(label: Text('Kg')),
                       DataColumn(label: Text('Subtotal')),
                       DataColumn(label: Text('')),
                     ],
@@ -1760,6 +1790,7 @@ class _CashierDashboardPageState extends State<CashierDashboardPage> {
                                 DataCell(Text('-')),
                                 DataCell(Text('-')),
                                 DataCell(Text('-')),
+                                DataCell(Text('-')),
                               ],
                             ),
                           ]
@@ -1767,7 +1798,7 @@ class _CashierDashboardPageState extends State<CashierDashboardPage> {
                             final index = entry.key;
                             final line = entry.value;
                             final p = line.product;
-                            final sub = p.sellingPrice * line.quantity;
+                            final sub = _scannerLineSubtotal(line);
                             return DataRow(
                               cells: [
                                 DataCell(Text(p.productName)),
@@ -1850,6 +1881,35 @@ class _CashierDashboardPageState extends State<CashierDashboardPage> {
                                           ),
                                         ],
                                       ),
+                                    ),
+                                  ),
+                                ),
+                                DataCell(
+                                  SizedBox(
+                                    width: 74,
+                                    child: TextFormField(
+                                      key: ValueKey('kg_${line.product.id}_$index'),
+                                      initialValue: line.kg > 0
+                                          ? line.kg.toStringAsFixed(
+                                              line.kg % 1 == 0 ? 0 : 2,
+                                            )
+                                          : '',
+                                      keyboardType:
+                                          const TextInputType.numberWithOptions(
+                                            decimal: true,
+                                          ),
+                                      textAlign: TextAlign.center,
+                                      decoration: const InputDecoration(
+                                        hintText: 'Kg',
+                                        isDense: true,
+                                        contentPadding: EdgeInsets.symmetric(
+                                          horizontal: 8,
+                                          vertical: 8,
+                                        ),
+                                        border: OutlineInputBorder(),
+                                      ),
+                                      onChanged: (v) =>
+                                          _updateScannerCartKg(index, v),
                                     ),
                                   ),
                                 ),
@@ -2325,10 +2385,11 @@ class _CashierDashboardPageState extends State<CashierDashboardPage> {
 }
 
 class _ScannerCartLine {
-  _ScannerCartLine({required this.product, this.quantity = 1});
+  _ScannerCartLine({required this.product, this.quantity = 1}) : kg = 1;
 
   final ProductListItem product;
   int quantity;
+  double kg;
 }
 
 class _InvoicePreviewDialog extends StatelessWidget {
